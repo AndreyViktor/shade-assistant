@@ -1,58 +1,45 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
-**Atualização:** 2026-11-02 — revisão arquitetural e de qualidade **somente dos documentos**, sem executar implementação.  
-**Marco atual:** M0 — fundação + viabilidade Swift.  
-**Próxima tarefa:** T001 (`T005` na sequência, assim que houver scaffold).  
-**Concluídas:** nenhuma. **Em andamento:** nenhuma.  
-**Escopo:** 35 tarefas MVP + 4 tarefas futuras Windows (`DEFERRED`). **Ainda não há código executável da aplicação neste pacote.**
+**Atualização:** 2026-11-02. **Marco:** M0 — fundação + viabilidade Swift.
+**Concluída nesta sessão:** somente **T001**. Nenhuma tarefa seguinte iniciada.
 
-## Revisão de engenharia V0.7 (documentação apenas)
-- Adicionado `ENGINEERING-STANDARDS.md`: arquitetura modular simples, estrutura de diretórios e dependências, convenções React/TS/Swift, ESLint, Prettier, TypeScript strict, Vitest/RTL, Swift tests, segurança, checks e Definition of Done.
-- Atualizados `ARCHITECTURE.md`, `AGENTS.md`, `PROMPT-CODEX.md`, `TASKS.md` e `ROADMAP.md` para exigir padrões desde T001–T003; nenhum lint, build ou teste do aplicativo foi executado porque código ainda não existe.
-- **Todas as tarefas continuam TODO/DEFERRED**; decisões de qualidade não representam implementação.
+## Entrega T001
 
-## Decisão consolidada
-- A viabilidade de STT local Apple teve um **teste exploratório externo**; o produto **não depende de um binário de STT externo**.
-- MVP macOS usará **helper nativo Swift próprio** para microfone + áudio do sistema com `SpeechAnalyzer`/`SpeechTranscriber` e `ScreenCaptureKit` (ou alternativas Apple verificadas), comunicado ao Electron main. React exibe transcrição e sugestões.
-- Idiomas iniciais: `pt-BR` e opção `pt-BR+en-US`, com detecção/troca bilíngue a avaliar **novamente** no código próprio.
-- OpenAI para sugestões/screenshot autorizados; STT remoto só fallback consentido; demo offline sem chave. Windows adiado a M6.
+- Estado inicial: documentos + runner Python, sem app e sem Git. Criada branch local `main` e commit base `1ee43a4` (`chore: initialize meeting copilot planning`).
+- Electron + React + TypeScript strict: lifecycle em `src/main/index.ts`, janela/URL local em `src/main/app`, shell em `src/renderer/app`. Tela `DEMO` informa que transcrição/sugestões ainda não estão disponíveis; captura e IA inativas.
+- Renderer sem Node/IPC exposto; contextIsolation, sandbox e webSecurity ativos; permissões, popups e navegação bloqueados; sessão em memória; CSP sem conexões no build. Dev limitado a `127.0.0.1:5173` com exceções CSP para HMR.
+- Configurados electron-vite, ESLint com tipos/React Hooks/imports, Prettier, tsconfigs separados, Vitest/RTL e Playwright. Scripts npm, lockfile, `.editorconfig`, `.nvmrc`, testes, README e ADR 0001 documentam execução e limites.
+- Domínio/adaptadores/Swift e preload/contratos serão criados com suas implementações. T003 ainda precisa implementar IPC, schemas e testes completos de fronteiras.
+- `.azul-engai` foi gerado pelo ambiente durante a sessão e entrou no commit base; retirado do índice nesta entrega e ignorado, preservando o arquivo local.
 
-## Evidência da conversa — não é teste do aplicativo
-- Em execução manual de uma POC externa no Mac, usuário viu boa transcrição de microfone + áudio do computador em português, com pontuação adequada.
-- Opção `pt-BR,en-US` em POC externa: confusões em alguns trechos; avaliação subjetiva do usuário de ~80% de resultado adequado (sem benchmark). Detalhes no arquivo `docs/REFERENCIA-STT-APPLE.md`.
-- **Não realizados neste pacote:** teste Swift próprio, testes `SpeechTranscriber`/`ScreenCaptureKit` implementados, integração Swift↔Electron, validação JSONL própria, build, teste de API real, empacotamento, Windows.
+## Ambiente e verificações executadas
 
-## Próximas validações reais
-1. T001–T003: iniciar repo Electron + React + TS e requisitos de segurança.
-2. T005: em Mac com Xcode/Swift, detectar versões/compatibilidade Apple, idiomas e permissões.
-3. T006: POC mic e sistema em Swift; testar modelo por idioma, sincronização, eco/duplicações, latência e modo bilíngue.
-4. T012–T014 e T017: criar protocolo e helper Swift, integrar via Electron main → IPC → renderer.
-5. Medir estabilidade e recursos. Somente após isso considerar M2 validado.
+Mac: **macOS 26.6.2 (25G83)**; `xcode-select -p`: `/Applications/Xcode-26.6.0.app/Contents/Developer`. Isso não valida APIs Speech ou SDK Swift.
+Terminal inicialmente em Node 20.20.2/npm 10.8.2. Selecionado Node **26.0.0**/npm **11.12.1** já instalado em `/opt/homebrew/bin`, com `export PATH=/opt/homebrew/bin:$PATH`, sem alteração global.
 
-## Bloqueios conhecidos para testes reais
-- Necessidade de Mac compatível e autorizações de microfone, captura de áudio do sistema/screen recording e eventual Speech Recognition.
-- Disponibilidade de idioma/assets e suporte ao SDK na configuração de Xcode/macOS instalada; não assumir que uma POC externa prova suporte em todo dispositivo.
-- Chave e faturamento OpenAI para testar sugestões reais; não necessários para M0/M1/POC local.
-- Consentimento para uso de áudio de participantes de reuniões reais.
+| Verificação                                                      | Resultado observado                                                                                                                                                                  |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm ci --ignore-scripts --offline --no-audit`                   | Instalação limpa pelo lockfile passou usando cache local; 268 pacotes.                                                                                                               |
+| `node node_modules/electron/install.js`                          | Binário oficial Electron 45.2.1 instalado; repetição após `npm ci` passou pelo cache.                                                                                                |
+| `npm run verify`                                                 | Passou: lint, Prettier, 3 tsconfigs strict, 12 testes em 2 arquivos e build main/renderer.                                                                                           |
+| `npm run test:smoke`                                             | Passou: 1 teste abrindo/fechando Electron real; tela, ausência de Node/IPC no renderer, CSP, recarga sem HTTP(S) e bloqueio de popup.                                                |
+| `env -u ELECTRON_RUN_AS_NODE npm run dev -- --clearScreen false` | Servidor e app iniciaram. Checagem adicional Playwright confirmou heading/DEMO, URL loopback e recarga sem erros de página. Servidor encerrado com Ctrl+C e janela de teste fechada. |
+| Auditoria de dependências                                        | Instalação final reportou **0 vulnerabilidades** após correção transitiva; sem `audit fix --force`.                                                                                  |
+| Inspeção visual                                                  | Imagem da janela obtida pelo smoke e inspecionada; sem corte do conteúdo no tamanho inicial. Artefato local ignorado: `test-results/startup.png`.                                    |
 
-## Registro padrão de tarefa
-```text
-Data/contexto:
-Tarefa escolhida:
-Arquivos alterados:
-Comandos executados e resultados verificáveis:
-Teste manual realmente realizado (ou não realizado):
-Uso de API e limites (se houver):
-Commit:
-Bloqueios e como desbloquear:
-Próxima tarefa elegível:
-```
+O smoke executou fora da sandbox para acesso ao desktop. Corrigida a herança de `ELECTRON_RUN_AS_NODE` no ambiente do teste; nenhum ajuste global. A primeira recarga dev ocorreu durante a navegação inicial e falhou; a verificação final aguardou o conteúdo e passou.
 
-## Retomada
-Ler `AGENTS.md`, `ENGINEERING-STANDARDS.md`, `DECISIONS.md`, `ROADMAP.md`, `TASKS.md` e este arquivo; comparar com código/`git status`. Não marcar tarefa como concluída com base apenas nesta documentação ou em testes exploratórios externos.
+O build emite `preload config is missing`, esperado e não silenciado: preload pertence à T003. Playwright emitiu aviso de `NO_COLOR`/`FORCE_COLOR` herdados do host, sem efeito no resultado. Incompatibilidade de tipos Vitest 5/jest-dom resolvida fixando Vitest 4.1.12; `skipLibCheck` permaneceu `false`. Justificativas no [ADR 0001](docs/adr/0001-desktop-scaffold.md).
 
-## Revisão de fluxo V0.7 — documentação e automação local (sem implementação do app)
-- Definido em `WORKFLOW.md` o versionamento em `main` e commit local por tarefa **DONE**, com ID de tarefa no título; não há commits de tarefa nem repositório inicializado neste pacote ZIP.
-- Definida execução em **sessões novas por tarefa**. Incluído `scripts/run-codex-tasks.py` (Python stdlib) para selecionar a próxima tarefa elegível, invocar novo `codex exec` limitado a uma tarefa e validar estado `DONE`, commit com ID e working tree limpa antes de próxima execução opcional.
-- Próxima tarefa permanece **T001**. Nenhum código do Meeting Copilot foi implementado/testado, e o runner **não foi executado contra o Codex no macOS**. `--dry-run` e testes da lógica do script são verificações locais separadas.
-- Próximo passo do usuário: extrair V0.7 no Mac, instalar/autenticar Codex, criar commit base Git e rodar o executor com 1 tarefa; inspecionar resultados antes de aumentar `--max-tasks`.
+## Limites e pendências
+
+- T001 prova scaffold e abertura local. **Não há** captura, transcrição Swift, OpenAI, JSONL, screenshots do produto ou jornada demo com mocks. Nenhuma chamada paga, chave, áudio de reunião ou concessão de permissão TCC foi usada.
+- Não executados: `swift test`, SwiftLint/SwiftFormat, avaliação de idiomas/assets, mic/system, empacotamento, assinatura, Windows ou teste manual humano da reunião. Ainda não existe pacote Swift.
+- T002 permanece `TODO`: revisar/ampliar gates, definir tooling Swift/limitações e CI. T003 permanece `TODO`: IPC tipado e testes de fronteiras. Não foram concluídas por antecipação.
+- Nenhum bloqueio remanescente da T001. Próxima sessão recomendada: **T005**, conforme `PROMPT-CODEX.md`. T002/T003 também elegíveis; o runner seleciona T002 pela ordem da tabela. Operador deve escolher em **nova sessão**. Windows T036–T039 permanece `DEFERRED`.
+
+## Commit e retomada
+
+Entrega atômica: `feat(T001): scaffold Electron and React`, contendo código, testes, lockfile e este registro. Obter seu hash sem autorreferência no arquivo: `git log -1 --format='%h %s' --grep='^feat(T001):'`. Commit base: `1ee43a4`. Nenhum push ou remoto criado.
+
+Na próxima sessão, reler documentos obrigatórios, comparar `git status/log` e `TASKS.md`, escolhendo somente uma tarefa. A evidência exploratória externa de STT em `docs/REFERENCIA-STT-APPLE.md` não comprova o Swift próprio.
