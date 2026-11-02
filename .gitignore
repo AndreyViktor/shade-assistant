@@ -12,3 +12,8 @@ build/
 
 __pycache__/
 *.py[cod]
+
+coverage/
+test-results/
+playwright-report/
+.azul-engai/

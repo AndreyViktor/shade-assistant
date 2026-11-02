@@ -1,8 +1,56 @@
-# Meeting Copilot — pacote de planejamento para Codex (V0.7)
+# Meeting Copilot — fundação desktop (T001)
 
-Este ZIP contém **somente documentos** para o Codex desenvolver um assistente de reuniões desktop **Electron + React + TypeScript**, primeiro no macOS, com **captura/transcrição Apple implementada em Swift próprio** e sugestões contextuais em tempo real. **Nenhum código de aplicativo foi implementado neste pacote.**
+Scaffold executável de **Electron + React + TypeScript strict**, primeiro no macOS. A janela inicial exibe `DEMO`, captura inativa e IA desativada. Ainda não há fluxo de reunião, mocks de transcrição, integração OpenAI ou helper Swift. A arquitetura de produto abaixo descreve as próximas entregas, não capacidades já disponíveis.
+
+## Executar localmente
+
+Use Node **26.0.0** (`.nvmrc`) e npm; as versões exatas das dependências estão em `package-lock.json`. O Node 20 não atende às dependências selecionadas. Com nvm já instalado:
+
+```bash
+nvm use
+npm ci --ignore-scripts
+node node_modules/electron/install.js
+npm run dev
+```
+
+Na máquina desta entrega, Node 26 já estava em `/opt/homebrew/bin`; foi usado `export PATH=/opt/homebrew/bin:$PATH`, sem alterar instalações globais. Se a versão indicada não existir, instale/selecione um Node compatível antes de `npm ci`.
+
+O instalador explícito do Electron baixa o binário oficial e verifica os checksums; requer rede na primeira instalação. Scripts de lifecycle das dependências não são necessários para este scaffold. Após instalar, a tela inicial funciona sem chave, sem chamadas OpenAI e sem acesso ao microfone ou captura de tela. Desenvolvimento usa apenas o servidor local `127.0.0.1:5173`; encerre com Ctrl+C. Fechar a última janela no macOS mantém o app disponível no Dock; Cmd+Q encerra o processo.
+
+```bash
+npm run build
+npm start
+```
+
+O build gera `dist/main` e `dist/renderer`. `npm start` abre esse build, sem servidor Vite. Ainda não gera instalador, assinatura ou pacote de distribuição (T034).
+
+## Verificações disponíveis
+
+| Comando                | Finalidade                                                                          |
+| ---------------------- | ----------------------------------------------------------------------------------- |
+| `npm run lint`         | ESLint com tipos, React Hooks, promessas e restrição básica de imports do renderer  |
+| `npm run format:check` | Prettier; preserva os documentos normativos originais listados em `.prettierignore` |
+| `npm run format`       | Formata os arquivos verificados                                                     |
+| `npm run typecheck`    | TS strict separado para main, renderer e tooling, sem omitir checks das bibliotecas |
+| `npm test`             | Vitest + React Testing Library: URL local permitida e estado inicial honesto        |
+| `npm run build`        | Compila os dois processos via electron-vite                                         |
+| `npm run verify`       | Lint → formatação → tipos → testes → build; para no primeiro erro                   |
+| `npm run test:smoke`   | Build + Playwright abre o Electron real; exige sessão gráfica local                 |
+
+O smoke valida abertura, ausência de Node/IPC no renderer, CSP, recarga sem requisições HTTP(S) e bloqueio de novas janelas. Salva uma imagem somente da janela do teste em `test-results/startup.png` (ignorada pelo Git). Não testa captura, STT ou permissões Apple. `verify` não inicia captura nem utiliza APIs pagas. CI e a configuração de ferramentas/testes Swift continuam no escopo de T002/T005; não existe pacote nativo para executar `swift test` nesta entrega.
+
+## Organização e limites
+
+- `src/main/index.ts`: ciclo de vida Electron; `src/main/app`: criação da janela e validação do endereço local de desenvolvimento.
+- `src/renderer/app`: shell React e estilos; `src/renderer/main.tsx`: montagem da UI. Não importa Node, main ou infraestrutura.
+- `tests/e2e`: smoke do app real; testes unitários ficam junto do código; `tests/setup.ts` prepara RTL.
+- `preload` e `contracts` entram com a API IPC de T003. Nenhuma API privilegiada é exposta neste scaffold. `core`, `infrastructure`, features React e `native/macos` serão criados quando tiverem implementação real, conforme `ENGINEERING-STANDARDS.md`.
+- Janela com `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true` e `webSecurity: true`; navegação, popups e permissões de captura bloqueados. CSP de produção não permite conexões; exceções para HMR existem apenas em desenvolvimento.
+
+Escolhas de build, compatibilidade e correção transitiva de dependências: [ADR 0001](docs/adr/0001-desktop-scaffold.md).
 
 ## Decisão central de arquitetura
+
 - **Mac MVP:** helper nativo **`MeetingCopilotTranscriber`**, escrito por nós em Swift e integrado ao Electron main. Utilizar `SpeechAnalyzer`/`SpeechTranscriber` e `ScreenCaptureKit` (áudio do sistema); microfone também deve ser suportado com API Apple apropriada. Contrato próprio JSONL versionado → `AppleNativeTranscriptionProvider` → IPC seguro → React.
 - **Transcrição autônoma:** nosso módulo Swift usa APIs Apple e não requer biblioteca, CLI, executável ou instalação de transcritor de terceiros. A referência histórica da POC está isolada em `docs/REFERENCIA-STT-APPLE.md`.
 - **Idiomas iniciais:** pt-BR prioritário e pt-BR+en-US opcional após validação real do mecanismo bilíngue próprio. Testes exploratórios externos não garantem o desempenho no app.
@@ -10,9 +58,11 @@ Este ZIP contém **somente documentos** para o Codex desenvolver um assistente d
 - **OpenAI:** texto de sugestões e análise de screenshots **somente com autorização e chave do usuário**; STT remoto apenas fallback opt-in com consentimento para envio de áudio/custo. Mocks para demo sem API.
 
 ## Qualidade do código e manutenção
+
 **Na V0.7:** `ENGINEERING-STANDARDS.md` define a estrutura de pastas, arquitetura modular, direção de imports, nomenclatura, lint, formatação, teste unitário/integração/e2e, Swift, CI, gestão de dependências e critérios de conclusão. Não introduzir complexidade por antecipação. `AGENTS.md` e `PROMPT-CODEX.md` obrigam o Codex a respeitar essas regras; T001–T003 exigem configurar verificações desde o scaffold.
 
 ## Primeiro checkpoint técnico
+
 1. Criar scaffold Electron/React/TypeScript seguindo `ENGINEERING-STANDARDS.md`, incluindo organização por módulos, lint/format, TS strict, testes e script `npm run verify`.
 2. No Mac, verificar APIs Swift, versão de macOS/Xcode, permissões, `SpeechTranscriber.isAvailable`, `supportedLocales`/`installedLocales` e `AssetInventory`.
 3. Fazer POC Swift própria com **duas fontes** (microfone/áudio do sistema). `SpeechAnalyzer` aceita uma sequência por vez: separar análise por canal; testar `pt-BR` e modo bilíngue.
@@ -20,12 +70,14 @@ Este ZIP contém **somente documentos** para o Codex desenvolver um assistente d
 5. Construir IA contextual, screenshots, controle de custo, segurança, testes reais e empacotamento assinável no macOS.
 
 ## Faturamento e privacidade
+
 - ChatGPT Plus e Codex não significam créditos de **OpenAI API** incluídos; faturamento da API é separado. Não comprar crédito, habilitar faturamento ou copiar credenciais no repositório.
 - No STT Apple local, **áudio não precisa deixar o Mac**; porém **texto enviado para sugestões** e **imagens aprovadas** podem sair para OpenAI. Fallback remoto de STT envia áudio **somente após opt-in**.
 - Demo com mocks funciona sem chave, sem cobranças e sem rede; deve ser rotulada como simulação.
 - Sem gravação de áudio bruto/prints automáticos ou histórico persistido por padrão. Obter consentimento aplicável para reuniões.
 
 ## Git e sessões isoladas por tarefa (V0.7)
+
 **Regra:** uma tarefa = uma sessão Codex nova = pelo menos um commit local se `DONE`. Não carregar histórico inteiro para a próxima tarefa; usar arquivos + Git como memória. Ver `WORKFLOW.md` para regras, mensagens de commit, bloqueios e limitações. Um prompt sozinho não consegue forçar a reinicialização de uma sessão em andamento; o executor externo usa `codex exec` novo a cada tarefa.
 
 Após descompactar, inicialize o repositório **uma vez** se ainda não houver Git:
@@ -48,6 +100,7 @@ python3 scripts/run-codex-tasks.py --max-tasks 3
 Alternativa manual: iniciar `codex`, colar `PROMPT-CODEX.md`, pedir **somente T001**, encerrar após o commit e abrir **uma nova** sessão para a tarefa seguinte. **Não use `resume`** quando o objetivo for contexto fresco.
 
 ## Como usar no Mac
+
 1. Descompactar o ZIP; entrar na pasta `meeting-copilot-codex/` no Terminal.
 2. Verificar pré-requisitos: Node.js, Xcode/Swift para construir o módulo macOS. Compatibilidade exata será definida após a POC T005/T006.
 3. Inicializar Git **se ainda não houver repositório** e criar o commit base antes de T001 (comandos acima).
@@ -56,6 +109,7 @@ Alternativa manual: iniciar `codex`, colar `PROMPT-CODEX.md`, pedir **somente T0
 6. Acompanhar `TASKS.md` e `PROGRESS.md`. Teste real de API somente após armazenamento seguro de chave, autorização e limite de custo.
 
 ## Arquivos
+
 - `PRD.md` — escopo e critérios de aceitação.
 - `ARCHITECTURE.md` — desenho da ponte Swift ↔ Electron, captura Apple, privacidade e IA.
 - `ENGINEERING-STANDARDS.md` — **estrutura, organização, padrões, lint/format, testes, gates e manutenção**.
@@ -70,6 +124,7 @@ Alternativa manual: iniciar `codex`, colar `PROMPT-CODEX.md`, pedir **somente T0
 - `docs/REFERENCIA-STT-APPLE.md` — evidência histórica e referência pública opcional para o desenvolvimento nativo.
 
 ## Referências técnicas
+
 - https://developer.apple.com/documentation/speech/speechanalyzer
 - https://developer.apple.com/documentation/speech/speechtranscriber
 - https://developer.apple.com/documentation/screencapturekit/capturing-screen-content-in-macos
