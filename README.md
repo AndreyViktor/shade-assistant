@@ -44,7 +44,7 @@ O smoke valida abertura, ausência de Node/IPC no renderer, CSP, recarga sem req
 - `src/main/index.ts`: ciclo de vida Electron; `src/main/app`: criação da janela e validação do endereço local de desenvolvimento.
 - `src/renderer/app`: shell React e estilos; `src/renderer/main.tsx`: montagem da UI. Não importa Node, main ou infraestrutura.
 - `tests/e2e`: smoke do app real; testes unitários ficam junto do código; `tests/setup.ts` prepara RTL.
-- `preload` e `contracts` entram com a API IPC de T003. Nenhuma API privilegiada é exposta neste scaffold. `core`, `infrastructure`, features React e `native/macos` serão criados quando tiverem implementação real, conforme `ENGINEERING-STANDARDS.md`.
+- `preload` e `contracts` entram com a API IPC de T003. Nenhuma API privilegiada é exposta neste scaffold. `core`, `infrastructure`, features React e `native/macos` serão criados quando tiverem implementação real, conforme `docs/ENGINEERING-STANDARDS.md`.
 - Janela com `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true` e `webSecurity: true`; navegação, popups e permissões de captura bloqueados. CSP de produção não permite conexões; exceções para HMR existem apenas em desenvolvimento.
 
 Escolhas de build, compatibilidade e correção transitiva de dependências: [ADR 0001](docs/adr/0001-desktop-scaffold.md).
@@ -59,11 +59,11 @@ Escolhas de build, compatibilidade e correção transitiva de dependências: [AD
 
 ## Qualidade do código e manutenção
 
-**Na V0.7:** `ENGINEERING-STANDARDS.md` define a estrutura de pastas, arquitetura modular, direção de imports, nomenclatura, lint, formatação, teste unitário/integração/e2e, Swift, CI, gestão de dependências e critérios de conclusão. Não introduzir complexidade por antecipação. `AGENTS.md` e `PROMPT-CODEX.md` obrigam o Codex a respeitar essas regras; T001–T003 exigem configurar verificações desde o scaffold.
+**Na V0.7:** `docs/ENGINEERING-STANDARDS.md` define a estrutura de pastas, arquitetura modular, direção de imports, nomenclatura, lint, formatação, teste unitário/integração/e2e, Swift, CI, gestão de dependências e critérios de conclusão. Não introduzir complexidade por antecipação. `AGENTS.md` e `docs/PROMPT-CODEX.md` obrigam o Codex a respeitar essas regras; T001–T003 exigem configurar verificações desde o scaffold.
 
 ## Primeiro checkpoint técnico
 
-1. Criar scaffold Electron/React/TypeScript seguindo `ENGINEERING-STANDARDS.md`, incluindo organização por módulos, lint/format, TS strict, testes e script `npm run verify`.
+1. Criar scaffold Electron/React/TypeScript seguindo `docs/ENGINEERING-STANDARDS.md`, incluindo organização por módulos, lint/format, TS strict, testes e script `npm run verify`.
 2. No Mac, verificar APIs Swift, versão de macOS/Xcode, permissões, `SpeechTranscriber.isAvailable`, `supportedLocales`/`installedLocales` e `AssetInventory`.
 3. Fazer POC Swift própria com **duas fontes** (microfone/áudio do sistema). `SpeechAnalyzer` aceita uma sequência por vez: separar análise por canal; testar `pt-BR` e modo bilíngue.
 4. Criar binário Swift próprio e integrar **sem shell** ao Electron main com eventos JSONL validados; exibir as falas no React. Nenhum executável externo de STT será integrado.
@@ -78,7 +78,7 @@ Escolhas de build, compatibilidade e correção transitiva de dependências: [AD
 
 ## Git e sessões isoladas por tarefa (V0.7)
 
-**Regra:** uma tarefa = uma sessão Codex nova = pelo menos um commit local se `DONE`. Não carregar histórico inteiro para a próxima tarefa; usar arquivos + Git como memória. Ver `WORKFLOW.md` para regras, mensagens de commit, bloqueios e limitações. Um prompt sozinho não consegue forçar a reinicialização de uma sessão em andamento; o executor externo usa `codex exec` novo a cada tarefa.
+**Regra:** uma tarefa = uma sessão Codex nova = pelo menos um commit local se `DONE`. Não carregar histórico inteiro para a próxima tarefa; usar arquivos + Git como memória. Ver `docs/WORKFLOW.md` para regras, mensagens de commit, bloqueios e limitações. Um prompt sozinho não consegue forçar a reinicialização de uma sessão em andamento; o executor externo usa `codex exec` novo a cada tarefa.
 
 Após descompactar, inicialize o repositório **uma vez** se ainda não houver Git:
 
@@ -97,7 +97,7 @@ python3 scripts/run-codex-tasks.py            # executa 1 tarefa e encerra sess�
 python3 scripts/run-codex-tasks.py --max-tasks 3
 ```
 
-Alternativa manual: iniciar `codex`, colar `PROMPT-CODEX.md`, pedir **somente T001**, encerrar após o commit e abrir **uma nova** sessão para a tarefa seguinte. **Não use `resume`** quando o objetivo for contexto fresco.
+Alternativa manual: iniciar `codex`, colar `docs/PROMPT-CODEX.md`, pedir **somente T001**, encerrar após o commit e abrir **uma nova** sessão para a tarefa seguinte. **Não use `resume`** quando o objetivo for contexto fresco.
 
 ## Como usar no Mac
 
@@ -105,23 +105,25 @@ Alternativa manual: iniciar `codex`, colar `PROMPT-CODEX.md`, pedir **somente T0
 2. Verificar pré-requisitos: Node.js, Xcode/Swift para construir o módulo macOS. Compatibilidade exata será definida após a POC T005/T006.
 3. Inicializar Git **se ainda não houver repositório** e criar o commit base antes de T001 (comandos acima).
 4. Instalar o Codex CLI, se necessário: `npm install -g @openai/codex@latest`; executar `codex` e fazer login com sua conta.
-5. Preferir `python3 scripts/run-codex-tasks.py` para abrir nova sessão em cada tarefa. Alternativamente, colar `PROMPT-CODEX.md` no Codex e trabalhar **uma tarefa por sessão**, encerrando após commit.
-6. Acompanhar `TASKS.md` e `PROGRESS.md`. Teste real de API somente após armazenamento seguro de chave, autorização e limite de custo.
+5. Preferir `python3 scripts/run-codex-tasks.py` para abrir nova sessão em cada tarefa. Alternativamente, colar `docs/PROMPT-CODEX.md` no Codex e trabalhar **uma tarefa por sessão**, encerrando após commit.
+6. Acompanhar `docs/TASKS.md` e `docs/PROGRESS.md`. Teste real de API somente após armazenamento seguro de chave, autorização e limite de custo.
 
 ## Arquivos
 
-- `PRD.md` — escopo e critérios de aceitação.
-- `ARCHITECTURE.md` — desenho da ponte Swift ↔ Electron, captura Apple, privacidade e IA.
-- `ENGINEERING-STANDARDS.md` — **estrutura, organização, padrões, lint/format, testes, gates e manutenção**.
-- `WORKFLOW.md` — **Git local, commit por tarefa, handoff e sessões Codex independentes**.
-- `scripts/run-codex-tasks.py` — executor mínimo opcional para até N sessões frescas e validação Git.
-- `DECISIONS.md` — decisões confirmadas (a mais recente prevalece).
-- `ROADMAP.md` — M0–M5 MVP macOS; M6 Windows futuro.
-- `TASKS.md` — 35 tarefas MVP + 4 tarefas `DEFERRED` Windows.
-- `AGENTS.md` — instruções do Codex em qualquer sessão.
-- `PROGRESS.md` — ponto de retomada e evidências observadas.
-- `PROMPT-CODEX.md` — prompt inicial e de retomada.
-- `docs/REFERENCIA-STT-APPLE.md` — evidência histórica e referência pública opcional para o desenvolvimento nativo.
+A documentação de planejamento e acompanhamento está em `docs/`. `README.md` permanece na raiz como ponto de entrada do projeto, e `AGENTS.md` mantém as instruções aplicáveis ao repositório inteiro. Caminhos escritos em código nos documentos são relativos à raiz; links Markdown são relativos ao arquivo que os contém.
+
+- [docs/PRD.md](docs/PRD.md) — escopo e critérios de aceitação.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — desenho da ponte Swift ↔ Electron, captura Apple, privacidade e IA.
+- [docs/ENGINEERING-STANDARDS.md](docs/ENGINEERING-STANDARDS.md) — **estrutura, organização, padrões, lint/format, testes, gates e manutenção**.
+- [docs/WORKFLOW.md](docs/WORKFLOW.md) — **Git local, commit por tarefa, handoff e sessões Codex independentes**.
+- [scripts/run-codex-tasks.py](scripts/run-codex-tasks.py) — executor mínimo opcional para até N sessões frescas e validação Git.
+- [docs/DECISIONS.md](docs/DECISIONS.md) — decisões confirmadas (a mais recente prevalece).
+- [docs/ROADMAP.md](docs/ROADMAP.md) — M0–M5 MVP macOS; M6 Windows futuro.
+- [docs/TASKS.md](docs/TASKS.md) — 35 tarefas MVP + 4 tarefas `DEFERRED` Windows.
+- [AGENTS.md](AGENTS.md) — instruções do Codex em qualquer sessão.
+- [docs/PROGRESS.md](docs/PROGRESS.md) — ponto de retomada e evidências observadas.
+- [docs/PROMPT-CODEX.md](docs/PROMPT-CODEX.md) — prompt inicial e de retomada.
+- [docs/REFERENCIA-STT-APPLE.md](docs/REFERENCIA-STT-APPLE.md) — evidência histórica e referência pública opcional para o desenvolvimento nativo.
 
 ## Referências técnicas
 
@@ -129,6 +131,6 @@ Alternativa manual: iniciar `codex`, colar `PROMPT-CODEX.md`, pedir **somente T0
 - https://developer.apple.com/documentation/speech/speechtranscriber
 - https://developer.apple.com/documentation/screencapturekit/capturing-screen-content-in-macos
 - https://www.electronjs.org/docs/latest/api/browser-window
-- `docs/REFERENCIA-STT-APPLE.md` — referência exploratória opcional para STT Apple.
+- [docs/REFERENCIA-STT-APPLE.md](docs/REFERENCIA-STT-APPLE.md) — referência exploratória opcional para STT Apple.
 - https://developers.openai.com/api/docs/guides/structured-outputs
 - https://help.openai.com/pt-br/articles/9039756-managing-billing-for-chatgpt-and-the-api-platform

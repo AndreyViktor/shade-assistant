@@ -1,7 +1,7 @@
 # Fluxo de trabalho Git e sessões Codex — Meeting Copilot V0.7
 
 ## Objetivo
-Rastreabilidade sem Git Flow sofisticado e **contexto novo por tarefa**. O estado durável fica no repositório (código, testes, `TASKS.md`, `PROGRESS.md`, ADRs e Git), não no histórico de chat. **Uma tarefa = uma execução do Codex = pelo menos um commit local quando `DONE`.** O objetivo é preferencialmente um commit atômico por tarefa; commits adicionais só quando houver divisão técnica justificada.
+Rastreabilidade sem Git Flow sofisticado e **contexto novo por tarefa**. O estado durável fica no repositório (código, testes, `docs/TASKS.md`, `docs/PROGRESS.md`, ADRs e Git), não no histórico de chat. **Uma tarefa = uma execução do Codex = pelo menos um commit local quando `DONE`.** O objetivo é preferencialmente um commit atômico por tarefa; commits adicionais só quando houver divisão técnica justificada.
 
 ## 1. Git local simples
 - Usar uma única branch `main` durante o MVP. Não criar develop/release/feature branches ou pull requests por obrigação. Não há remoto obrigatório; **nunca executar `git push` sem autorização**.
@@ -15,14 +15,14 @@ git commit -m "chore: initialize meeting copilot planning"
 
 - **Não reinicializar** um repositório existente; conferir `git status`, `git branch --show-current` e `git log -3 --oneline`. Em caso de conflito/alterações prévias, interromper e pedir decisão. Não apagar mudanças do usuário, não usar `git reset --hard`, `git clean -fd`, `--force` ou `--amend` sobre commits existentes sem autorização.
 - Mensagens de commits de tarefas: `feat(T001): scaffold Electron and React`, `test(T006): verify Swift audio sources`, `fix(T014): handle native process exit`, ou `chore(T002): configure quality gates`. **Cada commit que conclui uma tarefa deve mencionar `Txxx` no título.**
-- O commit de conclusão inclui implementação, testes, atualizações de `TASKS.md` e `PROGRESS.md`; não incluir segredos, gravações de reuniões, logs sensíveis, caches, binários de build, dados pessoais ou `.env`.
+- O commit de conclusão inclui implementação, testes, atualizações de `docs/TASKS.md` e `docs/PROGRESS.md`; não incluir segredos, gravações de reuniões, logs sensíveis, caches, binários de build, dados pessoais ou `.env`.
 - **Não marcar DONE** se gate aplicável falhar, testes relevantes não forem executados ou evidências exigidas estiverem ausentes. Registrar `BLOCKED` com motivo verificável, deixando o código em estado conhecido. Um commit `docs(Txxx): record blocker` é permitido para registrar bloqueios, mas **não conta como conclusão**.
 
 ## 2. Uma tarefa por sessão, sem acúmulo de histórico
 - Cada execução começa como uma **nova sessão `codex exec`** (não `codex resume` nem `codex exec resume`) e trabalha **somente em uma tarefa**, mesmo que sobre tempo ou tokens.
-- O Codex lê apenas os arquivos necessários: `AGENTS.md`, este fluxo, as decisões e padrões relevantes, a linha da tarefa, `PROGRESS.md`, `git status/log` e **os arquivos de código relacionados**; não carregar toda a transcrição de sessões passadas. Use o README para navegação quando preciso.
+- O Codex lê apenas os arquivos necessários: `AGENTS.md`, este fluxo, as decisões e padrões relevantes, a linha da tarefa, `docs/PROGRESS.md`, `git status/log` e **os arquivos de código relacionados**; não carregar toda a transcrição de sessões passadas. Use o README para navegação quando preciso.
 - Marcar `IN_PROGRESS` ao iniciar. Implementar, validar, registrar evidências e limitações, marcar `DONE` **somente após aceitação real**, criar commit local e **encerrar a sessão**. Não começar tarefa seguinte na mesma sessão.
-- `PROGRESS.md` deve manter um handoff **curto e objetivo**: tarefa, resumo técnico, testes realmente executados, resultado e limites, hash do commit, impedimentos, próximo trabalho elegível. Git + arquivos são a fonte de verdade; não confiar em resumos sem verificar.
+- `docs/PROGRESS.md` deve manter um handoff **curto e objetivo**: tarefa, resumo técnico, testes realmente executados, resultado e limites, hash do commit, impedimentos, próximo trabalho elegível. Git + arquivos são a fonte de verdade; não confiar em resumos sem verificar.
 - Nova sessão ≠ contexto zero absoluto: AGENTS.md e os arquivos do projeto serão relidos, mas não o histórico de conversa da sessão anterior. Isso reduz deriva e esgotamento de janela, não elimina erros de modelo. Code review e testes continuam obrigatórios.
 - Uma sessão interativa `codex` não pode garantir que ela própria abra um novo processo independente a cada tarefa. Para execução automática real, **a troca de sessão precisa ser feita externamente** (script mínimo abaixo ou operador humano). Compaction pode ajudar dentro de uma tarefa longa, mas **não substitui a fronteira entre tarefas**.
 

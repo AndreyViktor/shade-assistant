@@ -24,7 +24,7 @@
 - **P005:** Janela de contexto recente de 3–5 min + resumo, cooldown automático inicial ~10 s, expiração de sugestões ~30 s.
 - **P006:** Histórico só em memória, sem áudio bruto gravado; demo sem chave API; idioma de sugestões PT-BR.
 - **P007:** Modo BYO API key (o próprio usuário configura chave) no desktop; cofre de credenciais do sistema operacional; custo estimado e limite local por sessão.
-- **P009:** Adotar `ENGINEERING-STANDARDS.md` como base: arquitetura modular sem microserviços, boundaries verificáveis, React organizado por feature, `core` isolado de infraestrutura, ESLint+Prettier+TS strict+Vitest/RTL e Swift Testing/XCTest, checks Swift no Mac, scripts `verify` e ADRs pequenos. Revisar escolhas de ferramentas se incompatibilidade comprovada, preservando qualidade.
+- **P009:** Adotar `docs/ENGINEERING-STANDARDS.md` como base: arquitetura modular sem microserviços, boundaries verificáveis, React organizado por feature, `core` isolado de infraestrutura, ESLint+Prettier+TS strict+Vitest/RTL e Swift Testing/XCTest, checks Swift no Mac, scripts `verify` e ADRs pequenos. Revisar escolhas de ferramentas se incompatibilidade comprovada, preservando qualidade.
 - **P008:** Provedor STT selecionável e com detecção de compatibilidade; dados de áudio só saem no modo fallback autorizado. Mac primeiro, Windows depois; resultado de teste físico só se realmente realizado.
 
 ## Informação financeira verificada
@@ -47,5 +47,5 @@ Codex pode alterar defaults técnicos reversíveis com justificativa e teste; n�
 
 ## Decisões adicionais do usuário — V0.7 (2026-11-02)
 - **D013:** Versionamento Git simples, branch `main` local, sem Git Flow sofisticado; **ao menos um commit por tarefa concluída** (idealmente um commit atômico), com ID da tarefa, testes e handoff no mesmo commit. Não fazer push remoto sem consentimento.
-- **D014:** **Contexto novo para cada tarefa** Codex para evitar acúmulo; o histórico não é a memória do projeto. `TASKS.md`, `PROGRESS.md`, documentos, código e Git são estado persistido.
+- **D014:** **Contexto novo para cada tarefa** Codex para evitar acúmulo; o histórico não é a memória do projeto. `docs/TASKS.md`, `docs/PROGRESS.md`, documentos, código e Git são estado persistido.
 - **D015:** Para automação opcional, um executor mínimo em Python inicia **novos processos `codex exec`** por tarefa, valida estado/commit e encerra em erro/bloqueio. Não construir framework ou plataforma multiagente. A execução padrão é uma tarefa por chamada; avanço automático múltiplo é opt-in com `--max-tasks`.

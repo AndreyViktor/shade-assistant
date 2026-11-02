@@ -48,7 +48,7 @@ def git(root: Path, *args: str) -> str:
 
 def check_clean_git(root: Path) -> None:
     if not (root / ".git").exists():
-        raise RuntimeError("Inicialize Git e crie o commit base (veja WORKFLOW.md).")
+        raise RuntimeError("Inicialize Git e crie o commit base (veja docs/WORKFLOW.md).")
     if git(root, "status", "--porcelain"):
         raise RuntimeError("Há alterações não commitadas: confira git status antes de executar novas tarefas.")
     git(root, "rev-parse", "HEAD")
@@ -57,13 +57,13 @@ def check_clean_git(root: Path) -> None:
 def make_prompt(task: Task) -> str:
     return f"""Você está em uma NOVA sessão independente do Codex.
     Trabalhe EXCLUSIVAMENTE na tarefa {task.id}. Não inicie outra tarefa nesta sessão.
-    Siga AGENTS.md, WORKFLOW.md e ENGINEERING-STANDARDS.md; leia DECISIONS.md,
-    PROGRESS.md e a linha/critério de aceite da tarefa {task.id} em TASKS.md.
+    Siga AGENTS.md, docs/WORKFLOW.md e docs/ENGINEERING-STANDARDS.md; leia docs/DECISIONS.md,
+    docs/PROGRESS.md e a linha/critério de aceite da tarefa {task.id} em docs/TASKS.md.
     Confira git status/log e apenas arquivos técnicos relacionados. Respeite dependências.
     Marque {task.id} IN_PROGRESS. Implemente e execute os testes/gates aplicáveis.
-    NÃO marque DONE sem evidências reais. Registre em PROGRESS.md o resumo objetivo,
+    NÃO marque DONE sem evidências reais. Registre em docs/PROGRESS.md o resumo objetivo,
     comandos/testes e resultados reais, limitações, arquivos, blockers e próximo passo.
-    Se os critérios passarem, marque {task.id} DONE em TASKS.md; faça commit local
+    Se os critérios passarem, marque {task.id} DONE em docs/TASKS.md; faça commit local
     contendo as mudanças de código, testes e documentos, com {task.id} no título.
     Nunca faça push, deploy, instalação privilegiada, bypass de sandbox nem habilite
     gastos/chaves sem autorização. Se bloquear, registre BLOCKED e encerre.
@@ -72,9 +72,9 @@ def make_prompt(task: Task) -> str:
 
 
 def run(root: Path, maximum: int, dry_run: bool) -> int:
-    task_file = root / "TASKS.md"
+    task_file = root / "docs/TASKS.md"
     if not task_file.is_file():
-        raise RuntimeError(f"TASKS.md não encontrado em {root}")
+        raise RuntimeError(f"docs/TASKS.md não encontrado em {root}")
     if dry_run:
         tasks = parse_tasks(task_file.read_text(encoding="utf-8"))
         task = eligible_task(tasks)

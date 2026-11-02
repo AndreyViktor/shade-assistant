@@ -56,11 +56,15 @@ meeting-copilot-codex/
   tests/
     integration/             # IPC, JSONL parser, spawn, sessão e mocks
     e2e/                     # smoke Electron/renderer, sem APIs pagas
-  docs/adr/                 # decisões arquiteturais curtas e datadas
+  docs/                     # planejamento, padrões e acompanhamento
+    adr/                    # decisões arquiteturais curtas e datadas
+    ARCHITECTURE.md
+    ENGINEERING-STANDARDS.md
+    TASKS.md
+    PROGRESS.md
   scripts/                  # automações reproduzíveis de verificação
-  AGENTS.md
-  ARCHITECTURE.md
-  ENGINEERING-STANDARDS.md
+  AGENTS.md                 # instruções para todo o repositório
+  README.md                 # entrada e execução local
 ```
 
 **Colocação dos testes:** testes unitários TS/React próximos ao arquivo (`*.test.ts(x)`) quando facilitarem manutenção; `tests/integration` e `tests/e2e` para fluxo entre módulos. Testes Swift em `native/macos/Tests`. **Nunca** importar `src/main` ou `src/infrastructure` diretamente no `renderer`; nunca importar React/Electron em `core`. `contracts` não importa implementações.
@@ -125,7 +129,7 @@ Uma tarefa só pode ir para `DONE` quando, conforme o escopo dela:
 2. Rodaram com resultado registrado `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm run test` e `npm run build` (ou `npm run verify` que os englobe) **quando os scripts já existirem**. Em tarefa inicial de scaffolding, registrar precisamente o que não foi possível executar e por quê.
 3. Há testes automatizados da lógica/contrato alterado e, quando exigido, teste manual de hardware com evidência. Teste manual não executado **não** vira teste concluído.
 4. Logs não vazam chaves nem transcrição; modos offline não enviam rede; resultados de mock são explicitamente identificados como mocks.
-5. `TASKS.md` e `PROGRESS.md` refletem testes, arquivos afetados, limites, decisão e próximo passo. Mudança arquitetural relevante possui ADR.
+5. `docs/TASKS.md` e `docs/PROGRESS.md` refletem testes, arquivos afetados, limites, decisão e próximo passo. Mudança arquitetural relevante possui ADR.
 
 **Não contornar um gate apagando o teste ou desabilitando a regra.** Se não houver macOS/permissões/API, marcar a parte dependente de ambiente como `BLOCKED` com instrução, continuar tarefa independente elegível. Se erro for preexistente, documentá-lo e corrigir de forma focada; não declarar aprovação falsa.
 
@@ -137,5 +141,5 @@ Uma tarefa só pode ir para `DONE` quando, conforme o escopo dela:
 - Performance otimizada após métricas de CPU, memória, latência, não por suposição. A arquitetura pode evoluir, mas sempre com alteração pequena, evidência e documentação.
 
 ## Fluxo Git/contexto complementar
-- Seguir também `WORKFLOW.md`: cada tarefa concluída deve ter commit local com `Txxx`, e sessão nova na tarefa seguinte. `npm run verify` e testes Swift aplicáveis são gates de engenharia, não substituídos por commits ou pelo runner.
+- Seguir também `docs/WORKFLOW.md`: cada tarefa concluída deve ter commit local com `Txxx`, e sessão nova na tarefa seguinte. `npm run verify` e testes Swift aplicáveis são gates de engenharia, não substituídos por commits ou pelo runner.
 - O runner `scripts/run-codex-tasks.py` não é parte do aplicativo Electron/Swift; é uma automação **opcional de desenvolvimento** em Python stdlib. Testes do runner não substituem testes do produto.

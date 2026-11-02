@@ -1,31 +1,31 @@
 # Instruções permanentes do Codex — Meeting Copilot V0.7
 
 ## Missão
-Implementar um assistente local de reuniões **em tempo real** e verificável (não só mock/UI): Electron + React + TypeScript, **módulo Apple Swift próprio** no macOS para STT, modelos OpenAI autorizados para sugestões e visão. Este repositório inicial contém apenas Markdown, sem app construído.
+Implementar um assistente local de reuniões **em tempo real** e verificável (não só mock/UI): Electron + React + TypeScript, **módulo Apple Swift próprio** no macOS para STT, modelos OpenAI autorizados para sugestões e visão. O scaffold T001 já está implementado; consulte `docs/PROGRESS.md` e o código para verificar o estado atual.
 
 ## Fluxo obrigatório: Git e sessões
-- **Uma tarefa por sessão**, iniciada como novo `codex exec` ou nova sessão manual. Não continuar a próxima tarefa no mesmo histórico; quem reinicia é o operador ou `scripts/run-codex-tasks.py`. Consulte `WORKFLOW.md`.
+- **Uma tarefa por sessão**, iniciada como novo `codex exec` ou nova sessão manual. Não continuar a próxima tarefa no mesmo histórico; quem reinicia é o operador ou `scripts/run-codex-tasks.py`. Consulte `docs/WORKFLOW.md`.
 - Pelo menos **um commit local por tarefa DONE** (idealmente um commit atômico) incluindo código, testes e registros, título com `Txxx`; nunca push automático. Estado `DONE` somente após evidência verificável.
-- Registrar handoff breve em `PROGRESS.md` e encerrar após a tarefa; não carregar transcrições de sessões anteriores.
+- Registrar handoff breve em `docs/PROGRESS.md` e encerrar após a tarefa; não carregar transcrições de sessões anteriores.
 - Antes da primeira tarefa, inicializar Git e criar commit base se o repositório ainda não existir.
 
 ## Leia no começo de cada sessão
-1. `PRD.md`, `ARCHITECTURE.md`, **`ENGINEERING-STANDARDS.md`**, **`WORKFLOW.md`**, `DECISIONS.md` (decisões atuais prevalecem sobre hipóteses antigas).
-2. `ROADMAP.md`, `TASKS.md`, `PROGRESS.md`; consultar `docs/REFERENCIA-STT-APPLE.md` somente para contexto técnico/histórico.
+1. `docs/PRD.md`, `docs/ARCHITECTURE.md`, **`docs/ENGINEERING-STANDARDS.md`**, **`docs/WORKFLOW.md`**, `docs/DECISIONS.md` (decisões atuais prevalecem sobre hipóteses antigas).
+2. `docs/ROADMAP.md`, `docs/TASKS.md`, `docs/PROGRESS.md`; consultar `docs/REFERENCIA-STT-APPLE.md` somente para contexto técnico/histórico.
 3. `git status`/últimos commits e código de fato existente.
 
 ## Ciclo
 1. Conciliar tarefas/progresso com código real; escolher a primeira tarefa `TODO` elegível, sem dependências pendentes, marcar `IN_PROGRESS`.
 2. Implementar menor fatia testável, testes unitários/integrados e manuais **quando houver ambiente**; executar lint/typecheck/build.
-3. Registrar arquivos/resultado/limites em `TASKS.md` e `PROGRESS.md`, fazer commit **local** somente da entrega validada.
+3. Registrar arquivos/resultado/limites em `docs/TASKS.md` e `docs/PROGRESS.md`, fazer commit **local** somente da entrega validada.
 4. **Encerrar a sessão após uma única tarefa.** Um novo processo Codex (operador ou runner) selecionará a próxima tarefa elegível. Se hardware/credencial/permissão/custo bloquear, marcar `BLOCKED`, registrar motivo e encerrar; não pular silenciosamente.
 5. **Não executar T036–T039 (M6 Windows): `DEFERRED` até nova decisão do usuário.**
 
 ## Qualidade e manutenção — também obrigatórias
-- Seguir `ENGINEERING-STANDARDS.md`: módulos com responsabilidade clara, imports dirigidos (`core` sem UI/Electron/OpenAI; renderer sem main/Node), providers por interface, código simples antes de frameworks pesados.
+- Seguir `docs/ENGINEERING-STANDARDS.md`: módulos com responsabilidade clara, imports dirigidos (`core` sem UI/Electron/OpenAI; renderer sem main/Node), providers por interface, código simples antes de frameworks pesados.
 - Scaffold T001–T003 deve instalar/configurar **ESLint, Prettier, TypeScript strict, Vitest/React Testing Library, scripts npm lint/format:check/typecheck/test/build/verify**. Swift Testing/XCTest e verificações Swift conforme ferramentas do Mac (não alegar execução sem ambiente). Lockfile reproduzível e `.editorconfig`.
 - Cada implementação deve trazer testes relevantes e passar gates de lint/formatação/tipos/testes/build disponíveis. Não suprimir regras para "passar" nem acumular arquivos que concentrem UI, STT e OpenAI.
-- ADR pequeno em `docs/adr/` quando alterar fronteira, contrato, tecnologia fundamental ou segurança. Manter `TASKS.md`/`PROGRESS.md` sincronizados com evidências. Não criar microserviços/abstrações vazias.
+- ADR pequeno em `docs/adr/` quando alterar fronteira, contrato, tecnologia fundamental ou segurança. Manter `docs/TASKS.md`/`docs/PROGRESS.md` sincronizados com evidências. Não criar microserviços/abstrações vazias.
 
 ## Regras técnicas obrigatórias
 - **STT do MVP Mac = Swift próprio**, `SpeechAnalyzer` + `SpeechTranscriber` + captura mic e sistema (`ScreenCaptureKit` para sistema ou API nativa justificada). Verificar capacidade/idiomas/assets/permissões e testar streaming em Mac real.
@@ -41,4 +41,4 @@ Implementar um assistente local de reuniões **em tempo real** e verificável (n
 - Não fazer `push`, deploy, comprar créditos, conceder permissões administrativas, instalar drivers, remover quarentena Gatekeeper nem automatizar aprovação de acesso sem consentimento humano.
 
 ## Critério de conclusão
-`DONE` exige gates e testes de `ENGINEERING-STANDARDS.md`. Os testes exploratórios externos **não provam** captura Swift própria nem ponte Electron. Não anunciar app pronto com somente mocks; registrar evidências em `PROGRESS.md`.
+`DONE` exige gates e testes de `docs/ENGINEERING-STANDARDS.md`. Os testes exploratórios externos **não provam** captura Swift própria nem ponte Electron. Não anunciar app pronto com somente mocks; registrar evidências em `docs/PROGRESS.md`.

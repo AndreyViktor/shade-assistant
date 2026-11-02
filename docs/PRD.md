@@ -3,7 +3,7 @@
 **Data:** 2026-11-02. **Status:** definição inicial para validação, não produto implementado. **Alvo:** Electron + React + TypeScript no macOS e Windows. **Execução:** desktop local; **transcrição Apple local própria em Swift no MVP Mac**; OpenAI para sugestões/imagens autorizadas, e STT remoto somente como fallback opt-in.
 
 ## Requisito não funcional: manutenção sustentável
-A primeira versão deve permanecer fácil de modificar por um desenvolvedor que não participou da POC: módulos com limites claros, lógica testável, contratos IPC/JSONL explícitos, sem acoplamento do React às APIs de sistema ou OpenAI; lint, formatação, tipos, testes e build reproduzíveis. **Regras detalhadas e critérios de aceite em `ENGINEERING-STANDARDS.md`.** Não criar complexidade abstrata sem necessidade. Este requisito não substitui o teste real de captura/STT em Mac.
+A primeira versão deve permanecer fácil de modificar por um desenvolvedor que não participou da POC: módulos com limites claros, lógica testável, contratos IPC/JSONL explícitos, sem acoplamento do React às APIs de sistema ou OpenAI; lint, formatação, tipos, testes e build reproduzíveis. **Regras detalhadas e critérios de aceite em `docs/ENGINEERING-STANDARDS.md`.** Não criar complexidade abstrata sem necessidade. Este requisito não substitui o teste real de captura/STT em Mac.
 
 ## 1. Problema e valor
 Durante reuniões, o usuário precisa de ajuda **enquanto a conversa acontece**, não somente de resumos posteriores. O aplicativo deve ouvir fontes autorizadas, transcrever em fluxo, reconhecer o momento em que uma intervenção ajuda e exibir sugestões objetivas e relevantes sem distrair.
@@ -99,7 +99,7 @@ SaaS multiusuário, deploy remoto, integração CRM, gravação automática perm
 - Screenshot confirmado -> modelo OpenAI com visão configurável e validado -> resposta contextual; cancelado -> **zero** envios.
 - Confirmação de proteção do overlay em compartilhamento de tela inteira e janela por aplicativo/OS testado; informar cobertura e limitações.
 - Medir p50/p95 de latência e uso estimado da API; controle de orçamento funcional.
-- Typecheck, testes, lint, build e documentação reproduzíveis; `TASKS.md`/`PROGRESS.md` sempre com evidências reais.
+- Typecheck, testes, lint, build e documentação reproduzíveis; `docs/TASKS.md`/`docs/PROGRESS.md` sempre com evidências reais.
 
 ## 10. Questões abertas para nossa próxima revisão
 - Estilo pessoal das dicas (mais direto, técnico, comercial ou misto); granularidade e nível de intervenção.

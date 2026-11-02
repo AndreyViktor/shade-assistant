@@ -6,11 +6,11 @@ playwright-report/
 .azul-engai/
 # Documentos de planejamento originais: preservar sua formatação histórica.
 AGENTS.md
-ARCHITECTURE.md
-DECISIONS.md
-ENGINEERING-STANDARDS.md
-PRD.md
-PROMPT-CODEX.md
-ROADMAP.md
-WORKFLOW.md
+docs/ARCHITECTURE.md
+docs/DECISIONS.md
+docs/ENGINEERING-STANDARDS.md
+docs/PRD.md
+docs/PROMPT-CODEX.md
+docs/ROADMAP.md
+docs/WORKFLOW.md
 docs/REFERENCIA-STT-APPLE.md

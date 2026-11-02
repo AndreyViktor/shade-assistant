@@ -84,7 +84,7 @@ Fontes `mic` e `system` **não identificam participantes**. O app não promete d
 
 ## Organização e padrões de manutenção
 
-A arquitetura modular, estrutura de diretórios detalhada, regras de dependência, convenções TypeScript/React/Swift, lint/format, testes, CI e **Definition of Done** estão em **[`ENGINEERING-STANDARDS.md`](ENGINEERING-STANDARDS.md)** e são obrigatórias para o Codex.
+A arquitetura modular, estrutura de diretórios detalhada, regras de dependência, convenções TypeScript/React/Swift, lint/format, testes, CI e **Definition of Done** estão em **[`docs/ENGINEERING-STANDARDS.md`](ENGINEERING-STANDARDS.md)** e são obrigatórias para o Codex.
 
 **Limites essenciais:** `core` não conhece UI, Electron ou SDK; `infrastructure` implementa adaptadores; `main` compõe e gerencia sessão/segredos/processos; `preload` é bridge IPC mínima; `renderer` não conhece Node/OpenAI/Swift; helper Swift é processo próprio ligado por protocolo versionado. Evitar tanto "tudo no `main.ts`" quanto abstrações sem uso. O arquivo de padrões traz a árvore proposta e testes de fronteira.
 
