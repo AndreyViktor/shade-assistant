@@ -1,4 +1,4 @@
-# Meeting Copilot — fundação desktop (T001)
+# Meeting Copilot — fundação desktop (T001–T002)
 
 Scaffold executável de **Electron + React + TypeScript strict**, primeiro no macOS. A janela inicial exibe `DEMO`, captura inativa e IA desativada. Ainda não há fluxo de reunião, mocks de transcrição, integração OpenAI ou helper Swift. A arquitetura de produto abaixo descreve as próximas entregas, não capacidades já disponíveis.
 
@@ -37,7 +37,30 @@ O build gera `dist/main` e `dist/renderer`. `npm start` abre esse build, sem ser
 | `npm run verify`       | Lint → formatação → tipos → testes → build; para no primeiro erro                   |
 | `npm run test:smoke`   | Build + Playwright abre o Electron real; exige sessão gráfica local                 |
 
-O smoke valida abertura, ausência de Node/IPC no renderer, CSP, recarga sem requisições HTTP(S) e bloqueio de novas janelas. Salva uma imagem somente da janela do teste em `test-results/startup.png` (ignorada pelo Git). Não testa captura, STT ou permissões Apple. `verify` não inicia captura nem utiliza APIs pagas. CI e a configuração de ferramentas/testes Swift continuam no escopo de T002/T005; não existe pacote nativo para executar `swift test` nesta entrega.
+O smoke valida abertura, ausência de Node/IPC no renderer, CSP, recarga sem requisições HTTP(S) e bloqueio de novas janelas. Salva uma imagem somente da janela do teste em `test-results/startup.png` (ignorada pelo Git). Não testa captura, STT ou permissões Apple. `verify` não inicia captura nem utiliza APIs pagas.
+
+`tests/tooling/quality-gates.test.ts` também comprova que ESLint rejeita violações, que os três projetos TypeScript detectam erros strict e que Prettier rejeita formatação inválida. As configurações existentes continuam obrigatórias, sem supressões.
+
+### CI básico
+
+[`.github/workflows/verify.yml`](.github/workflows/verify.yml) executa instalação pelo lockfile e `npm run verify` em Ubuntu 24.04, com Node de `.nvmrc`, em pull requests, push para `main` ou acionamento manual. Actions fixadas por SHA, permissão `contents: read`, sem credenciais persistidas, cache ou secrets. Não baixa o binário Electron nem abre janelas. Smoke gráfico e validação Apple ficam separados. O workflow foi preparado localmente; execução hospedada depende de publicação autorizada, não realizada nesta entrega. Decisões: [ADR 0002](docs/adr/0002-quality-gates.md).
+
+### Tooling Swift: disponibilidade e limites
+
+Verificado neste Mac: macOS 26.6.2, Xcode 26.6 (17F113), Apple Swift 6.3.3 e `xcrun swift-format --version` = 6.3.0. `swiftlint` e `swiftformat` não estão no PATH. Nenhuma instalação global foi feita. O `swift-format` do Xcode é uma ferramenta diferente do SwiftFormat; sua presença não comprova execução de lint ou testes nativos.
+
+Ainda não existe `native/macos/Package.swift`. Portanto, `swift test`, Swift Testing/XCTest e lint/formatação de código nativo **não foram executados**. Na tarefa nativa correspondente, criar testes com Swift Testing ou XCTest, validar SDK e fixar versão/configuração do linter/formatador escolhido antes de torná-lo obrigatório no CI. Não usar instalação automática de versão `latest`. Com pacote e ferramentas validados, os comandos a incorporar são:
+
+```bash
+xcode-select -p
+xcodebuild -version
+xcrun swift --version
+swift test --package-path native/macos
+# Se swift-format do Xcode for escolhido e sua versão/configuração fixadas:
+xcrun swift-format lint --strict --recursive native/macos/Sources native/macos/Tests
+```
+
+Esses comandos futuros não substituem os ensaios reais de captura e reconhecimento Apple da T005/T006. Um runner macOS/SDK compatível deverá ser selecionado quando houver implementação nativa; não há job Swift que reporte sucesso sem executá-la.
 
 ## Organização e limites
 

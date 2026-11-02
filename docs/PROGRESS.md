@@ -1,7 +1,32 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
 **Atualização:** 2026-11-02. **Marco:** M0 — fundação + viabilidade Swift.
-**Implementação concluída:** **T001**. Manutenção documental posterior registrada abaixo; nenhuma tarefa seguinte iniciada.
+**Implementação concluída:** **T001 e T002**. T002 revisada e validada na retomada autorizada pelo usuário. Nenhuma tarefa seguinte iniciada.
+
+## T002 — concluída após revisão da execução interrompida — 2026-11-02
+
+- Na execução original, dependência T001 confirmada no código e Git; sessão iniciou em `main`, árvore limpa, HEAD `0ae3818`. T002 passou por `IN_PROGRESS`; após os gates passou provisoriamente a `DONE`, revertido para `BLOCKED` quando a tentativa de commit falhou.
+- Revisados ESLint com tipos/React Hooks, Prettier, TS strict, Vitest/RTL e scripts existentes. Acrescentados dez testes de tooling: rejeição de variáveis não usadas, `any`, promises soltas, non-null assertions, hooks condicionais; aceitação de código válido; diagnóstico de tipos implícitos, índices possivelmente ausentes e catch `unknown` nos três tsconfigs; formatação inválida/válida. Fixtures em memória, sem supressões ou novas dependências.
+- CI básico em `.github/workflows/verify.yml`: Ubuntu 24.04, Node de `.nvmrc`, instalação pelo lockfile sem lifecycle scripts, `npm run verify`, actions fixadas por SHA, leitura somente e sem credenciais persistidas/cache/secrets. Workflow configurado e YAML aceito pelo Prettier; **não executado no GitHub Actions**, pois não houve push. `actionlint` não está disponível no PATH.
+- Arquivos: workflow, `tests/tooling/quality-gates.test.ts`, `vitest.config.mts`, `tsconfig.tooling.json`, `README.md`, `docs/adr/0002-quality-gates.md`, `docs/TASKS.md` e este handoff. Código runtime, dependências e lockfile preservados.
+
+| Comando / verificação                                                                                  | Resultado registrado na execução original                                                                                      |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `export PATH=/opt/homebrew/bin:$PATH` + `node --version` / `npm --version`                             | Node 26.0.0 / npm 11.12.1 já instalados; sem instalação ou alteração global.                                                   |
+| `npm test`                                                                                             | 22 testes passaram em 3 arquivos, incluindo 10 novos testes de tooling e os 12 existentes.                                     |
+| `npm run verify`                                                                                       | Passou: ESLint sem warnings, Prettier, 3 tsconfigs strict, 22 testes e build main/renderer.                                    |
+| `git diff --check`                                                                                     | Passou sem erro de whitespace.                                                                                                 |
+| `sw_vers`, `xcode-select -p`, `xcodebuild -version`, `xcrun swift --version`                           | macOS 26.6.2 (25G83), Xcode 26.6 (17F113) em `/Applications/Xcode-26.6.0.app/Contents/Developer`, Apple Swift 6.3.3.           |
+| `command -v swiftlint swiftformat` / `xcrun swift-format --version` / `xcrun swift-format lint --help` | SwiftLint/SwiftFormat ausentes do PATH; swift-format do Xcode 6.3.0 disponível e ajuda consultada. Não são a mesma ferramenta. |
+| Presença de `native/macos/Package.swift`                                                               | Ausente; `swift test`, Swift Testing/XCTest e lint/formatação nativos não executados. Setup futuro e limitações no README.     |
+
+Limites: o aviso `preload config is missing` continua esperado até T003, sem ser silenciado. Smoke gráfico não repetido porque não houve mudança de runtime/UI; a evidência da T001 permanece histórica. CI hospedado, toolchains Linux e captura/STT Apple não foram validados nesta sessão. Nenhuma chamada paga, chave, permissão TCC, instalação privilegiada ou bypass de sandbox utilizado.
+
+**Falha da execução anterior:** `git add` terminou com saída 128 ao tentar criar `.git/index.lock` (`Operation not permitted`). O commit não foi executado, HEAD permaneceu `0ae3818` e T002 foi marcada `BLOCKED`. A restrição era de escrita no Git naquela sessão; os arquivos da entrega foram preservados.
+
+**Retomada autorizada pelo usuário:** revisados todos os arquivos alterados e os critérios da T002; nenhuma correção da implementação foi necessária. `npm run verify` executado novamente com Node 26.0.0: lint, formatação, três tsconfigs strict, **22 testes em três arquivos** e build passaram. Links locais e os 39 IDs/dependências do backlog conferidos; somente o estado de T002 mudou. Confirmados novamente Xcode 26.6, Swift 6.3.3 e swift-format 6.3.0; consultas do Xcode emitiram avisos de cache/FSEvents da sandbox, sem impedir a leitura das versões. Não foram executados testes nativos.
+
+O CI e os SHAs das actions foram revisados nas referências oficiais do ADR 0002; execução hospedada continua pendente de publicação autorizada. Entrega aprovada para o commit local **`chore(T002): verify quality gates and configure CI`**, com atualização de T002 para `DONE`. Não houve push, mudança no runner ou início de outra tarefa. O commit desta retomada não altera as permissões usadas pelo runner em futuras sessões.
 
 ## Reorganização da documentação — 2026-11-02
 
@@ -42,8 +67,8 @@ O build emite `preload config is missing`, esperado e não silenciado: preload p
 
 - T001 prova scaffold e abertura local. **Não há** captura, transcrição Swift, OpenAI, JSONL, screenshots do produto ou jornada demo com mocks. Nenhuma chamada paga, chave, áudio de reunião ou concessão de permissão TCC foi usada.
 - Não executados: `swift test`, SwiftLint/SwiftFormat, avaliação de idiomas/assets, mic/system, empacotamento, assinatura, Windows ou teste manual humano da reunião. Ainda não existe pacote Swift.
-- T002 permanece `TODO`: revisar/ampliar gates, definir tooling Swift/limitações e CI. T003 permanece `TODO`: IPC tipado e testes de fronteiras. Não foram concluídas por antecipação.
-- Nenhum bloqueio remanescente da T001. Próxima sessão recomendada: **T005**, conforme `docs/PROMPT-CODEX.md`. T002/T003 também elegíveis; o runner seleciona T002 pela ordem da tabela. Operador deve escolher em **nova sessão**. Windows T036–T039 permanece `DEFERRED`.
+- T002 está concluída após revisão e retomada do commit. T003 permanece `TODO`: IPC tipado e testes de fronteiras.
+- Nenhum bloqueio remanescente de T001/T002. Próxima sessão recomendada: **T005**, conforme `docs/PROMPT-CODEX.md`; o runner seleciona T003 pela ordem do backlog. Operador deve escolher em **nova sessão**. Windows T036–T039 permanece `DEFERRED`.
 
 ## Commit e retomada
 
