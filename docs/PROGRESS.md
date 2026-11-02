@@ -1,7 +1,14 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
 **Atualização:** 2026-11-02. **Marco:** M0 — fundação + viabilidade Swift.
-**Concluída nesta sessão:** somente **T001**. Nenhuma tarefa seguinte iniciada.
+**Implementação concluída:** **T001**. Manutenção documental posterior registrada abaixo; nenhuma tarefa seguinte iniciada.
+
+## Reorganização da documentação — 2026-11-02
+
+- A pedido do usuário, nove documentos de planejamento e acompanhamento foram movidos da raiz para `docs/`. `README.md` e `AGENTS.md` permanecem na raiz como entrada do projeto e instruções para todo o repositório.
+- Atualizados links, caminhos nas instruções, árvore de diretórios, `.prettierignore` e runner Python para ler `docs/TASKS.md` e gerar prompts com os novos caminhos.
+- Validação: 16 links Markdown locais existentes; 39 tarefas com IDs, estados e dependências preservados; referências do prompt válidas; `--dry-run` na raiz e fora dela identificou T002 sem executá-la; sintaxe Python verificada.
+- `npm run verify` passou novamente (lint, formatação, tipos, 12 testes e build). Permanece o aviso esperado de preload ausente da T001. Smoke gráfico não repetido: esta manutenção altera documentação e caminhos do runner, sem mudança no app.
 
 ## Entrega T001
 
@@ -29,17 +36,17 @@ Terminal inicialmente em Node 20.20.2/npm 10.8.2. Selecionado Node **26.0.0**/np
 
 O smoke executou fora da sandbox para acesso ao desktop. Corrigida a herança de `ELECTRON_RUN_AS_NODE` no ambiente do teste; nenhum ajuste global. A primeira recarga dev ocorreu durante a navegação inicial e falhou; a verificação final aguardou o conteúdo e passou.
 
-O build emite `preload config is missing`, esperado e não silenciado: preload pertence à T003. Playwright emitiu aviso de `NO_COLOR`/`FORCE_COLOR` herdados do host, sem efeito no resultado. Incompatibilidade de tipos Vitest 5/jest-dom resolvida fixando Vitest 4.1.12; `skipLibCheck` permaneceu `false`. Justificativas no [ADR 0001](docs/adr/0001-desktop-scaffold.md).
+O build emite `preload config is missing`, esperado e não silenciado: preload pertence à T003. Playwright emitiu aviso de `NO_COLOR`/`FORCE_COLOR` herdados do host, sem efeito no resultado. Incompatibilidade de tipos Vitest 5/jest-dom resolvida fixando Vitest 4.1.12; `skipLibCheck` permaneceu `false`. Justificativas no [ADR 0001](adr/0001-desktop-scaffold.md).
 
 ## Limites e pendências
 
 - T001 prova scaffold e abertura local. **Não há** captura, transcrição Swift, OpenAI, JSONL, screenshots do produto ou jornada demo com mocks. Nenhuma chamada paga, chave, áudio de reunião ou concessão de permissão TCC foi usada.
 - Não executados: `swift test`, SwiftLint/SwiftFormat, avaliação de idiomas/assets, mic/system, empacotamento, assinatura, Windows ou teste manual humano da reunião. Ainda não existe pacote Swift.
 - T002 permanece `TODO`: revisar/ampliar gates, definir tooling Swift/limitações e CI. T003 permanece `TODO`: IPC tipado e testes de fronteiras. Não foram concluídas por antecipação.
-- Nenhum bloqueio remanescente da T001. Próxima sessão recomendada: **T005**, conforme `PROMPT-CODEX.md`. T002/T003 também elegíveis; o runner seleciona T002 pela ordem da tabela. Operador deve escolher em **nova sessão**. Windows T036–T039 permanece `DEFERRED`.
+- Nenhum bloqueio remanescente da T001. Próxima sessão recomendada: **T005**, conforme `docs/PROMPT-CODEX.md`. T002/T003 também elegíveis; o runner seleciona T002 pela ordem da tabela. Operador deve escolher em **nova sessão**. Windows T036–T039 permanece `DEFERRED`.
 
 ## Commit e retomada
 
-Entrega atômica: `feat(T001): scaffold Electron and React`, contendo código, testes, lockfile e este registro. Obter seu hash sem autorreferência no arquivo: `git log -1 --format='%h %s' --grep='^feat(T001):'`. Commit base: `1ee43a4`. Nenhum push ou remoto criado.
+Entrega do scaffold: `80a5d67` — `feat(T001): scaffold Electron and React`, contendo código, testes, lockfile e registro inicial. Commit base: `1ee43a4`. A reorganização documental é registrada em commit posterior `docs(T001): move planning documentation into docs`. Nenhum push ou remoto criado.
 
-Na próxima sessão, reler documentos obrigatórios, comparar `git status/log` e `TASKS.md`, escolhendo somente uma tarefa. A evidência exploratória externa de STT em `docs/REFERENCIA-STT-APPLE.md` não comprova o Swift próprio.
+Na próxima sessão, reler documentos obrigatórios, comparar `git status/log` e `docs/TASKS.md`, escolhendo somente uma tarefa. A evidência exploratória externa de STT em `docs/REFERENCIA-STT-APPLE.md` não comprova o Swift próprio.

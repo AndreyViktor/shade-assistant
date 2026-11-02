@@ -18,7 +18,7 @@
 - A experiência valida **viabilidade preliminar da tecnologia Apple**, não o SDK Swift escrito por nós, nem o JSONL próprio, nem Electron, assinatura, permissões do nosso app ou precisão bilíngue da nossa implementação.
 
 ## Gates permanentes de engenharia
-- `ENGINEERING-STANDARDS.md` é normativo: estrutura modular simples, limites de import, ESLint, Prettier, TypeScript strict, testes TS/React e Swift, scripts `npm run verify`, revisão de dependências e ADRs relevantes.
+- `docs/ENGINEERING-STANDARDS.md` é normativo: estrutura modular simples, limites de import, ESLint, Prettier, TypeScript strict, testes TS/React e Swift, scripts `npm run verify`, revisão de dependências e ADRs relevantes.
 - T001–T003 estabelecem o padrão **antes** de aumentar o código; todos os outros marcos herdam os gates. Regressão de qualidade é bloqueio da entrega, não dívida invisível.
 - Evitar complexidade desnecessária: não impor microserviços, frameworks extras ou infraestrutura de nuvem para um aplicativo desktop.
 
@@ -38,5 +38,5 @@
 Referências: https://developer.apple.com/documentation/speech/speechanalyzer · https://developer.apple.com/documentation/speech/speechtranscriber · https://developer.apple.com/documentation/screencapturekit/capturing-screen-content-in-macos · `docs/REFERENCIA-STT-APPLE.md` (POC e referência opcional)
 
 ## Sequência de implementação isolada (V0.7)
-- Marcos e dependências permanecem inalterados. Cada `Txxx` é tratada **numa sessão Codex nova**, concluída com testes, atualização de `TASKS.md`/`PROGRESS.md` e commit local com ID. Sessões posteriores usam o estado no Git/arquivos, sem reutilizar histórico. Ver `WORKFLOW.md`.
+- Marcos e dependências permanecem inalterados. Cada `Txxx` é tratada **numa sessão Codex nova**, concluída com testes, atualização de `docs/TASKS.md`/`docs/PROGRESS.md` e commit local com ID. Sessões posteriores usam o estado no Git/arquivos, sem reutilizar histórico. Ver `docs/WORKFLOW.md`.
 - A execução multi-tarefa automática, quando desejada, deve passar por um **executor externo limitado** (`scripts/run-codex-tasks.py --max-tasks N`) que valida a conclusão antes de criar a próxima sessão. Padrão `N=1`.

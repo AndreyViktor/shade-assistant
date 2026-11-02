@@ -32,4 +32,4 @@ App local executável, sem capacidade de captura ou acesso a segredos. O smoke e
 - [Playwright: automação Electron](https://playwright.dev/docs/api/class-electron)
 - [Advisory minimatch](https://github.com/advisories/GHSA-g3hv-75wg-m249) e [correção upstream 11.0.1](https://github.com/isaacs/minimatch/releases/tag/v11.0.1)
 
-Versões/engines também foram consultados no registro npm e confirmados na instalação e no lockfile; evidências da execução ficam em `PROGRESS.md`.
+Versões/engines também foram consultados no registro npm e confirmados na instalação e no lockfile; evidências da execução ficam em `docs/PROGRESS.md`.
