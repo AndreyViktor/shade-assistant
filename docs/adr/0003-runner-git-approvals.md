@@ -8,7 +8,7 @@ A execução da T002 validou os gates, mas não criou o commit: `.git/index.lock
 
 ## Decisão
 
-Usar `codex exec --sandbox workspace-write --approve-for-me -`, opção documentada oficialmente e presente no CLI 0.166.0 instalado. O agente solicita escalada para as operações Git autorizadas, e o revisor decide sobre cada pedido. A configuração global e as permissões do repositório não são alteradas. Não usar full access, bypass ou commit feito pelo runner fora do mecanismo de aprovação.
+Usar `codex exec --approve-for-me -`, opção documentada oficialmente e presente no CLI 0.166.0 instalado. Ela seleciona workspace-write; não combinar com `--sandbox`, pois o CLI rejeita a combinação antes de iniciar a sessão. O agente solicita escalada para as operações Git autorizadas, e o revisor decide sobre cada pedido. A configuração global e as permissões do repositório não são alteradas. Não usar full access, bypass ou commit feito pelo runner fora do mecanismo de aprovação.
 
 Verificar suporte à flag antes de iniciar uma tarefa. Na ausência de suporte ou autorização, parar sem alternativa automática mais permissiva. Parar também se existir `BLOCKED` ou `IN_PROGRESS`, inclusive no dry-run. Continuam obrigatórios saída zero, estado DONE, novo commit com ID e árvore limpa antes de outra sessão.
 

@@ -122,8 +122,8 @@ def run(root: Path, maximum: int, dry_run: bool) -> int:
             return 0
         print(f"\n[{index}/{maximum}] Nova sessão Codex para {task.id}", flush=True)
         before = git(root, "rev-parse", "HEAD")
-        result = subprocess.run(["codex", "exec", "--sandbox", "workspace-write",
-                                 "--approve-for-me", "-"],
+        # --approve-for-me selects workspace-write itself; CLI rejects --sandbox alongside it.
+        result = subprocess.run(["codex", "exec", "--approve-for-me", "-"],
                                 input=make_prompt(task), cwd=root, text=True, check=False)
         if result.returncode:
             raise RuntimeError(f"Codex terminou com erro ({result.returncode}) em {task.id}; confira estado Git.")

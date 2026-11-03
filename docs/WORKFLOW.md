@@ -28,7 +28,7 @@ git commit -m "chore: initialize meeting copilot planning"
 
 ## 3. Executor leve (opcional)
 - `python3 scripts/run-codex-tasks.py --dry-run` mostra a primeira tarefa `TODO` cujas dependências estão `DONE`, sem iniciar Codex. Tanto simulação quanto execução param se existir tarefa `BLOCKED` ou `IN_PROGRESS`, mesmo que outra seja elegível.
-- `python3 scripts/run-codex-tasks.py` inicia uma sessão nova `codex exec --sandbox workspace-write --approve-for-me -` para uma tarefa e termina.
+- `python3 scripts/run-codex-tasks.py` inicia uma sessão nova `codex exec --approve-for-me -` para uma tarefa e termina.
 - `python3 scripts/run-codex-tasks.py --max-tasks 3` pode executar **até 3 tarefas em sequência**, iniciando um processo **novo** por tarefa. É apenas um loop limitado, não uma plataforma de agentes.
 - Antes de executar, o runner confirma em `codex exec --help` o suporte a `--approve-for-me`. Se ausente, encerra sem iniciar tarefa ou alterar permissões. Validado com Codex CLI 0.166.0.
 - `workspace-write` protege `.git`; o agente deve solicitar escalada para o commit local pelo mecanismo normal de aprovação. `--approve-for-me` encaminha pedidos elegíveis à revisão automática. A revisão pode negar; nesse caso, registrar `BLOCKED` e parar, sem fallback para full access, alteração global de configuração ou execução de Git fora do fluxo de aprovação.
