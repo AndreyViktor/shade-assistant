@@ -78,8 +78,7 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertEqual(len(self.launches), 1)
         command, options = self.launches[0]
-        self.assertEqual(command, ["codex", "exec", "--sandbox", "workspace-write",
-                                   "--approve-for-me", "-"])
+        self.assertEqual(command, ["codex", "exec", "--approve-for-me", "-"])
         self.assertEqual(options["cwd"], self.root)
         self.assertIn("solicite a escalada", options["input"])
         self.assertIn("EXCLUSIVAMENTE na tarefa T001", options["input"])
