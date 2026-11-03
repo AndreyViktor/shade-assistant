@@ -4,6 +4,8 @@ coverage/
 test-results/
 playwright-report/
 .azul-engai/
+native/macos/.build/
+native/macos/.swiftpm/
 # Documentos de planejamento originais: preservar sua formatação histórica.
 AGENTS.md
 docs/ARCHITECTURE.md

@@ -1,6 +1,6 @@
-# Meeting Copilot — fundação desktop (T001–T004)
+# Meeting Copilot — fundação desktop e diagnóstico Swift (T001–T005)
 
-Scaffold executável de **Electron + React + TypeScript strict**, primeiro no macOS. A janela inicial exibe `DEMO`, captura inativa e IA desativada. Ainda não há fluxo de reunião, mocks de transcrição, integração OpenAI ou helper Swift. A arquitetura de produto abaixo descreve as próximas entregas, não capacidades já disponíveis.
+Scaffold executável de **Electron + React + TypeScript strict**, primeiro no macOS. A janela inicial exibe `DEMO`, captura inativa e IA desativada. Há um diagnóstico Swift independente de capacidades (T005). Ainda não há fluxo de reunião, mocks de transcrição, integração OpenAI ou helper de captura/transcrição. A arquitetura de produto abaixo descreve as próximas entregas, não capacidades já disponíveis.
 
 ## Executar localmente
 
@@ -55,22 +55,18 @@ O smoke valida isolamento, API pública congelada, IPC real, argumentos inválid
 
 [`.github/workflows/verify.yml`](.github/workflows/verify.yml) executa instalação pelo lockfile e `npm run verify` em Ubuntu 24.04, com Node de `.nvmrc`, em pull requests, push para `main` ou acionamento manual. Actions fixadas por SHA, permissão `contents: read`, sem credenciais persistidas, cache ou secrets. Não baixa o binário Electron nem abre janelas. Smoke gráfico e validação Apple ficam separados. O workflow foi preparado localmente; execução hospedada depende de publicação autorizada, não realizada nesta entrega. Decisões: [ADR 0002](docs/adr/0002-quality-gates.md).
 
-### Tooling Swift: disponibilidade e limites
+### Diagnóstico e gates Swift (T005)
 
-Verificado neste Mac: macOS 26.6.2, Xcode 26.6 (17F113), Apple Swift 6.3.3 e `xcrun swift-format --version` = 6.3.0. `swiftlint` e `swiftformat` não estão no PATH. Nenhuma instalação global foi feita. O `swift-format` do Xcode é uma ferramenta diferente do SwiftFormat; sua presença não comprova execução de lint ou testes nativos.
-
-Ainda não existe `native/macos/Package.swift`. Portanto, `swift test`, Swift Testing/XCTest e lint/formatação de código nativo **não foram executados**. Na tarefa nativa correspondente, criar testes com Swift Testing ou XCTest, validar SDK e fixar versão/configuração do linter/formatador escolhido antes de torná-lo obrigatório no CI. Não usar instalação automática de versão `latest`. Com pacote e ferramentas validados, os comandos a incorporar são:
+Pacote próprio em `native/macos`, sem dependências externas, compilado com Xcode 26.6/SDK 26.5 e Swift 6.3.3 no macOS 26.6.2 arm64. `MeetingCopilotCapabilities` consulta APIs, pt-BR/en-US, assets e estado das permissões; constrói/cancela SpeechAnalyzer sem áudio. Não captura, solicita TCC, reserva assets ou baixa modelos. Emite um relatório JSON único, sem integração Electron/JSONL de transcrição.
 
 ```bash
-xcode-select -p
-xcodebuild -version
-xcrun swift --version
-swift test --package-path native/macos
-# Se swift-format do Xcode for escolhido e sua versão/configuração fixadas:
-xcrun swift-format lint --strict --recursive native/macos/Sources native/macos/Tests
+npm run verify:swift   # swift-format + Swift Testing + build release (warnings como erros)
+npm run probe:swift    # diagnóstico real; não faz parte dos testes unitários
 ```
 
-Esses comandos futuros não substituem os ensaios reais de captura e reconhecimento Apple da T005/T006. Um runner macOS/SDK compatível deverá ser selecionado quando houver implementação nativa; não há job Swift que reporte sucesso sem executá-la.
+`verify:swift` exige **swift-format 6.3.0**, fornecido pelo Xcode, e usa `native/macos/.swift-format`. SwiftLint/SwiftFormat não estão instalados; nenhuma instalação global foi feita. Manifest tools 6.2; SDK 26+ necessário para build. O CLI tem target macOS 14 e guarda de API para macOS 26; versões antigas/Intel não foram ensaiadas. CI Ubuntu continua executando apenas os gates JS/Python; mudanças Swift exigem também o gate nativo no Mac. Sandbox do agente pode restringir caches/serviços Apple: usar aprovação normal, sem alterar permissões.
+
+Resultado real: `isAvailable = true`, pt-BR/en-US nas listas de suporte/instalação, mas `AssetInventory = supported` para ambos. Preparação de modelo não realizada: disponibilidade para captura não está comprovada. Microfone `notDetermined`, preflight de tela `false`, sem pedidos de acesso. Ver [relatório T005](docs/T005-SWIFT-CAPABILITIES.md), [evidência JSON](docs/evidence/T005-capabilities-2026-11-03.json) e [ADR 0006](docs/adr/0006-swift-capability-spike.md). POC de áudio, assets prontos, permissões do bundle e streaming pertencem às tarefas seguintes.
 
 ## Organização e limites
 
@@ -78,7 +74,7 @@ Esses comandos futuros não substituem os ensaios reais de captura e reconhecime
 - `src/renderer/app`: shell React e estilos; `src/renderer/main.tsx`: montagem da UI. Não importa Node, main ou infraestrutura.
 - `tests/e2e`: smoke do app real; testes unitários ficam junto do código; `tests/setup.ts` prepara RTL.
 - `src/contracts/ipc`: schema versionado de estado público, validado nas duas pontas; `src/preload`: API fechada `getStatus/getSettings/savePreferences/importSecret/removeSecret`; `src/main/ipc`: allowlist e autorização por janela/frame/URL. Sem chaves, IPC genérico ou comandos de captura.
-- `scripts/eslint/module-boundaries.mjs` e testes em `tests/tooling` verificam os limites entre os seis módulos, incluindo re-exports/imports dinâmicos e caminhos normalizados. `core` e `native/macos` serão criados quando tiverem implementação real, conforme `docs/ENGINEERING-STANDARDS.md`.
+- `scripts/eslint/module-boundaries.mjs` e testes em `tests/tooling` verificam os limites entre os seis módulos, incluindo re-exports/imports dinâmicos e caminhos normalizados. `core` será criado quando tiver implementação real; `native/macos` contém apenas o diagnóstico T005, conforme `docs/ENGINEERING-STANDARDS.md`.
 - Janela com `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true` e `webSecurity: true`; navegação, popups e permissões de captura bloqueados. CSP de produção não permite conexões; exceções para HMR existem apenas em desenvolvimento.
 
 Escolhas de build, compatibilidade e correção transitiva de dependências: [ADR 0001](docs/adr/0001-desktop-scaffold.md).

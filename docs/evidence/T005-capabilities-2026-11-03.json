@@ -1,0 +1,80 @@
+{
+  "architecture": "arm64",
+  "bilingualValidated": false,
+  "fallback": "Remain in DEMO; remote STT requires separate consent and budget.",
+  "installedLocales": [
+    "en-AU",
+    "en-CA",
+    "en-GB",
+    "en-IE",
+    "en-IN",
+    "en-NZ",
+    "en-SG",
+    "en-US",
+    "en-ZA",
+    "pt-BR",
+    "pt-PT"
+  ],
+  "locales": [
+    {
+      "analyzer": "notChecked",
+      "analyzerConstructedAndCancelled": true,
+      "assets": "supported",
+      "availability": "assetsRequired",
+      "installed": true,
+      "requested": "pt-BR",
+      "resolved": "pt-BR"
+    },
+    {
+      "analyzer": "notChecked",
+      "analyzerConstructedAndCancelled": true,
+      "assets": "supported",
+      "availability": "assetsRequired",
+      "installed": true,
+      "requested": "en-US",
+      "resolved": "en-US"
+    }
+  ],
+  "observedAt": "2026-11-03T18:53:23Z",
+  "operatingSystem": "Version 26.6.2 (Build 25G83)",
+  "permissions": {
+    "microphone": "notDetermined",
+    "screenCapturePreflight": false
+  },
+  "reportVersion": 1,
+  "scope": "capability-spike-no-capture",
+  "speechAPIAvailable": true,
+  "supportedLocales": [
+    "de-AT",
+    "de-CH",
+    "de-DE",
+    "en-AU",
+    "en-CA",
+    "en-GB",
+    "en-IE",
+    "en-IN",
+    "en-NZ",
+    "en-SG",
+    "en-US",
+    "en-ZA",
+    "es-CL",
+    "es-ES",
+    "es-MX",
+    "es-US",
+    "fr-BE",
+    "fr-CA",
+    "fr-CH",
+    "fr-FR",
+    "it-CH",
+    "it-IT",
+    "ja-JP",
+    "ko-KR",
+    "pt-BR",
+    "pt-PT",
+    "yue-CN",
+    "zh-CN",
+    "zh-HK",
+    "zh-TW"
+  ],
+  "transcriberAvailable": true
+}
