@@ -1,7 +1,27 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
 **Atualização:** 2026-11-03. **Marco:** M0 — fundação + viabilidade Swift.
-**Implementação concluída:** **T001–T005**. Esta sessão executou exclusivamente **T005**, sem iniciar outra tarefa.
+**Implementação concluída:** **T001–T005**. Esta sessão verificou exclusivamente **T006**, agora **BLOCKED**; nenhuma outra tarefa iniciada.
+
+## T006 — Bloqueada nos pré-requisitos de captura — 2026-11-03
+
+- Início em `main`, árvore limpa, HEAD `dbc0657`; dependência T005 DONE conferida no código e Git. T006 passou de `TODO` para `IN_PROGRESS` e depois `BLOCKED`, conforme instrução explícita do operador de parar se houver bloqueio de permissão/ambiente.
+- Reexecutado o diagnóstico Swift próprio existente, fora da sandbox por escalada aprovada, sem captura ou prompts TCC. [Evidência real](evidence/T006-capabilities-2026-11-03.json), às **18:57:38 UTC**: macOS 26.6.2/arm64, `isAvailable = true`; pt-BR/en-US constam como instalados, mas o status por módulo continua `supported`, resultando em `assetsRequired`; preparação não executada. Microfone `notDetermined`, preflight de tela `false`. O preflight não comprova a autorização de um futuro SCStream somente de áudio; a causa da divergência de assets permanece desconhecida.
+- **Bloqueio:** falta concessão humana de acesso ao microfone e validação da autorização de áudio do sistema no contexto do executável da POC; assets ainda não comprovados como prontos. Eventual download exige autorização. Não há evidência de transcrição real de ambas fontes, requisito obrigatório do aceite; T006 não pode ser DONE.
+- **Implementação:** nenhuma alteração de código/runtime ou novos testes. A POC de captura ainda não foi implementada; a sessão foi encerrada na verificação de pré-requisitos, seguindo a regra de bloqueio. Arquivos alterados: `docs/TASKS.md`, este handoff e o JSON de evidência acima (somente metadados técnicos, sem fala/áudio/segredo).
+
+| Comando / verificação                                                                                                            | Resultado real                                                                                                                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sh scripts/verify-swift.sh` por escalada aprovada                                                                               | Passou: swift-format 6.3.0 estrito, **6 testes Swift**, build debug/test e release com warnings como erros. Testes existentes de diagnóstico; não testam captura. |
+| `native/macos/.build/release/MeetingCopilotCapabilities > docs/evidence/T006-capabilities-2026-11-03.json` por escalada aprovada | Saída 0, stderr vazio; resultado descrito acima. Sem captura, reserva/download de modelos ou alteração de permissões.                                             |
+
+**Gate geral:** `export PATH=/opt/homebrew/bin:$PATH` + `npm run verify` passou: ESLint, Prettier, três projetos TS strict, **155 testes TS em 13 arquivos**, **12 testes Python** e build main/preload/renderer. A primeira execução parou na formatação dos documentos alterados; corrigida com Prettier antes do gate completo. `git diff --check` passou. Smoke Electron não repetido porque runtime/UI não foram alterados.
+
+**Não executados:** mic/system, streaming pt-BR, eventos por fonte/idioma/tempo, pausa/erros de captura e avaliação pt-BR+en-US. Qualidade/latência bilíngue não medidas. Nenhuma integração Electron ou chamada OpenAI, chave, gasto, push, deploy ou aprovação automática de TCC.
+
+**Próximo passo:** operador deve retomar **T006 em nova sessão**, com acompanhamento humano para os prompts de acesso às fontes de teste, investigação dos assets e autorização explícita se houver download necessário. Implementar a POC própria e executar os ensaios reais antes de marcar DONE. Não iniciar outra tarefa nem usar o runner para pular este bloqueio.
+
+**Commit local do registro:** `docs(T006): record capture prerequisites blocker` (este commit; localizar hash com `git log -1 --format=%h --grep="docs(T006)"`); não conta como conclusão da tarefa. Escrita em `.git` pelo mecanismo normal de escalada, sem alteração de permissões ou locks.
 
 ## T005 — Spike Swift Apple de capacidades — 2026-11-03
 
