@@ -1,13 +1,16 @@
-import { builtinModules } from 'node:module';
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
-
-const nodeImports = [
-  ...new Set(builtinModules.flatMap((name) => [name, `node:${name}`])),
-];
+import moduleBoundaries from './scripts/eslint/module-boundaries.mjs';
 
 export default tseslint.config(
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    plugins: {
+      architecture: { rules: { 'module-boundaries': moduleBoundaries } },
+    },
+    rules: { 'architecture/module-boundaries': 'error' },
+  },
   {
     ignores: [
       'node_modules/**',
@@ -43,19 +46,6 @@ export default tseslint.config(
     plugins: { 'react-hooks': reactHooks },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: [...nodeImports, 'electron', 'openai'],
-          patterns: [
-            {
-              regex: '(^|/)(main|infrastructure|preload|core)(/|$)',
-              message:
-                'Renderer usa somente apresentação e contratos públicos; acesso privilegiado passa pela API do preload (T003).',
-            },
-          ],
-        },
-      ],
     },
   },
 );

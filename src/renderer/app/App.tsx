@@ -1,4 +1,26 @@
+import { useEffect, useState } from 'react';
+import { ipcFailure } from '../../contracts/ipc/appStatus';
+import type { AppStatusResult } from '../../contracts/ipc/appStatus';
+
 export function App() {
+  const [result, setResult] = useState<AppStatusResult | null>(null);
+  useEffect(() => {
+    let active = true;
+    async function loadStatus() {
+      try {
+        const status = await window.meetingCopilot.getStatus();
+        if (active) setResult(status);
+      } catch {
+        if (active) setResult(ipcFailure('UNAVAILABLE'));
+      }
+    }
+    void loadStatus();
+    return () => {
+      active = false;
+    };
+  }, []);
+  const unavailable = result ? 'Indisponível' : 'Verificando…';
+
   return (
     <main className="app-shell">
       <header>
@@ -14,18 +36,23 @@ export function App() {
           A base do aplicativo está pronta para as próximas etapas. A
           demonstração com transcrições e sugestões ainda não está disponível.
         </p>
+        {result && !result.ok && (
+          <p role="alert">
+            Não foi possível verificar o estado do aplicativo. Reabra o app.
+          </p>
+        )}
         <dl className="status-grid">
           <div>
             <dt>Captura</dt>
-            <dd>Inativa</dd>
+            <dd>{result?.ok ? 'Inativa' : unavailable}</dd>
           </div>
           <div>
             <dt>Conexão com IA</dt>
-            <dd>Desativada</dd>
+            <dd>{result?.ok ? 'Desativada' : unavailable}</dd>
           </div>
           <div>
             <dt>Dados enviados</dt>
-            <dd>Nenhum</dd>
+            <dd>{result?.ok ? 'Nenhum' : unavailable}</dd>
           </div>
         </dl>
       </section>
