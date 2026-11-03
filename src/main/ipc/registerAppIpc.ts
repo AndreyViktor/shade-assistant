@@ -1,3 +1,4 @@
+import { isAuthorizedRenderer } from './isAuthorizedRenderer';
 import { ipcMain } from 'electron';
 import type { BrowserWindow } from 'electron';
 import {
@@ -17,13 +18,7 @@ export function registerAppIpc(
     APP_STATUS_CHANNEL,
     (event, ...args: unknown[]): AppStatusResult => {
       // A matching URL alone does not authorize another window or a child frame.
-      if (
-        window.isDestroyed() ||
-        event.sender !== window.webContents ||
-        !event.senderFrame ||
-        event.senderFrame !== window.webContents.mainFrame ||
-        event.senderFrame.url !== rendererUrl
-      ) {
+      if (!isAuthorizedRenderer(window, rendererUrl, event)) {
         return ipcFailure('FORBIDDEN');
       }
       if (args.length !== 1) return ipcFailure('INVALID_REQUEST');

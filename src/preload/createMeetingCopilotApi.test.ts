@@ -14,7 +14,13 @@ describe('limited preload API', () => {
   it('exposes only a frozen method and invokes only the fixed channel', async () => {
     const invoke = vi.fn().mockResolvedValue(success);
     const api = createMeetingCopilotApi(invoke);
-    expect(Object.keys(api)).toEqual(['getStatus']);
+    expect(Object.keys(api)).toEqual([
+      'getStatus',
+      'getSettings',
+      'savePreferences',
+      'importSecret',
+      'removeSecret',
+    ]);
     expect(Object.isFrozen(api)).toBe(true);
     expect(await api.getStatus()).toEqual(success);
     expect(invoke).toHaveBeenCalledExactlyOnceWith(APP_STATUS_CHANNEL, {
@@ -67,6 +73,69 @@ describe('limited preload API', () => {
       success,
       success,
     ]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe('settings preload boundary', () => {
+  const preferences = {
+    version: 1 as const,
+    mode: 'demo' as const,
+    sttProvider: 'apple-local' as const,
+    language: 'pt-BR' as const,
+  };
+  const success = {
+    version: 1,
+    ok: true,
+    settings: { preferences, credential: 'missing' },
+  };
+  it('uses fixed settings actions and validates replies', async () => {
+    const invoke = vi.fn().mockResolvedValue(success);
+    const api = createMeetingCopilotApi(invoke);
+    expect(await api.getSettings()).toEqual(success);
+    expect(await api.savePreferences(preferences)).toEqual(success);
+    expect(await api.importSecret()).toEqual(success);
+    expect(await api.removeSecret()).toEqual(success);
+    expect(invoke.mock.calls).toEqual([
+      ['meeting-copilot:settings', { version: 1, action: 'read' }],
+      ['meeting-copilot:settings', { version: 1, action: 'save', preferences }],
+      ['meeting-copilot:settings', { version: 1, action: 'import-secret' }],
+      ['meeting-copilot:settings', { version: 1, action: 'remove-secret' }],
+    ]);
+    invoke.mockResolvedValue({ ...success, secret: 'synthetic' });
+    expect(await api.getSettings()).toEqual(ipcFailure('INVALID_RESPONSE'));
+  });
+  it('blocks paths, secret values, extra args and invalid preferences before IPC', async () => {
+    const invoke = vi.fn();
+    const api = createMeetingCopilotApi(invoke);
+    for (const method of [
+      api.getSettings,
+      api.importSecret,
+      api.removeSecret,
+    ]) {
+      expect(await Reflect.apply(method, null, ['/private/key'])).toEqual(
+        ipcFailure('INVALID_REQUEST'),
+      );
+    }
+    expect(
+      await Reflect.apply(api.savePreferences, null, [
+        { ...preferences, key: 'synthetic' },
+      ]),
+    ).toEqual(ipcFailure('INVALID_REQUEST'));
+    expect(
+      await Reflect.apply(api.savePreferences, null, [preferences, 'extra']),
+    ).toEqual(ipcFailure('INVALID_REQUEST'));
+    expect(invoke).not.toHaveBeenCalled();
+  });
+  it('redacts errors and times out stalled settings reads', async () => {
+    const invoke = vi.fn().mockRejectedValueOnce(new Error('synthetic-secret'));
+    const api = createMeetingCopilotApi(invoke);
+    expect(await api.getSettings()).toEqual(ipcFailure('UNAVAILABLE'));
+    vi.useFakeTimers();
+    invoke.mockReturnValue(new Promise(() => {}));
+    const result = api.getSettings();
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(await result).toEqual(ipcFailure('TIMEOUT'));
     expect(vi.getTimerCount()).toBe(0);
   });
 });

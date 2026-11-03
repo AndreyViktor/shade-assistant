@@ -1,17 +1,9 @@
-import { _electron as electron, expect, test } from '@playwright/test';
+import { createTestApp } from './testApp';
+import { expect, test } from '@playwright/test';
 
 test('opens the real Electron build with an isolated offline renderer', async () => {
-  const env: Record<string, string> = {};
-  for (const [key, value] of Object.entries(process.env)) {
-    if (value !== undefined) env[key] = value;
-  }
-  env.ELECTRON_RENDERER_URL = '';
-  // Hosts built on Electron may inherit this flag; the test must launch the desktop app.
-  delete env.ELECTRON_RUN_AS_NODE;
-  const app = await electron.launch({
-    args: ['.'],
-    env,
-  });
+  const fixture = await createTestApp();
+  const app = await fixture.launch();
   try {
     const page = await app.firstWindow();
     await expect(
@@ -32,7 +24,13 @@ test('opens the real Electron build with an isolated offline renderer', async ()
       require: false,
       process: false,
       bridge: false,
-      methods: ['getStatus'],
+      methods: [
+        'getStatus',
+        'getSettings',
+        'savePreferences',
+        'importSecret',
+        'removeSecret',
+      ],
       frozen: true,
     });
 
@@ -79,5 +77,6 @@ test('opens the real Electron build with an isolated offline renderer', async ()
     expect(app.windows()).toHaveLength(1);
   } finally {
     await app.close();
+    await fixture.cleanup();
   }
 });

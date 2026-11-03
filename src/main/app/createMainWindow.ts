@@ -1,3 +1,5 @@
+import { createSettingsService } from '../settings/createSettingsService';
+import { registerSettingsIpc } from '../ipc/registerSettingsIpc';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { app, BrowserWindow, session } from 'electron';
@@ -42,6 +44,12 @@ export async function createMainWindow(): Promise<BrowserWindow> {
   window.webContents.on('will-navigate', (event) => event.preventDefault());
   window.once('ready-to-show', () => window.show());
   registerAppIpc(window, developmentUrl ?? pathToFileURL(rendererFile).href);
+
+  registerSettingsIpc(
+    window,
+    developmentUrl ?? pathToFileURL(rendererFile).href,
+    createSettingsService(window),
+  );
 
   if (developmentUrl) await window.loadURL(developmentUrl);
   else await window.loadFile(rendererFile);

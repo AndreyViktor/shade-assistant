@@ -13,7 +13,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('electron', () => ({
-  app: { isPackaged: true },
+  app: { isPackaged: true, getPath: () => '/unused' },
+  safeStorage: {},
+  dialog: {},
   ipcMain: { handle: mocks.handle, removeHandler: vi.fn() },
   session: {
     fromPartition: () => ({
