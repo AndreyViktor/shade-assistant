@@ -17,3 +17,5 @@ coverage/
 test-results/
 playwright-report/
 .azul-engai/
+native/macos/.build/
+native/macos/.swiftpm/
