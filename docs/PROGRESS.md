@@ -23,7 +23,7 @@ As primeiras rodadas detectaram narrowing de `unknown`, uso de propriedade AST o
 
 **Limites:** smoke de produção no Mac; caminho dev coberto por testes de URL/autorização, sem repetir abertura gráfica em dev. Testes de autorização do main simulam objetos Electron; o smoke comprova a ponte real para chamadas permitidas e rejeição de argumentos no preload. Não existe captura/STT/JSONL, segredo configurado ou chamada OpenAI nesta entrega. Swift, TCC, sessão real de reunião, Windows e CI hospedado não foram testados; não são critérios da T003. Nenhuma permissão de captura, gasto, push ou deploy.
 
-**Commit local da entrega:** `feat(T003): secure typed IPC and module boundaries` (hash consultável em `git log -1 --format=%h --grep='feat(T003)'`). Escrita em `.git` pelo mecanismo de escalada, sem alterar permissões, locks ou configurações. Se o revisor impedir o commit, esta entrega deve permanecer `BLOCKED` com motivo registrado.
+**Commit local da entrega:** `aa6a0c3` — `feat(T003): secure typed IPC and module boundaries`. Escrita em `.git` concluída pelo mecanismo de escalada, sem alterar permissões, locks ou configurações. O runner confirmou DONE, commit com ID e árvore limpa.
 
 **Blockers técnicos remanescentes:** nenhum. **Próximo passo:** encerrar esta sessão; operador/runner deve iniciar uma sessão independente para outra tarefa. T004 é a primeira elegível pela ordem do backlog; T005 continua sendo a prioridade técnica recomendada no planejamento. Nenhuma delas foi iniciada.
 
@@ -33,7 +33,7 @@ As primeiras rodadas detectaram narrowing de `unknown`, uso de propriedade AST o
 - Acrescentada verificação de suporte antes de iniciar tarefas e bloqueio de avanço quando houver qualquer `BLOCKED`/`IN_PROGRESS`, inclusive no dry-run. Nenhum fallback para acesso irrestrito ou commit fora do fluxo de aprovação.
 - Testes com Git real temporário e Codex simulado: 12 casos passaram. `npm run verify` passou com 22 testes TS, 12 Python, lint, formatação, tipos e build. `--dry-run` identificou T003 sem executá-la. ADR 0003 registra decisão e limites.
 - Primeira tentativa real: CLI rejeitou a combinação redundante `--sandbox workspace-write --approve-for-me` antes de iniciar T003 (saída 2). Corrigido para apenas `--approve-for-me`, que já seleciona workspace-write. A ajuda do CLI aceita `--help` mesmo com argumentos conflitantes; por isso a checagem anterior de ajuda não detectou a incompatibilidade. Teste de comando atualizado.
-- O usuário autorizou executar o runner após a correção. A próxima execução real será limitada a uma tarefa (T003), após o commit desta manutenção deixar a árvore limpa. Os testes locais e a ajuda do CLI ainda não comprovam o fluxo de aprovação do serviço; registrar resultado real na conclusão.
+- **Validação real concluída:** após os commits `af2d67e` e `151973c`, `python3 scripts/run-codex-tasks.py` executou exatamente uma nova sessão (T003) e retornou **saída 0**. A sessão usou aprovação on-request com revisão automática e sandbox workspace-write; criou `aa6a0c3` após os gates (108 testes TS, 12 Python e smoke Electron real). O runner confirmou `T003: DONE, commit local aa6a0c3c verificado` e encerrou no limite de uma tarefa. A árvore ficou limpa, sem push. **B002 resolvido e comprovado no fluxo real**; nenhuma T004/T005 foi iniciada.
 
 ## T002 — concluída após revisão da execução interrompida — 2026-11-02
 
