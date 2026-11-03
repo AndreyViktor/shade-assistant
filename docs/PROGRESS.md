@@ -1,7 +1,14 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
-**Atualização:** 2026-11-02. **Marco:** M0 — fundação + viabilidade Swift.
+**Atualização:** 2026-11-03. **Marco:** M0 — fundação + viabilidade Swift.
 **Implementação concluída:** **T001 e T002**. T002 revisada e validada na retomada autorizada pelo usuário. Nenhuma tarefa seguinte iniciada.
+
+## Correção B002 do runner — 2026-11-03
+
+- A pedido do usuário, corrigida a invocação para `codex exec --sandbox workspace-write --approve-for-me -`. O CLI 0.166.0 instalado reconhece a opção; `.git` continua protegido e o agente deve solicitar escalada pelo revisor. Configuração global, permissões e locks não foram alterados.
+- Acrescentada verificação de suporte antes de iniciar tarefas e bloqueio de avanço quando houver qualquer `BLOCKED`/`IN_PROGRESS`, inclusive no dry-run. Nenhum fallback para acesso irrestrito ou commit fora do fluxo de aprovação.
+- Testes com Git real temporário e Codex simulado: 12 casos passaram. `npm run verify` passou com 22 testes TS, 12 Python, lint, formatação, tipos e build. `--dry-run` identificou T003 sem executá-la. ADR 0003 registra decisão e limites.
+- O usuário autorizou executar o runner após a correção. A próxima execução real será limitada a uma tarefa (T003), após o commit desta manutenção deixar a árvore limpa. Os testes locais e a ajuda do CLI ainda não comprovam o fluxo de aprovação do serviço; registrar resultado real na conclusão.
 
 ## T002 — concluída após revisão da execução interrompida — 2026-11-02
 

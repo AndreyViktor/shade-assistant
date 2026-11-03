@@ -34,7 +34,7 @@ O build gera `dist/main` e `dist/renderer`. `npm start` abre esse build, sem ser
 | `npm run typecheck`    | TS strict separado para main, renderer e tooling, sem omitir checks das bibliotecas |
 | `npm test`             | Vitest + React Testing Library: URL local permitida e estado inicial honesto        |
 | `npm run build`        | Compila os dois processos via electron-vite                                         |
-| `npm run verify`       | Lint → formatação → tipos → testes → build; para no primeiro erro                   |
+| `npm run verify`       | Lint → formatação → tipos → testes TS/Python → build; para no primeiro erro         |
 | `npm run test:smoke`   | Build + Playwright abre o Electron real; exige sessão gráfica local                 |
 
 O smoke valida abertura, ausência de Node/IPC no renderer, CSP, recarga sem requisições HTTP(S) e bloqueio de novas janelas. Salva uma imagem somente da janela do teste em `test-results/startup.png` (ignorada pelo Git). Não testa captura, STT ou permissões Apple. `verify` não inicia captura nem utiliza APIs pagas.
@@ -100,6 +100,8 @@ Escolhas de build, compatibilidade e correção transitiva de dependências: [AD
 - Sem gravação de áudio bruto/prints automáticos ou histórico persistido por padrão. Obter consentimento aplicável para reuniões.
 
 ## Git e sessões isoladas por tarefa (V0.7)
+
+O runner requer Python 3 e Codex CLI com `--approve-for-me` (verificado em 0.166.0). Cada sessão mantém `workspace-write` e encaminha pedidos de acesso a `.git` à revisão automática. A execução para se a revisão negar, se o CLI não suportar a opção ou se houver tarefa `BLOCKED`/`IN_PROGRESS`. Detalhes em [WORKFLOW](docs/WORKFLOW.md). Testes locais do runner: `npm run test:runner` (também incluído em `npm run verify`).
 
 **Regra:** uma tarefa = uma sessão Codex nova = pelo menos um commit local se `DONE`. Não carregar histórico inteiro para a próxima tarefa; usar arquivos + Git como memória. Ver `docs/WORKFLOW.md` para regras, mensagens de commit, bloqueios e limitações. Um prompt sozinho não consegue forçar a reinicialização de uma sessão em andamento; o executor externo usa `codex exec` novo a cada tarefa.
 
