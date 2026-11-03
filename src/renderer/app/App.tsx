@@ -1,3 +1,4 @@
+import { SettingsPanel } from '../features/settings/SettingsPanel';
 import { useEffect, useState } from 'react';
 import { ipcFailure } from '../../contracts/ipc/appStatus';
 import type { AppStatusResult } from '../../contracts/ipc/appStatus';
@@ -56,6 +57,7 @@ export function App() {
           </div>
         </dl>
       </section>
+      <SettingsPanel />
       <footer>
         Nenhum áudio é capturado. Nenhuma chave de API é necessária.
       </footer>

@@ -1,4 +1,4 @@
-# Meeting Copilot — fundação desktop (T001–T003)
+# Meeting Copilot — fundação desktop (T001–T004)
 
 Scaffold executável de **Electron + React + TypeScript strict**, primeiro no macOS. A janela inicial exibe `DEMO`, captura inativa e IA desativada. Ainda não há fluxo de reunião, mocks de transcrição, integração OpenAI ou helper Swift. A arquitetura de produto abaixo descreve as próximas entregas, não capacidades já disponíveis.
 
@@ -24,6 +24,16 @@ npm start
 
 O build gera `dist/main`, `dist/preload` e `dist/renderer`. `npm start` abre esse build, sem servidor Vite. Ainda não gera instalador, assinatura ou pacote de distribuição (T034).
 
+## Preferências e chave (T004)
+
+O painel salva modo, provedor STT e idiomas no perfil local do app. Padrão Mac: **DEMO**, **APPLE LOCAL (SWIFT)** como preferência e **pt-BR**. Salvar modo real ou idiomas bilíngues não inicia captura nem confirma suporte; integrações e validação Swift continuam pendentes. OPENAI STT permanece desabilitado até o fluxo de consentimento específico.
+
+A chave é opcional. No Mac, **Importar chave pelo Mac** abre um seletor nativo para arquivo contendo somente a chave (até 4 KiB). O main cifra o conteúdo usando safeStorage/Keychain e grava apenas o ciphertext. **O arquivo original permanece no local escolhido**; remova-o manualmente se não for mais necessário. O renderer nunca recebe chave/ciphertext/caminho. **Remover chave armazenada** apaga o ciphertext do app. Nenhuma dessas ações faz chamada à API ou verifica a validade da chave. Falha no cofre impede a gravação, sem alternativa plaintext.
+
+Em desenvolvimento não empacotado, `OPENAI_API_KEY` é reconhecida apenas no main, sem persistência e sem leitura de `.env`. Não coloque credenciais no repositório, comandos registrados ou frontend. Para removê-la, encerre o app, retire-a do ambiente e reinicie. Builds empacotados ignoram essa variável.
+
+Arquivos: `preferences.v1.json` e `openai-key.enc` no `userData` do Electron. Preferências inválidas/versão desconhecida geram erro sem sobrescrita automática; para recuperar, encerre o app e mova somente o arquivo de preferências para backup. Após timeout, reabra para conferir se a operação terminou. Consulte o [ADR 0005](docs/adr/0005-settings-and-secrets.md) para contrato, proteção e limites. Código em `src/contracts/settings`, `src/infrastructure/settings`, `src/main/settings` e `src/renderer/features/settings`.
+
 ## Verificações disponíveis
 
 | Comando                | Finalidade                                                                          |
@@ -37,7 +47,7 @@ O build gera `dist/main`, `dist/preload` e `dist/renderer`. `npm start` abre ess
 | `npm run verify`       | Lint → formatação → tipos → testes TS/Python → build; para no primeiro erro         |
 | `npm run test:smoke`   | Build + Playwright abre o Electron real; exige sessão gráfica local                 |
 
-O smoke valida abertura, ausência de Node/IPC genérico no renderer, API pública congelada com somente `getStatus()`, consulta real ao main, rejeição de argumentos extras, CSP, recarga sem requisições HTTP(S) e bloqueio de novas janelas. Salva uma imagem somente da janela do teste em `test-results/startup.png` (ignorada pelo Git). Não testa captura, STT ou permissões Apple. `verify` não inicia captura nem utiliza APIs pagas.
+O smoke valida isolamento, API pública congelada, IPC real, argumentos inválidos, CSP, recarga sem HTTP(S), bloqueio de popups e preferências persistentes entre reinícios. No Mac também testa safeStorage/Keychain real com valor sintético, simulando somente a escolha do arquivo; não usa credencial real nem API. Pode exigir acesso à sessão gráfica/cofre pelo SO, sem automatizar aprovação. Perfil temporário e ambiente sem `OPENAI_API_KEY`; imagens do app de teste em `test-results/startup.png` e `test-results/settings.png`, ignoradas pelo Git. Não testa captura/STT/TCC. `verify` usa cifra simulada e não acessa o Keychain nem APIs pagas.
 
 `tests/tooling/quality-gates.test.ts` também comprova que ESLint rejeita violações, que os três projetos TypeScript detectam erros strict e que Prettier rejeita formatação inválida. As configurações existentes continuam obrigatórias, sem supressões.
 
@@ -67,8 +77,8 @@ Esses comandos futuros não substituem os ensaios reais de captura e reconhecime
 - `src/main/index.ts`: ciclo de vida Electron; `src/main/app`: criação da janela e validação do endereço local de desenvolvimento.
 - `src/renderer/app`: shell React e estilos; `src/renderer/main.tsx`: montagem da UI. Não importa Node, main ou infraestrutura.
 - `tests/e2e`: smoke do app real; testes unitários ficam junto do código; `tests/setup.ts` prepara RTL.
-- `src/contracts/ipc`: schema versionado de estado público, validado nas duas pontas; `src/preload`: somente `window.meetingCopilot.getStatus()`; `src/main/ipc`: allowlist e autorização por janela/frame/URL. Sem chaves, IPC genérico ou comandos de captura.
-- `scripts/eslint/module-boundaries.mjs` e testes em `tests/tooling` verificam os limites entre os seis módulos, incluindo re-exports/imports dinâmicos e caminhos normalizados. `core`, `infrastructure`, features React e `native/macos` serão criados quando tiverem implementação real, conforme `docs/ENGINEERING-STANDARDS.md`.
+- `src/contracts/ipc`: schema versionado de estado público, validado nas duas pontas; `src/preload`: API fechada `getStatus/getSettings/savePreferences/importSecret/removeSecret`; `src/main/ipc`: allowlist e autorização por janela/frame/URL. Sem chaves, IPC genérico ou comandos de captura.
+- `scripts/eslint/module-boundaries.mjs` e testes em `tests/tooling` verificam os limites entre os seis módulos, incluindo re-exports/imports dinâmicos e caminhos normalizados. `core` e `native/macos` serão criados quando tiverem implementação real, conforme `docs/ENGINEERING-STANDARDS.md`.
 - Janela com `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true` e `webSecurity: true`; navegação, popups e permissões de captura bloqueados. CSP de produção não permite conexões; exceções para HMR existem apenas em desenvolvimento.
 
 Escolhas de build, compatibilidade e correção transitiva de dependências: [ADR 0001](docs/adr/0001-desktop-scaffold.md).

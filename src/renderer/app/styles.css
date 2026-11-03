@@ -92,3 +92,58 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+
+.settings {
+  margin-top: 28px;
+  padding: 28px;
+  border: 1px solid #314058;
+  border-radius: 16px;
+}
+.settings p {
+  color: #b7c4d8;
+}
+.settings fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.settings legend {
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.settings label {
+  display: block;
+  margin-bottom: 16px;
+}
+.settings select,
+.settings button {
+  color: #eef3fb;
+  background: #243652;
+  border: 1px solid #7592bc;
+  border-radius: 6px;
+  padding: 10px;
+  font: inherit;
+}
+.settings select {
+  display: block;
+  margin-top: 8px;
+  width: 100%;
+}
+.settings button {
+  cursor: pointer;
+}
+.settings button:disabled,
+.settings fieldset:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.settings :focus-visible {
+  outline: 3px solid #bcd8ff;
+  outline-offset: 3px;
+}

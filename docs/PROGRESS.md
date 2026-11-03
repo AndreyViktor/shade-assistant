@@ -1,7 +1,32 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
 **Atualização:** 2026-11-03. **Marco:** M0 — fundação + viabilidade Swift.
-**Implementação concluída:** **T001, T002 e T003**. Esta sessão executou exclusivamente T003, sem iniciar outra tarefa.
+**Implementação concluída:** **T001, T002, T003 e T004**. Esta sessão executou exclusivamente **T004**, sem iniciar outra tarefa.
+
+## T004 — Preferências e SecretStore — 2026-11-03
+
+- Início em `main`, árvore limpa, HEAD `ec08d62`; T003 conferida como DONE no código e Git. T004 marcada `IN_PROGRESS` e depois `DONE` somente após os gates e smoke reais abaixo; nenhuma outra tarefa iniciada.
+- Preferências v1 estritas e persistentes: DEMO inicial, Apple Swift local preferido no Mac, pt-BR; modo real e seleção de idiomas são preferências, sem ativar funcionalidades ainda pendentes. Fallback remoto desabilitado e rejeitado no contrato até consentimento/provider. Arquivo inválido não é sobrescrito silenciosamente.
+- SecretStore restrito ao main, safeStorage assíncrono/Keychain no Mac, ciphertext separado e escrita atômica 0600. Importação explícita via seletor nativo; cancelamento/remoção/erros/concorrência tratados. Renderer recebe somente preferências e estado da credencial. Ambiente de desenvolvimento reconhecido somente sem empacotamento, sem persistir chave. Nenhuma chave real lida ou configurada nesta execução.
+- IPC adicional validado nas duas pontas e autorizado por janela/frame/URL; painel React acessível, sem campo de chave. ADR 0005 registra armazenamento, contrato, alternativas e limites.
+- Arquivos: `src/contracts/settings/*`, `src/contracts/ipc/settings.ts`, validação compartilhada, `src/infrastructure/settings/*`, `src/main/settings/*`, autorização/handlers IPC, composição da janela, preload, `src/renderer/features/settings/*`, App/estilos, testes unitários e `tests/e2e/*`, README, ADR 0005, TASKS e este handoff. Sem dependências novas ou mudança no lockfile.
+
+| Comando / verificação                      | Resultado real                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `export PATH=/opt/homebrew/bin:$PATH`      | Node 26 instalado selecionado; sem instalação ou alteração global.                                                                                                                                                                                                                                                                           |
+| `npm test`                                 | **155 testes passaram em 13 arquivos**, incluindo schema, disco real temporário, cifra simulada, main/preload e RTL.                                                                                                                                                                                                                         |
+| `npm run typecheck`                        | Três projetos TS strict passaram.                                                                                                                                                                                                                                                                                                            |
+| `npm run test:smoke` na sandbox            | Build passou; os três testes não conseguiram abrir Electron (`Process failed to launch`).                                                                                                                                                                                                                                                    |
+| `npm run test:smoke` por escalada aprovada | **3 testes passaram no Electron real**: isolamento/IPC; persistência de preferências após encerrar e reabrir processo; importação de valor sintético com safeStorage/Keychain real, ciphertext sem plaintext, decifra correta e remoção. Seletor de arquivo simulado; armazenamento/IPC reais. Perfis temporários, sem chave real/rede paga. |
+| Inspeção de `test-results/settings.png`    | Painel legível, controles completos, estado inativo e aviso sobre integração/idiomas pendentes. Artefato ignorado pelo Git.                                                                                                                                                                                                                  |
+
+**Gate completo:** `npm run verify` passou: ESLint sem warnings, Prettier, três projetos TS strict, **155 testes TS em 13 arquivos**, **12 testes Python** e build main/preload/renderer. `git diff --check` passou. Ajustes durante validação: narrowing do resultado IPC, anotação de retorno `unknown` em teste de argumentos inválidos e normalização explícita de erros de storage sem causa sensível; sem supressões de lint. Smoke emitiu apenas aviso herdado `NO_COLOR`/`FORCE_COLOR`.
+
+**Limites:** arquivo original da chave permanece sob responsabilidade do usuário; aviso exibido antes da importação. `stored` indica presença, não validade na API. Timeout não cancela gravação já iniciada. Cifra/decifra reais testadas no Mac atual, sem ensaio de Keychain bloqueado ou app assinado/distribuído; indisponibilidade/rotação cobertas com cifra simulada. Não há captura/STT Swift, consentimento de envio, chamadas OpenAI, validação real de idiomas ou jornada demo de reunião. Swift/TCC/Windows/CI hospedado não executados e não são critérios desta tarefa. Nenhuma aprovação de TCC, gasto, push ou deploy.
+
+**Commit local da entrega:** `feat(T004): persist preferences and secure main-only secrets` (este commit, incluindo código, testes e registros; localizar hash com `git log -1 --format=%h --grep="feat(T004)"`). Escrita em `.git` pelo mecanismo de escalada, sem alterar permissões, locks ou configurações.
+
+**Blockers técnicos:** nenhum após smoke aprovado. **Próximo passo:** encerrar após o commit local da T004. T005 permanece TODO para uma nova sessão independente do operador/runner.
 
 ## T003 — IPC seguro e fronteiras de módulos — 2026-11-03
 

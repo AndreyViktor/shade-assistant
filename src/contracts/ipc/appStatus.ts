@@ -1,3 +1,7 @@
+import { hasExactKeys } from '../validation';
+import type { Preferences } from '../settings/preferences';
+import type { SettingsResult } from './settings';
+
 export const IPC_VERSION = 1;
 export const APP_STATUS_CHANNEL = 'meeting-copilot:app-status';
 
@@ -25,23 +29,16 @@ export type AppStatusResult =
 
 export interface MeetingCopilotApi {
   readonly getStatus: () => Promise<AppStatusResult>;
+  readonly getSettings: () => Promise<SettingsResult>;
+  readonly savePreferences: (
+    preferences: Preferences,
+  ) => Promise<SettingsResult>;
+  readonly importSecret: () => Promise<SettingsResult>;
+  readonly removeSecret: () => Promise<SettingsResult>;
 }
 
 export function ipcFailure(code: IpcErrorCode): AppStatusResult {
   return { version: IPC_VERSION, ok: false, code };
-}
-
-function hasExactKeys(
-  value: unknown,
-  keys: readonly string[],
-): value is Record<string, unknown> {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    !Array.isArray(value) &&
-    Reflect.ownKeys(value).length === keys.length &&
-    keys.every((key) => Object.hasOwn(value, key))
-  );
 }
 
 export function validateStatusRequest(value: unknown): IpcErrorCode | null {
