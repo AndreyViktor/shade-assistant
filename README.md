@@ -1,4 +1,4 @@
-# Meeting Copilot — fundação desktop (T001–T002)
+# Meeting Copilot — fundação desktop (T001–T003)
 
 Scaffold executável de **Electron + React + TypeScript strict**, primeiro no macOS. A janela inicial exibe `DEMO`, captura inativa e IA desativada. Ainda não há fluxo de reunião, mocks de transcrição, integração OpenAI ou helper Swift. A arquitetura de produto abaixo descreve as próximas entregas, não capacidades já disponíveis.
 
@@ -22,22 +22,22 @@ npm run build
 npm start
 ```
 
-O build gera `dist/main` e `dist/renderer`. `npm start` abre esse build, sem servidor Vite. Ainda não gera instalador, assinatura ou pacote de distribuição (T034).
+O build gera `dist/main`, `dist/preload` e `dist/renderer`. `npm start` abre esse build, sem servidor Vite. Ainda não gera instalador, assinatura ou pacote de distribuição (T034).
 
 ## Verificações disponíveis
 
 | Comando                | Finalidade                                                                          |
 | ---------------------- | ----------------------------------------------------------------------------------- |
-| `npm run lint`         | ESLint com tipos, React Hooks, promessas e restrição básica de imports do renderer  |
+| `npm run lint`         | ESLint com tipos, React Hooks, promessas e fronteiras dos seis módulos              |
 | `npm run format:check` | Prettier; preserva os documentos normativos originais listados em `.prettierignore` |
 | `npm run format`       | Formata os arquivos verificados                                                     |
 | `npm run typecheck`    | TS strict separado para main, renderer e tooling, sem omitir checks das bibliotecas |
-| `npm test`             | Vitest + React Testing Library: URL local permitida e estado inicial honesto        |
-| `npm run build`        | Compila os dois processos via electron-vite                                         |
+| `npm test`             | Vitest + RTL: contratos IPC, autorização, timeout, UI e fronteiras de imports       |
+| `npm run build`        | Compila main, preload e renderer via electron-vite                                  |
 | `npm run verify`       | Lint → formatação → tipos → testes TS/Python → build; para no primeiro erro         |
 | `npm run test:smoke`   | Build + Playwright abre o Electron real; exige sessão gráfica local                 |
 
-O smoke valida abertura, ausência de Node/IPC no renderer, CSP, recarga sem requisições HTTP(S) e bloqueio de novas janelas. Salva uma imagem somente da janela do teste em `test-results/startup.png` (ignorada pelo Git). Não testa captura, STT ou permissões Apple. `verify` não inicia captura nem utiliza APIs pagas.
+O smoke valida abertura, ausência de Node/IPC genérico no renderer, API pública congelada com somente `getStatus()`, consulta real ao main, rejeição de argumentos extras, CSP, recarga sem requisições HTTP(S) e bloqueio de novas janelas. Salva uma imagem somente da janela do teste em `test-results/startup.png` (ignorada pelo Git). Não testa captura, STT ou permissões Apple. `verify` não inicia captura nem utiliza APIs pagas.
 
 `tests/tooling/quality-gates.test.ts` também comprova que ESLint rejeita violações, que os três projetos TypeScript detectam erros strict e que Prettier rejeita formatação inválida. As configurações existentes continuam obrigatórias, sem supressões.
 
@@ -67,10 +67,13 @@ Esses comandos futuros não substituem os ensaios reais de captura e reconhecime
 - `src/main/index.ts`: ciclo de vida Electron; `src/main/app`: criação da janela e validação do endereço local de desenvolvimento.
 - `src/renderer/app`: shell React e estilos; `src/renderer/main.tsx`: montagem da UI. Não importa Node, main ou infraestrutura.
 - `tests/e2e`: smoke do app real; testes unitários ficam junto do código; `tests/setup.ts` prepara RTL.
-- `preload` e `contracts` entram com a API IPC de T003. Nenhuma API privilegiada é exposta neste scaffold. `core`, `infrastructure`, features React e `native/macos` serão criados quando tiverem implementação real, conforme `docs/ENGINEERING-STANDARDS.md`.
+- `src/contracts/ipc`: schema versionado de estado público, validado nas duas pontas; `src/preload`: somente `window.meetingCopilot.getStatus()`; `src/main/ipc`: allowlist e autorização por janela/frame/URL. Sem chaves, IPC genérico ou comandos de captura.
+- `scripts/eslint/module-boundaries.mjs` e testes em `tests/tooling` verificam os limites entre os seis módulos, incluindo re-exports/imports dinâmicos e caminhos normalizados. `core`, `infrastructure`, features React e `native/macos` serão criados quando tiverem implementação real, conforme `docs/ENGINEERING-STANDARDS.md`.
 - Janela com `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true` e `webSecurity: true`; navegação, popups e permissões de captura bloqueados. CSP de produção não permite conexões; exceções para HMR existem apenas em desenvolvimento.
 
 Escolhas de build, compatibilidade e correção transitiva de dependências: [ADR 0001](docs/adr/0001-desktop-scaffold.md).
+
+Contrato IPC, allowlists, fronteiras e limites da T003: [ADR 0004](docs/adr/0004-ipc-and-module-boundaries.md).
 
 ## Decisão central de arquitetura
 

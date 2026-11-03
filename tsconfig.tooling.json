@@ -5,6 +5,7 @@
     "*.config.ts",
     "*.config.mts",
     "tests/e2e/**/*.ts",
-    "tests/tooling/**/*.ts"
+    "tests/tooling/**/*.ts",
+    "src/renderer/env.d.ts"
   ]
 }

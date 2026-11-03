@@ -1,7 +1,31 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
 **Atualização:** 2026-11-03. **Marco:** M0 — fundação + viabilidade Swift.
-**Implementação concluída:** **T001 e T002**. T002 revisada e validada na retomada autorizada pelo usuário. Nenhuma tarefa seguinte iniciada.
+**Implementação concluída:** **T001, T002 e T003**. Esta sessão executou exclusivamente T003, sem iniciar outra tarefa.
+
+## T003 — IPC seguro e fronteiras de módulos — 2026-11-03
+
+- Início em `main`, árvore limpa, HEAD `151973c`; dependência T001 conferida no Git/código. T003 passou de `TODO` a `IN_PROGRESS` e só foi marcada `DONE` após os gates e smoke real abaixo.
+- Criados contrato IPC v1 com schema estrito e API `window.meetingCopilot.getStatus()`. Main autoriza janela, frame principal e URL exata, valida request e remove handler ao fechar; preload valida resposta, redige falhas de transporte e aplica timeout de 5 s. Sem IPC genérico, campos privados ou operações de captura. UI consulta o estado público, com espera/erro acessível e descarte após desmontagem.
+- Fronteiras ESLint para `contracts`, `core`, `infrastructure`, `main`, `preload` e `renderer`, cobrindo caminhos normalizados, re-exports, import types, imports dinâmicos e require. `core`/`infrastructure` não receberam módulos vazios: regras testadas com fixtures virtuais até haver implementações. ADR 0004 registra contrato, matriz de imports e limites.
+- Arquivos: `src/contracts/ipc/*`, `src/preload/*`, `src/main/ipc/*`, criação/teste da janela, `src/renderer/env.d.ts`, App/testes, regra `scripts/eslint/module-boundaries.mjs`, testes de fronteira/smoke, configuração ESLint/electron-vite/tsconfig, README, ADR 0004, TASKS e este handoff. Dependências e lockfile preservados.
+
+| Comando / verificação                                          | Resultado real                                                                                                                                                                                                              |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `export PATH=/opt/homebrew/bin:$PATH`                          | Selecionado Node 26 já instalado; nenhuma instalação ou configuração global.                                                                                                                                                |
+| `npm run verify`                                               | Passou: ESLint sem warnings, Prettier, três projetos TS strict, **108 testes TS em 8 arquivos**, **12 testes Python**, build main/preload/renderer. Aviso de preload ausente eliminado pela implementação.                  |
+| `npm run test:smoke` na sandbox                                | Build passou; Electron não iniciou (`Process failed to launch`).                                                                                                                                                            |
+| `npm run test:smoke` via escalada aprovada para sessão gráfica | **1 teste passou no Electron real**: consulta IPC, API congelada com apenas `getStatus`, argumentos extras rejeitados, ausência de Node/IPC genérico, CSP, recarga sem HTTP(S) e popup bloqueado. App encerrado pelo teste. |
+| Inspeção da imagem do smoke                                    | Janela inicial legível, estado DEMO/inativo e sem conteúdo cortado. `test-results/startup.png` é artefato local ignorado.                                                                                                   |
+| `git diff --check`                                             | Passou sem erro de whitespace.                                                                                                                                                                                              |
+
+As primeiras rodadas detectaram narrowing de `unknown`, uso de propriedade AST obsoleta, seleção incorreta do handler na fixture de recriação e erros de tipos/lint nos testes. Corrigidos antes do gate final, sem supressões nas regras do produto. O smoke emitiu somente o aviso herdado `NO_COLOR`/`FORCE_COLOR`, sem efeito no resultado.
+
+**Limites:** smoke de produção no Mac; caminho dev coberto por testes de URL/autorização, sem repetir abertura gráfica em dev. Testes de autorização do main simulam objetos Electron; o smoke comprova a ponte real para chamadas permitidas e rejeição de argumentos no preload. Não existe captura/STT/JSONL, segredo configurado ou chamada OpenAI nesta entrega. Swift, TCC, sessão real de reunião, Windows e CI hospedado não foram testados; não são critérios da T003. Nenhuma permissão de captura, gasto, push ou deploy.
+
+**Commit local da entrega:** `feat(T003): secure typed IPC and module boundaries` (hash consultável em `git log -1 --format=%h --grep='feat(T003)'`). Escrita em `.git` pelo mecanismo de escalada, sem alterar permissões, locks ou configurações. Se o revisor impedir o commit, esta entrega deve permanecer `BLOCKED` com motivo registrado.
+
+**Blockers técnicos remanescentes:** nenhum. **Próximo passo:** encerrar esta sessão; operador/runner deve iniciar uma sessão independente para outra tarefa. T004 é a primeira elegível pela ordem do backlog; T005 continua sendo a prioridade técnica recomendada no planejamento. Nenhuma delas foi iniciada.
 
 ## Correção B002 do runner — 2026-11-03
 
@@ -75,8 +99,8 @@ O build emite `preload config is missing`, esperado e não silenciado: preload p
 
 - T001 prova scaffold e abertura local. **Não há** captura, transcrição Swift, OpenAI, JSONL, screenshots do produto ou jornada demo com mocks. Nenhuma chamada paga, chave, áudio de reunião ou concessão de permissão TCC foi usada.
 - Não executados: `swift test`, SwiftLint/SwiftFormat, avaliação de idiomas/assets, mic/system, empacotamento, assinatura, Windows ou teste manual humano da reunião. Ainda não existe pacote Swift.
-- T002 está concluída após revisão e retomada do commit. T003 permanece `TODO`: IPC tipado e testes de fronteiras.
-- Nenhum bloqueio remanescente de T001/T002. Próxima sessão recomendada: **T005**, conforme `docs/PROMPT-CODEX.md`; o runner seleciona T003 pela ordem do backlog. Operador deve escolher em **nova sessão**. Windows T036–T039 permanece `DEFERRED`.
+- T001–T003 concluídas; IPC tipado e testes de fronteiras entregues na T003. Domínio, adaptadores e captura permanecem pendentes nas tarefas correspondentes.
+- Nenhum bloqueio técnico remanescente de T001–T003. Próxima sessão recomendada: **T005**, conforme `docs/PROMPT-CODEX.md`; o runner seleciona T004 pela ordem do backlog. Operador deve escolher em **nova sessão**. Windows T036–T039 permanece `DEFERRED`.
 
 ## Commit e retomada
 

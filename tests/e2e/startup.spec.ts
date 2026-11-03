@@ -25,11 +25,39 @@ test('opens the real Electron build with an isolated offline renderer', async ()
       require: 'require' in window,
       process: 'process' in window,
       bridge: 'electron' in window || 'ipcRenderer' in window,
+      methods: Object.keys(window.meetingCopilot),
+      frozen: Object.isFrozen(window.meetingCopilot),
     }));
     expect(isolation).toEqual({
       require: false,
       process: false,
       bridge: false,
+      methods: ['getStatus'],
+      frozen: true,
+    });
+
+    expect(
+      await page.evaluate(() => window.meetingCopilot.getStatus()),
+    ).toEqual({
+      version: 1,
+      ok: true,
+      status: {
+        mode: 'demo',
+        capture: 'inactive',
+        ai: 'disabled',
+        dataSent: 'none',
+      },
+    });
+    expect(
+      await page.evaluate((): unknown =>
+        Reflect.apply(window.meetingCopilot.getStatus, null, [
+          'arbitrary:channel',
+        ]),
+      ),
+    ).toEqual({
+      version: 1,
+      ok: false,
+      code: 'INVALID_REQUEST',
     });
 
     await expect(
