@@ -38,6 +38,26 @@ def eligible_task(tasks: list[Task]) -> Task | None:
     return None
 
 
+def check_pending_tasks(tasks: list[Task]) -> None:
+    pending = [task.id for task in tasks if task.state in {"IN_PROGRESS", "BLOCKED"}]
+    if pending:
+        raise RuntimeError(
+            f"Há tarefas IN_PROGRESS/BLOCKED ({', '.join(pending)}): "
+            "revisar e resolver antes de iniciar outra."
+        )
+
+
+def check_codex_approval_support() -> None:
+    result = subprocess.run(["codex", "exec", "--help"], text=True,
+                            capture_output=True, check=False)
+    if result.returncode or "--approve-for-me" not in result.stdout:
+        raise RuntimeError(
+            "O runner requer Codex CLI com suporte a --approve-for-me. "
+            "Confira codex exec --help e docs/WORKFLOW.md antes de executar. "
+            "Nenhuma tarefa foi iniciada; não há fallback sem sandbox."
+        )
+
+
 def git(root: Path, *args: str) -> str:
     proc = subprocess.run(["git", *args], cwd=root, text=True,
                           capture_output=True, check=False)
@@ -65,6 +85,11 @@ def make_prompt(task: Task) -> str:
     comandos/testes e resultados reais, limitações, arquivos, blockers e próximo passo.
     Se os critérios passarem, marque {task.id} DONE em docs/TASKS.md; faça commit local
     contendo as mudanças de código, testes e documentos, com {task.id} no título.
+    Esta execução usa workspace-write com --approve-for-me. O diretório .git
+    permanece protegido; para git add/commit autorizados, solicite a escalada
+    pelo mecanismo de aprovação do Codex quando necessário. A revisão automática
+    decide a autorização; não altere permissões, locks ou regras para contorná-la.
+    Se a aprovação for negada ou indisponível, registre o motivo e BLOCKED, e pare.
     Nunca faça push, deploy, instalação privilegiada, bypass de sandbox nem habilite
     gastos/chaves sem autorização. Se bloquear, registre BLOCKED e encerre.
     Depois do commit local de {task.id}, ENCERRE: NÃO comece a próxima tarefa.
@@ -77,6 +102,7 @@ def run(root: Path, maximum: int, dry_run: bool) -> int:
         raise RuntimeError(f"docs/TASKS.md não encontrado em {root}")
     if dry_run:
         tasks = parse_tasks(task_file.read_text(encoding="utf-8"))
+        check_pending_tasks(tasks)
         task = eligible_task(tasks)
         print(f"Próxima tarefa elegível: {task.id}" if task else "Nenhuma tarefa elegível.")
         return 0
@@ -85,22 +111,25 @@ def run(root: Path, maximum: int, dry_run: bool) -> int:
         raise RuntimeError("Codex CLI não encontrado no PATH; instale e autentique primeiro.")
     if not shutil.which("git"):
         raise RuntimeError("Git não encontrado no PATH.")
+    check_codex_approval_support()
     for index in range(1, maximum + 1):
         check_clean_git(root)
         tasks = parse_tasks(task_file.read_text(encoding="utf-8"))
-        if any(t.state == "IN_PROGRESS" for t in tasks):
-            raise RuntimeError("Há tarefa IN_PROGRESS de sessão anterior: resolver antes de iniciar outra.")
+        check_pending_tasks(tasks)
         task = eligible_task(tasks)
         if task is None:
             print("Nenhuma tarefa TODO elegível. Fim do ciclo.")
             return 0
         print(f"\n[{index}/{maximum}] Nova sessão Codex para {task.id}", flush=True)
         before = git(root, "rev-parse", "HEAD")
-        result = subprocess.run(["codex", "exec", "--sandbox", "workspace-write", "-"],
+        result = subprocess.run(["codex", "exec", "--sandbox", "workspace-write",
+                                 "--approve-for-me", "-"],
                                 input=make_prompt(task), cwd=root, text=True, check=False)
         if result.returncode:
             raise RuntimeError(f"Codex terminou com erro ({result.returncode}) em {task.id}; confira estado Git.")
-        updated = {t.id: t.state for t in parse_tasks(task_file.read_text(encoding="utf-8"))}
+        updated_tasks = parse_tasks(task_file.read_text(encoding="utf-8"))
+        check_pending_tasks(updated_tasks)
+        updated = {t.id: t.state for t in updated_tasks}
         if updated.get(task.id) != "DONE":
             raise RuntimeError(f"{task.id} terminou como {updated.get(task.id)!r}; corrigir ou tratar bloqueio. Parado.")
         after = git(root, "rev-parse", "HEAD")

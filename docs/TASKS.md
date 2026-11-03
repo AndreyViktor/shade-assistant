@@ -53,6 +53,8 @@
 
 ## Qualidade obrigatória para toda tarefa
 
+Ocorrência **B002 — correção do runner após T002**: `workspace-write` protege `.git`, e a invocação anterior não habilitava revisão de escaladas para finalizar o commit. Runner atualizado com `--approve-for-me`, verificação de suporte e parada diante de qualquer `BLOCKED`/`IN_PROGRESS`; regressões testadas com Git temporário e Codex simulado. Ver ADR 0003 e evidências de execução em `docs/PROGRESS.md`.
+
 Ocorrência **B001 — resolvida na T001**: auditoria inicial detectou GHSA-g3hv-75wg-m249 em `minimatch` transitivo do tooling (11 entradas moderadas). Override para 11.0.1, instalação limpa e gates passaram; auditoria voltou a zero. Revisar remoção do override quando os consumidores adotarem a correção. Ver ADR 0001.
 
 - Aplicar `docs/ENGINEERING-STANDARDS.md` e preservar a direção das dependências. Tarefa de código não é `DONE` com lint/typecheck/test/build falhando ou sem testes pertinentes. Relatar comandos e resultados, incluindo impossibilidade real de rodar Swift/macOS.

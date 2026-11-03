@@ -27,9 +27,11 @@ git commit -m "chore: initialize meeting copilot planning"
 - Uma sessão interativa `codex` não pode garantir que ela própria abra um novo processo independente a cada tarefa. Para execução automática real, **a troca de sessão precisa ser feita externamente** (script mínimo abaixo ou operador humano). Compaction pode ajudar dentro de uma tarefa longa, mas **não substitui a fronteira entre tarefas**.
 
 ## 3. Executor leve (opcional)
-- `python3 scripts/run-codex-tasks.py --dry-run` mostra a primeira tarefa `TODO` cujas dependências estão `DONE`.
-- `python3 scripts/run-codex-tasks.py` inicia uma sessão nova `codex exec --sandbox workspace-write -` para uma tarefa e termina.
+- `python3 scripts/run-codex-tasks.py --dry-run` mostra a primeira tarefa `TODO` cujas dependências estão `DONE`, sem iniciar Codex. Tanto simulação quanto execução param se existir tarefa `BLOCKED` ou `IN_PROGRESS`, mesmo que outra seja elegível.
+- `python3 scripts/run-codex-tasks.py` inicia uma sessão nova `codex exec --sandbox workspace-write --approve-for-me -` para uma tarefa e termina.
 - `python3 scripts/run-codex-tasks.py --max-tasks 3` pode executar **até 3 tarefas em sequência**, iniciando um processo **novo** por tarefa. É apenas um loop limitado, não uma plataforma de agentes.
+- Antes de executar, o runner confirma em `codex exec --help` o suporte a `--approve-for-me`. Se ausente, encerra sem iniciar tarefa ou alterar permissões. Validado com Codex CLI 0.166.0.
+- `workspace-write` protege `.git`; o agente deve solicitar escalada para o commit local pelo mecanismo normal de aprovação. `--approve-for-me` encaminha pedidos elegíveis à revisão automática. A revisão pode negar; nesse caso, registrar `BLOCKED` e parar, sem fallback para full access, alteração global de configuração ou execução de Git fora do fluxo de aprovação.
 - Em cada passagem, o script exige árvore Git limpa, seleciona uma `TODO` elegível, manda executar somente aquela tarefa, e **verifica** ao retornar: estado `DONE`, commit com ID da tarefa e árvore Git limpa. Se falhar, parar e informar. Não forçar reset, não passar ao próximo após erro/`BLOCKED`. Pode ser necessário retomar manualmente após corrigir bloqueios.
 - CLI precisa estar instalada e autenticada e Git com autor configurado. O runner **não** autoriza pagamentos, instala drivers, acessa credenciais, executa push/deploy ou contorna sandbox. Exigir confirmação humana para ações sensíveis. `workspace-write` é capacidade de editar o repositório, não acesso irrestrito ao sistema.
 - **Controle de custos/limites:** preferir `--max-tasks 1` inicialmente, revisar commits e resultados, ampliar para três ou mais somente após comprovar estabilidade; cada sessão do Codex consome sua cota conforme o plano.
@@ -41,6 +43,9 @@ git commit -m "chore: initialize meeting copilot planning"
 
 ## 5. Critério de aceite para o fluxo (não para o app)
 - O **script** só pode declarar sucesso após verificar `DONE` + título de commit com ID + árvore limpa + saída zero. Isso não prova, por si, a qualidade dos testes: o Codex precisa fornecer evidências nos arquivos.
-- Testar o script com `--dry-run` e testes locais em Python; a capacidade de executar Codex no Mac **não foi testada neste pacote de documentação**.
+- `npm run test:runner` usa unittest/Python stdlib, Git real em repositórios temporários e Codex simulado para testar aprovações, recusas, bloqueios, commits, árvore suja e sessões separadas. Esses testes não provam aprovação do serviço: a execução real deve ser registrada em `docs/PROGRESS.md`.
+- O suporte da flag no CLI não comprova disponibilidade de auto-review na conta ou permissão organizacional; eventual recusa/indisponibilidade encerra a execução, preservando as alterações.
 
 Referências: https://learn.chatgpt.com/docs/developer-commands (CLI `codex exec`) e https://learn.chatgpt.com/docs/non-interactive-mode.
+
+Referências da correção do runner: [modo não interativo](https://learn.chatgpt.com/docs/non-interactive-mode), [proteção de `.git`](https://learn.chatgpt.com/docs/agent-approvals-security) e [auto-review](https://learn.chatgpt.com/docs/sandboxing/auto-review).
