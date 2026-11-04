@@ -1,6 +1,6 @@
-# Meeting Copilot — fundação desktop e diagnóstico Swift (T001–T005)
+# Meeting Copilot — fundação desktop e POC Swift (T006 em validação)
 
-Scaffold executável de **Electron + React + TypeScript strict**, primeiro no macOS. A janela inicial exibe `DEMO`, captura inativa e IA desativada. Há um diagnóstico Swift independente de capacidades (T005). Ainda não há fluxo de reunião, mocks de transcrição, integração OpenAI ou helper de captura/transcrição. A arquitetura de produto abaixo descreve as próximas entregas, não capacidades já disponíveis.
+Scaffold executável de **Electron + React + TypeScript strict**, primeiro no macOS. A janela inicial exibe `DEMO`, captura inativa e IA desativada. Há um diagnóstico Swift independente de capacidades (T005) e uma POC própria de áudio (T006), compilada e aguardando teste humano. Ainda não há fluxo de reunião, mocks de transcrição, integração OpenAI ou helper de produção integrado ao Electron. A arquitetura de produto abaixo descreve as próximas entregas, não capacidades já disponíveis.
 
 ## Executar localmente
 
@@ -55,6 +55,17 @@ O smoke valida isolamento, API pública congelada, IPC real, argumentos inválid
 
 [`.github/workflows/verify.yml`](.github/workflows/verify.yml) executa instalação pelo lockfile e `npm run verify` em Ubuntu 24.04, com Node de `.nvmrc`, em pull requests, push para `main` ou acionamento manual. Actions fixadas por SHA, permissão `contents: read`, sem credenciais persistidas, cache ou secrets. Não baixa o binário Electron nem abre janelas. Smoke gráfico e validação Apple ficam separados. O workflow foi preparado localmente; execução hospedada depende de publicação autorizada, não realizada nesta entrega. Decisões: [ADR 0002](docs/adr/0002-quality-gates.md).
 
+### POC de áudio T006 — teste humano pendente
+
+O executável próprio `MeetingCopilotAudioPOC` separa microfone/AVAudioEngine e sistema/ScreenCaptureKit, com um SpeechAnalyzer por fonte. Assets pt-BR preparados; captura e qualidade ainda **não validadas**. Não é o helper de produção nem está ligado ao Electron.
+
+```bash
+sh scripts/build-audio-poc.sh   # apenas compila e assina ad hoc o bundle local
+python3 scripts/check-audio-poc.py   # checks sem captura, TCC ou rede
+```
+
+Para executar captura manualmente, siga o [roteiro T006](docs/T006-SWIFT-AUDIO-POC.md): permissões humanas, frases sintéticas, comandos exatos, pausa/parada e relatório sem conteúdo sensível. T006 permanece **BLOCKED** até esse teste. Não usar reuniões reais nem redirecionar transcrições para arquivos.
+
 ### Diagnóstico e gates Swift (T005)
 
 Pacote próprio em `native/macos`, sem dependências externas, compilado com Xcode 26.6/SDK 26.5 e Swift 6.3.3 no macOS 26.6.2 arm64. `MeetingCopilotCapabilities` consulta APIs, pt-BR/en-US, assets e estado das permissões; constrói/cancela SpeechAnalyzer sem áudio. Não captura, solicita TCC, reserva assets ou baixa modelos. Emite um relatório JSON único, sem integração Electron/JSONL de transcrição.
@@ -66,7 +77,7 @@ npm run probe:swift    # diagnóstico real; não faz parte dos testes unitários
 
 `verify:swift` exige **swift-format 6.3.0**, fornecido pelo Xcode, e usa `native/macos/.swift-format`. SwiftLint/SwiftFormat não estão instalados; nenhuma instalação global foi feita. Manifest tools 6.2; SDK 26+ necessário para build. O CLI tem target macOS 14 e guarda de API para macOS 26; versões antigas/Intel não foram ensaiadas. CI Ubuntu continua executando apenas os gates JS/Python; mudanças Swift exigem também o gate nativo no Mac. Sandbox do agente pode restringir caches/serviços Apple: usar aprovação normal, sem alterar permissões.
 
-Resultado real: `isAvailable = true`, pt-BR/en-US nas listas de suporte/instalação, mas `AssetInventory = supported` para ambos. Preparação de modelo não realizada: disponibilidade para captura não está comprovada. Microfone `notDetermined`, preflight de tela `false`, sem pedidos de acesso. Ver [relatório T005](docs/T005-SWIFT-CAPABILITIES.md), [evidência JSON](docs/evidence/T005-capabilities-2026-11-03.json) e [ADR 0006](docs/adr/0006-swift-capability-spike.md). POC de áudio, assets prontos, permissões do bundle e streaming pertencem às tarefas seguintes.
+Resultado histórico T005 (2026-11-03): `isAvailable = true`, pt-BR/en-US nas listas de suporte/instalação, mas `AssetInventory = supported` para ambos. Preparação de modelo não realizada: disponibilidade para captura não está comprovada. Microfone `notDetermined`, preflight de tela `false`, sem pedidos de acesso. Ver [relatório T005](docs/T005-SWIFT-CAPABILITIES.md), [evidência JSON](docs/evidence/T005-capabilities-2026-11-03.json) e [ADR 0006](docs/adr/0006-swift-capability-spike.md). Na retomada T006, os assets pt-BR foram instalados/preparados no bundle próprio sem captura; permissões e streaming continuam aguardando teste humano.
 
 ## Organização e limites
 
@@ -74,7 +85,7 @@ Resultado real: `isAvailable = true`, pt-BR/en-US nas listas de suporte/instala�
 - `src/renderer/app`: shell React e estilos; `src/renderer/main.tsx`: montagem da UI. Não importa Node, main ou infraestrutura.
 - `tests/e2e`: smoke do app real; testes unitários ficam junto do código; `tests/setup.ts` prepara RTL.
 - `src/contracts/ipc`: schema versionado de estado público, validado nas duas pontas; `src/preload`: API fechada `getStatus/getSettings/savePreferences/importSecret/removeSecret`; `src/main/ipc`: allowlist e autorização por janela/frame/URL. Sem chaves, IPC genérico ou comandos de captura.
-- `scripts/eslint/module-boundaries.mjs` e testes em `tests/tooling` verificam os limites entre os seis módulos, incluindo re-exports/imports dinâmicos e caminhos normalizados. `core` será criado quando tiver implementação real; `native/macos` contém apenas o diagnóstico T005, conforme `docs/ENGINEERING-STANDARDS.md`.
+- `scripts/eslint/module-boundaries.mjs` e testes em `tests/tooling` verificam os limites entre os seis módulos, incluindo re-exports/imports dinâmicos e caminhos normalizados. `core` será criado quando tiver implementação real; `native/macos` contém o diagnóstico T005 e a POC independente T006, conforme `docs/ENGINEERING-STANDARDS.md`.
 - Janela com `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true` e `webSecurity: true`; navegação, popups e permissões de captura bloqueados. CSP de produção não permite conexões; exceções para HMR existem apenas em desenvolvimento.
 
 Escolhas de build, compatibilidade e correção transitiva de dependências: [ADR 0001](docs/adr/0001-desktop-scaffold.md).
