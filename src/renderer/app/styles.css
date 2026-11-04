@@ -210,3 +210,21 @@ summary {
   min-height: 44px;
   line-height: 1.5;
 }
+
+.suggestion-card {
+  margin: 12px 0;
+  padding: 14px;
+  border: 1px solid #7592bc;
+  border-radius: 10px;
+  background: #182338;
+  overflow-wrap: anywhere;
+}
+.suggestion-card h4 {
+  margin: 8px 0;
+  font-size: 16px;
+}
+.suggestion-category,
+.suggestion-grounding {
+  color: #bed5f7;
+  font-size: 13px;
+}

@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SessionControls } from './SessionControls';
 const consent = { capture: false, context: false, remoteAudio: false };
 const reply = (phase: string) => ({
-  version: 1,
+  version: 2,
   ok: true,
   demo: emptyDemo(),
   session: { mode: 'demo', phase, consent },
@@ -20,6 +20,92 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe('session controls', () => {
+  it.each(['paused', 'running'])(
+    'refreshes expiration in %s after playback completion and then stops polling',
+    async (phase) => {
+      vi.useFakeTimers();
+      const card = {
+        id: 'demo-1-2',
+        category: 'question',
+        title: 'Contexto',
+        body: 'Sugestão sintética.',
+        groundedIn: 'inference',
+        expiresAt: 30000,
+      };
+      const session = vi.fn().mockResolvedValue({
+        ...reply(phase),
+        demo: { ...emptyDemo(), completed: true, suggestions: [card] },
+      });
+      vi.stubGlobal('meetingCopilot', { session });
+      render(<SessionControls />);
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(screen.getByRole('article')).toBeVisible();
+      session.mockResolvedValue({
+        ...reply(phase),
+        demo: { ...emptyDemo(), completed: true },
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(500);
+      });
+      expect(screen.queryByRole('article')).not.toBeInTheDocument();
+      const calls = session.mock.calls.length;
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(10000);
+      });
+      expect(session).toHaveBeenCalledTimes(calls);
+    },
+  );
+
+  it('discards a stale read after dismissal and does not restore the card', async () => {
+    vi.useFakeTimers();
+    const card = {
+      id: 'demo-1-2',
+      category: 'question',
+      title: 'Contexto',
+      body: 'Sugestão sintética.',
+      groundedIn: 'inference',
+      expiresAt: 30000,
+    };
+    const withCard = {
+      ...reply('paused'),
+      demo: { ...emptyDemo(), suggestions: [card] },
+    };
+    const session = vi.fn().mockResolvedValue(withCard);
+    vi.stubGlobal('meetingCopilot', { session });
+    render(<SessionControls />);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    let finish: (value: unknown) => void = () => {};
+    session.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+    session.mockResolvedValue(reply('paused'));
+    await act(async () => {
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Descartar: Contexto' }),
+      );
+      await Promise.resolve();
+    });
+    expect(session).toHaveBeenLastCalledWith({
+      version: 2,
+      action: 'dismiss-suggestion',
+      id: card.id,
+    });
+    await act(async () => {
+      finish(withCard);
+      await Promise.resolve();
+    });
+    expect(screen.queryByRole('article')).not.toBeInTheDocument();
+  });
+
   it('polls simulated content, labels its source and stops polling after unmount', async () => {
     vi.useFakeTimers();
     const session = vi.fn().mockResolvedValue(reply('running'));
@@ -38,7 +124,16 @@ describe('session controls', () => {
           locale: 'pt-BR',
           text: 'Pergunta sintética?',
         },
-        suggestion: { sequence: 2, text: 'Sugestão sintética.' },
+        suggestions: [
+          {
+            id: 'demo-1-2',
+            category: 'question',
+            title: 'Contexto',
+            body: 'Sugestão sintética.',
+            groundedIn: 'inference',
+            expiresAt: 30000,
+          },
+        ],
         completed: false,
       },
     });
@@ -88,7 +183,7 @@ describe('session controls', () => {
             locale: 'pt-BR',
             text: 'Late content',
           },
-          suggestion: null,
+          suggestions: [],
           completed: false,
         },
       });
@@ -151,7 +246,7 @@ describe('session controls', () => {
     render(<SessionControls />);
     await screen.findByText('Não iniciada');
     expect(session).toHaveBeenCalledExactlyOnceWith({
-      version: 1,
+      version: 2,
       action: 'read',
     });
     expect(screen.getByRole('button', { name: 'Pausar' })).toBeDisabled();
@@ -159,7 +254,7 @@ describe('session controls', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Iniciar DEMO' }));
     await screen.findByText('Em andamento');
     expect(session).toHaveBeenLastCalledWith({
-      version: 1,
+      version: 2,
       action: 'start',
       options: { mode: 'demo', consent },
     });
@@ -185,7 +280,7 @@ describe('session controls', () => {
     vi.stubGlobal('meetingCopilot', { session });
     render(<SessionControls />);
     await screen.findByText('Em andamento');
-    session.mockResolvedValue({ version: 1, ok: false, code: 'TIMEOUT' });
+    session.mockResolvedValue({ version: 2, ok: false, code: 'TIMEOUT' });
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     await screen.findByRole('alert');

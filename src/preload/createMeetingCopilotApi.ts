@@ -44,11 +44,15 @@ export function createMeetingCopilotApi(invoke: Invoke): MeetingCopilotApi {
       return await Promise.race([
         invoke(channel, request),
         new Promise((resolve) => {
-          timer = setTimeout(() => resolve(ipcFailure('TIMEOUT')), timeout);
+          timer = setTimeout(
+            () =>
+              resolve({ ...ipcFailure('TIMEOUT'), version: request.version }),
+            timeout,
+          );
         }),
       ]);
     } catch {
-      return ipcFailure('UNAVAILABLE');
+      return { ...ipcFailure('UNAVAILABLE'), version: request.version };
     } finally {
       clearTimeout(timer);
     }
@@ -72,7 +76,7 @@ export function createMeetingCopilotApi(invoke: Invoke): MeetingCopilotApi {
       const request = args.length === 1 ? parseSessionRequest(args[0]) : null;
       if (!request)
         return {
-          version: 1 as const,
+          version: 2 as const,
           ok: false as const,
           code: 'INVALID_REQUEST' as const,
         };

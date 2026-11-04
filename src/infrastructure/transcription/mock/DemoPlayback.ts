@@ -1,3 +1,4 @@
+import { SuggestionStore } from '../../../core/suggestions/SuggestionStore';
 import { emptyDemo } from '../../../contracts/meeting/demo';
 import type { DemoSnapshot } from '../../../contracts/meeting/demo';
 import type { MeetingSession } from '../../../core/meeting/MeetingSession';
@@ -6,6 +7,8 @@ import { demoScript } from './demoScript';
 /** Bounded synthetic playback, owned by the main process for one session. */
 export class DemoPlayback {
   private state = emptyDemo();
+  private readonly suggestions = new SuggestionStore();
+  private run = 0;
   private turn = 0;
   private stage: 'transcript' | 'suggestion' = 'transcript';
   private timer: ReturnType<typeof setTimeout> | undefined;
@@ -17,12 +20,13 @@ export class DemoPlayback {
     return {
       ...this.state,
       transcript: this.state.transcript ? { ...this.state.transcript } : null,
-      suggestion: this.state.suggestion ? { ...this.state.suggestion } : null,
+      suggestions: this.suggestions.snapshot(),
     };
   }
 
   start(): void {
     this.stop();
+    this.run += 1;
     this.resume();
   }
 
@@ -51,15 +55,16 @@ export class DemoPlayback {
         if (this.stage === 'transcript') {
           this.state = {
             transcript: { ...next.transcript },
-            suggestion: null,
+            suggestions: [],
             completed: false,
           };
           this.stage = 'suggestion';
         } else {
-          this.state.suggestion =
-            next.suggestion === null
-              ? null
-              : { sequence: next.transcript.sequence, text: next.suggestion };
+          if (next.suggestion)
+            this.suggestions.add(
+              `demo-${this.run}-${next.transcript.sequence}`,
+              next.suggestion,
+            );
           this.turn += 1;
           this.stage = 'transcript';
           this.state.completed = this.turn === demoScript.length;
@@ -70,9 +75,14 @@ export class DemoPlayback {
     );
   }
 
+  dismiss(id: string): void {
+    this.suggestions.dismiss(id);
+  }
+
   stop(): void {
     this.pause();
     this.state = emptyDemo();
+    this.suggestions.clear();
     this.turn = 0;
     this.stage = 'transcript';
   }

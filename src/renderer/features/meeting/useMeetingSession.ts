@@ -19,7 +19,7 @@ export function useMeetingSession() {
     async function load() {
       try {
         const result = await window.meetingCopilot.session({
-          version: 1,
+          version: 2,
           action: 'read',
         });
         if (!active || revision.current !== initialRevision) return;
@@ -72,23 +72,31 @@ export function useMeetingSession() {
     }
   }
 
-  const running = session?.phase === 'running';
+  const polling =
+    (session?.phase === 'running' && !demo.completed) ||
+    ((session?.phase === 'running' || session?.phase === 'paused') &&
+      demo.suggestions.length > 0);
   useEffect(() => {
-    if (!running || busy) return;
+    if (!polling || busy) return;
     let active = true;
     let timer: ReturnType<typeof setTimeout>;
     const currentRevision = revision.current;
     async function poll() {
       try {
         const result = await window.meetingCopilot.session({
-          version: 1,
+          version: 2,
           action: 'read',
         });
         if (!active || revision.current !== currentRevision) return;
         if (!result.ok) throw new Error('Unavailable');
         setSession(result.session);
         setDemo(result.demo);
-        if (result.session.phase === 'running' && !result.demo.completed)
+        if (
+          (result.session.phase === 'running' && !result.demo.completed) ||
+          ((result.session.phase === 'running' ||
+            result.session.phase === 'paused') &&
+            result.demo.suggestions.length > 0)
+        )
           timer = setTimeout(() => {
             void poll();
           }, 500);
@@ -108,7 +116,7 @@ export function useMeetingSession() {
       active = false;
       clearTimeout(timer);
     };
-  }, [running, busy]);
+  }, [polling, busy]);
 
   return { session, demo, busy, error, command };
 }

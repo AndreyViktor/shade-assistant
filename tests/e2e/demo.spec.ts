@@ -36,7 +36,7 @@ test('plays deterministic demo transcription and suggestions without credentials
     ).toBeVisible();
     await page.getByRole('button', { name: 'Pausar' }).click();
     const paused = await page.evaluate(() =>
-      window.meetingCopilot.session({ version: 1, action: 'read' }),
+      window.meetingCopilot.session({ version: 2, action: 'read' }),
     );
     await expect(preview.getByText(/Roteiro pausado/)).toBeVisible();
     await page.screenshot({ path: 'test-results/demo.png' });
@@ -44,7 +44,7 @@ test('plays deterministic demo transcription and suggestions without credentials
     await page.waitForTimeout(3200);
     expect(
       await page.evaluate(() =>
-        window.meetingCopilot.session({ version: 1, action: 'read' }),
+        window.meetingCopilot.session({ version: 2, action: 'read' }),
       ),
     ).toEqual(paused);
     await page.getByRole('button', { name: 'Retomar' }).click();
@@ -54,10 +54,10 @@ test('plays deterministic demo transcription and suggestions without credentials
     await expect(preview).toHaveCount(0);
     expect(
       await page.evaluate(() =>
-        window.meetingCopilot.session({ version: 1, action: 'read' }),
+        window.meetingCopilot.session({ version: 2, action: 'read' }),
       ),
     ).toMatchObject({
-      demo: { transcript: null, suggestion: null, completed: false },
+      demo: { transcript: null, suggestions: [], completed: false },
     });
     await start.click();
     await expect(

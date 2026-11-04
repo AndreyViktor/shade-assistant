@@ -11,7 +11,7 @@ describe('App scaffold', () => {
     vi.stubGlobal('meetingCopilot', {
       getStatus,
       session: vi.fn().mockResolvedValue({
-        version: 1,
+        version: 2,
         ok: true,
         demo: emptyDemo(),
         session: {
