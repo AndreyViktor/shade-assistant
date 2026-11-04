@@ -3,6 +3,12 @@
 **Atualização:** 2026-11-04. **Marco:** M0 — fundação + viabilidade Swift.
 **Implementação concluída:** **T001–T005**. Retomada exclusivamente **T006**, com implementação parcial validada e estado **BLOCKED aguardando teste humano**. Nenhuma outra tarefa iniciada.
 
+## T006 — primeiro resultado real do microfone — 2026-11-04
+
+- Após o commit `8704c0b`, o usuário forneceu saída real da POC: sete eventos parciais e um final em `pt-BR`, `source=mic`, `segment=1`. O callback que antes encerrava o processo conseguiu receber áudio e produzir um resultado final. Não registrar o conteúdo falado no repositório.
+- Se a frase proferida correspondeu à frase sintética sugerida no roteiro, o resultado final omitiu parte dela; não há amostra suficiente para medir precisão. A faixa inicial dos resultados parciais variou em relação à faixa final; ainda não foi investigado se isso decorre da semântica dos parciais ou da normalização temporal.
+- As linhas recebidas não informam pausa, retomada, parada, indicador do microfone ou o estado do processo depois do resultado. Ainda faltam os ensaios de sistema e fontes simultâneas. **T006 permanece BLOCKED** até verificar as duas fontes e o lifecycle no Mac; B003 corrigido para o início/transcrição observados, com encerramento ainda pendente.
+
 ## T006 — correção do crash no microfone — 2026-11-04
 
 - O usuário autorizou o microfone e relatou encerramento antes da transcrição. O relatório aponta `EXC_BREAKPOINT` em `_dispatch_assert_queue_fail`, seguido de `_swift_task_checkIsolatedSwift` e do callback `MicrophoneCapture.start()` na fila `RealtimeMessenger.mServiceQueue`. Não há evidência de falha de permissão nem de resultado de reconhecimento.
