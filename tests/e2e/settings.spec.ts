@@ -8,6 +8,9 @@ test('persists preferences across real Electron restarts without network or rend
   let app = await fixture.launch();
   try {
     let page = await app.firstWindow();
+    await page
+      .getByRole('button', { name: 'Preferências', exact: true })
+      .click();
     const outgoing: string[] = [];
     page.on('request', (request) => {
       if (/^https?:/.test(request.url())) outgoing.push(request.url());
@@ -25,6 +28,9 @@ test('persists preferences across real Electron restarts without network or rend
     await app.close();
     app = await fixture.launch();
     page = await app.firstWindow();
+    await page
+      .getByRole('button', { name: 'Preferências', exact: true })
+      .click();
     await expect(page.getByLabel('Modo preferido')).toHaveValue('real');
     await expect(page.getByLabel('Idiomas preferidos')).toHaveValue(
       'pt-BR+en-US',
@@ -72,6 +78,9 @@ test('Mac SecretStore uses real OS encryption for a synthetic value; renderer se
   const app = await fixture.launch();
   try {
     const page = await app.firstWindow();
+    await page
+      .getByRole('button', { name: 'Preferências', exact: true })
+      .click();
     // Simulate only the file selection; safeStorage and the product's storage/IPC are real.
     await app.evaluate(({ dialog }, path) => {
       dialog.showOpenDialog = () =>

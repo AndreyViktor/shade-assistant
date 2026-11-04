@@ -23,10 +23,11 @@ export async function createMainWindow(): Promise<BrowserWindow> {
 
   const window = new BrowserWindow({
     title: 'Meeting Copilot',
-    width: 880,
-    height: 620,
-    minWidth: 480,
-    minHeight: 420,
+    width: 440,
+    height: 640,
+    minWidth: 360,
+    minHeight: 400,
+    alwaysOnTop: true,
     show: false,
     backgroundColor: '#101827',
     webPreferences: {

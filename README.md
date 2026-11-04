@@ -1,6 +1,6 @@
-# Meeting Copilot — fundação desktop e POC Swift (T006 em validação)
+# Meeting Copilot — painel desktop e POC Swift
 
-Scaffold executável de **Electron + React + TypeScript strict**, primeiro no macOS. A janela inicial exibe `DEMO`, captura inativa e IA desativada. Há um diagnóstico Swift independente de capacidades (T005) e uma POC própria de áudio (T006), compilada e aguardando teste humano. Ainda não há fluxo de reunião, mocks de transcrição, integração OpenAI ou helper de produção integrado ao Electron. A arquitetura de produto abaixo descreve as próximas entregas, não capacidades já disponíveis.
+Scaffold executável de **Electron + React + TypeScript strict**, primeiro no macOS. A janela inicial exibe `DEMO`, captura inativa e IA desativada. Há um diagnóstico Swift independente de capacidades (T005) e uma POC própria de áudio (T006), validada em pt-BR no Mac pelo usuário; evidências e limites em `docs/PROGRESS.md`. Ainda não há fluxo de reunião, mocks de transcrição, integração OpenAI ou helper de produção integrado ao Electron. A arquitetura de produto abaixo descreve as próximas entregas, não capacidades já disponíveis.
 
 ## Executar localmente
 
@@ -23,6 +23,12 @@ npm start
 ```
 
 O build gera `dist/main`, `dist/preload` e `dist/renderer`. `npm start` abre esse build, sem servidor Vite. Ainda não gera instalador, assinatura ou pacote de distribuição (T034).
+
+## Painel flutuante (T007)
+
+Janela de 440 × 640, redimensionável até o mínimo de 360 × 400, sempre à frente de janelas comuns. Arraste pela barra de título e use o botão nativo amarelo para minimizar. No Mac, o menu **Janela** oferece **⌘M** (Minimizar painel) e **⇧⌘M** (Mostrar painel). Os atalhos pertencem ao app ativo; não são globais. Ative o app pelo Dock para restaurar o painel minimizado ou recriar a janela fechada. **⌘Q** encerra o app.
+
+**Tab/Shift+Tab** navegam pelos controles; **Enter/Espaço** abrem ou recolhem Preferências. Dentro das preferências, **Esc** ou **Voltar ao painel** recolhem a seção e devolvem o foco ao botão. Rascunhos são preservados ao recolher. O menu **Exibir** permite ampliar o texto; o conteúdo rola verticalmente em janelas pequenas. O painel continua em DEMO, sem captura ou sugestões implementadas. Proteção em compartilhamento de tela pertence à T030, sem garantia de invisibilidade.
 
 ## Preferências e chave (T004)
 
@@ -47,7 +53,7 @@ Arquivos: `preferences.v1.json` e `openai-key.enc` no `userData` do Electron. Pr
 | `npm run verify`       | Lint → formatação → tipos → testes TS/Python → build; para no primeiro erro         |
 | `npm run test:smoke`   | Build + Playwright abre o Electron real; exige sessão gráfica local                 |
 
-O smoke valida isolamento, API pública congelada, IPC real, argumentos inválidos, CSP, recarga sem HTTP(S), bloqueio de popups e preferências persistentes entre reinícios. No Mac também testa safeStorage/Keychain real com valor sintético, simulando somente a escolha do arquivo; não usa credencial real nem API. Pode exigir acesso à sessão gráfica/cofre pelo SO, sem automatizar aprovação. Perfil temporário e ambiente sem `OPENAI_API_KEY`; imagens do app de teste em `test-results/startup.png` e `test-results/settings.png`, ignoradas pelo Git. Não testa captura/STT/TCC. `verify` usa cifra simulada e não acessa o Keychain nem APIs pagas.
+O smoke também verifica janela flutuante, minimização/restauração pelos comandos do menu, accelerators registrados, foco por teclado, redimensionamento e zoom de 200%. As teclas nativas do menu macOS não são emitidas pelo Playwright; os testes invocam os handlers reais do menu. Não é uma auditoria manual de VoiceOver. O smoke valida isolamento, API pública congelada, IPC real, argumentos inválidos, CSP, recarga sem HTTP(S), bloqueio de popups e preferências persistentes entre reinícios. No Mac também testa safeStorage/Keychain real com valor sintético, simulando somente a escolha do arquivo; não usa credencial real nem API. Pode exigir acesso à sessão gráfica/cofre pelo SO, sem automatizar aprovação. Perfil temporário e ambiente sem `OPENAI_API_KEY`; imagens do app de teste em `test-results/startup.png`, `test-results/settings.png`, `test-results/panel.png` e `test-results/panel-zoom.png`, ignoradas pelo Git. Não testa captura/STT/TCC. `verify` usa cifra simulada e não acessa o Keychain nem APIs pagas.
 
 `tests/tooling/quality-gates.test.ts` também comprova que ESLint rejeita violações, que os três projetos TypeScript detectam erros strict e que Prettier rejeita formatação inválida. As configurações existentes continuam obrigatórias, sem supressões.
 
@@ -55,16 +61,16 @@ O smoke valida isolamento, API pública congelada, IPC real, argumentos inválid
 
 [`.github/workflows/verify.yml`](.github/workflows/verify.yml) executa instalação pelo lockfile e `npm run verify` em Ubuntu 24.04, com Node de `.nvmrc`, em pull requests, push para `main` ou acionamento manual. Actions fixadas por SHA, permissão `contents: read`, sem credenciais persistidas, cache ou secrets. Não baixa o binário Electron nem abre janelas. Smoke gráfico e validação Apple ficam separados. O workflow foi preparado localmente; execução hospedada depende de publicação autorizada, não realizada nesta entrega. Decisões: [ADR 0002](docs/adr/0002-quality-gates.md).
 
-### POC de áudio T006 — teste humano pendente
+### POC de áudio T006 — validação registrada
 
-O executável próprio `MeetingCopilotAudioPOC` separa microfone/AVAudioEngine e sistema/ScreenCaptureKit, com um SpeechAnalyzer por fonte. Assets pt-BR preparados; captura e qualidade ainda **não validadas**. Não é o helper de produção nem está ligado ao Electron.
+O executável próprio `MeetingCopilotAudioPOC` separa microfone/AVAudioEngine e sistema/ScreenCaptureKit, com um SpeechAnalyzer por fonte. Captura e transcrição pt-BR de mic/system, separadas e simultâneas, confirmadas pelo usuário; qualidade e latência não quantificadas. Não é o helper de produção nem está ligado ao Electron.
 
 ```bash
 sh scripts/build-audio-poc.sh   # apenas compila e assina ad hoc o bundle local
 python3 scripts/check-audio-poc.py   # checks sem captura, TCC ou rede
 ```
 
-Para executar captura manualmente, siga o [roteiro T006](docs/T006-SWIFT-AUDIO-POC.md): permissões humanas, frases sintéticas, comandos exatos, pausa/parada e relatório sem conteúdo sensível. T006 permanece **BLOCKED** até esse teste. Não usar reuniões reais nem redirecionar transcrições para arquivos.
+Para executar captura manualmente, siga o [roteiro T006](docs/T006-SWIFT-AUDIO-POC.md): permissões humanas, frases sintéticas, comandos exatos, pausa/parada e relatório sem conteúdo sensível. T006 está **DONE** no escopo da POC; veja as evidências e limitações em `docs/PROGRESS.md`. Não usar reuniões reais nem redirecionar transcrições para arquivos.
 
 ### Diagnóstico e gates Swift (T005)
 
@@ -77,7 +83,7 @@ npm run probe:swift    # diagnóstico real; não faz parte dos testes unitários
 
 `verify:swift` exige **swift-format 6.3.0**, fornecido pelo Xcode, e usa `native/macos/.swift-format`. SwiftLint/SwiftFormat não estão instalados; nenhuma instalação global foi feita. Manifest tools 6.2; SDK 26+ necessário para build. O CLI tem target macOS 14 e guarda de API para macOS 26; versões antigas/Intel não foram ensaiadas. CI Ubuntu continua executando apenas os gates JS/Python; mudanças Swift exigem também o gate nativo no Mac. Sandbox do agente pode restringir caches/serviços Apple: usar aprovação normal, sem alterar permissões.
 
-Resultado histórico T005 (2026-11-03): `isAvailable = true`, pt-BR/en-US nas listas de suporte/instalação, mas `AssetInventory = supported` para ambos. Preparação de modelo não realizada: disponibilidade para captura não está comprovada. Microfone `notDetermined`, preflight de tela `false`, sem pedidos de acesso. Ver [relatório T005](docs/T005-SWIFT-CAPABILITIES.md), [evidência JSON](docs/evidence/T005-capabilities-2026-11-03.json) e [ADR 0006](docs/adr/0006-swift-capability-spike.md). Na retomada T006, os assets pt-BR foram instalados/preparados no bundle próprio sem captura; permissões e streaming continuam aguardando teste humano.
+Resultado histórico T005 (2026-11-03): `isAvailable = true`, pt-BR/en-US nas listas de suporte/instalação, mas `AssetInventory = supported` para ambos. Preparação de modelo não realizada: disponibilidade para captura não está comprovada. Microfone `notDetermined`, preflight de tela `false`, sem pedidos de acesso. Ver [relatório T005](docs/T005-SWIFT-CAPABILITIES.md), [evidência JSON](docs/evidence/T005-capabilities-2026-11-03.json) e [ADR 0006](docs/adr/0006-swift-capability-spike.md). Na retomada T006, os assets pt-BR foram instalados/preparados no bundle próprio sem captura; o ensaio posterior de mic/system e parada foi confirmado pelo usuário na conclusão da T006.
 
 ## Organização e limites
 

@@ -1,7 +1,31 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
-**Atualização:** 2026-11-04. **Marco:** M0 — fundação + viabilidade Swift.
-**Implementação concluída:** **T001–T006**. T006 validada no Mac pelo usuário e encerrada; nenhuma tarefa seguinte iniciada.
+**Atualização:** 2026-11-04. **Marco:** M1 — painel flutuante.
+**Implementação concluída:** **T001–T007**. T007 validada com gates e Electron real; T008 não iniciada.
+
+## T007 — painel flutuante acessível — 2026-11-04
+
+- Início em `main`, árvore limpa, HEAD `3df70ad`; dependência T003 DONE conferida no código/Git. T007 passou por IN_PROGRESS e foi marcada DONE após os gates abaixo. Trabalho exclusivo nesta tarefa.
+- Janela 440 × 640, mínimo 360 × 400, sempre à frente de janelas comuns, com moldura nativa para arrastar/redimensionar/minimizar. Menu Janela: ⌘M para minimizar, ⇧⌘M para mostrar; atalhos locais ao app ativo. Controlador restaura/foca e recria pelo evento activate, compartilhando aberturas concorrentes. Menu de edição e zoom preserva operações de teclado.
+- Preferências recolhidas inicialmente, com botão semântico, aria-expanded/controls, foco visível e controles de pelo menos 44 px. Enter/Espaço abrem; Esc e Voltar ao painel recolhem e devolvem o foco; rascunhos preservados. Conteúdo com rolagem e sem overflow horizontal no mínimo com zoom 200%. DEMO, captura inativa e IA desativada continuam explícitos.
+- Arquivos: `src/main/app/createMainWindow*`, novos `createPanelController*` e `installApplicationMenu.ts`, `src/main/index.ts`, `src/renderer/app/{App.tsx,styles.css}`, novos `features/settings/SettingsDisclosure*`, `tests/e2e/{panel,settings}.spec.ts`, README, [ADR 0008](adr/0008-floating-panel-native-controls.md), TASKS e este registro. Nenhuma dependência, contrato IPC, helper ou arquivo Swift alterado. README conciliado com a conclusão histórica da T006, sem novo ensaio de áudio.
+
+| Comando / verificação                                                              | Resultado real                                                                                                                                                                                                          |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `export PATH=/opt/homebrew/bin:$PATH`; `node --version`; `sw_vers -productVersion` | Node 26.0.0 já instalado; macOS 26.6.2. Sem instalação ou configuração global.                                                                                                                                          |
+| `npm run verify` final                                                             | Passou: ESLint sem warnings, Prettier, três projetos TS strict, **160 testes TS em 15 arquivos**, **12 testes Python** e build main/preload/renderer.                                                                   |
+| `npm run test:smoke` na sandbox                                                    | Electron não iniciou: `Process failed to launch`. Build passou.                                                                                                                                                         |
+| `npm run test:smoke` final, via escalada aprovada                                  | **4 testes passaram no Electron real**: painel/tamanho/foco/teclado/zoom/minimização/restauração/reabertura, isolamento/IPC/offline, persistência e cofre real com valor sintético. Perfis temporários, sem chave real. |
+| Inspeção visual                                                                    | `test-results/panel.png`: painel legível no tamanho inicial. `panel-zoom.png`: controles acessíveis com rolagem no mínimo/200%; captura somente do app de teste. Artefatos ignorados pelo Git.                          |
+| `git diff --check`                                                                 | Passou.                                                                                                                                                                                                                 |
+
+**Ajustes na validação:** corrigidos tipos do handle Electron e sombra de `window` no teste. CDP e `sendInputEvent` não acionaram os key equivalents Cocoa, mesmo com foco confirmado; o smoke verifica accelerators registrados e invoca os handlers reais de menu, observando minimização/restauração nativas. Minimizar usa callback explícito no main. Reabertura passou após o teste aguardar `closed` antes de emitir activate. Imagem ampliada usa `webContents.capturePage` porque a captura CDP com zoom saiu recortada. Nenhuma regra/gate suprimido. Único aviso no smoke final: conflito herdado NO_COLOR/FORCE_COLOR.
+
+**Limites:** não houve teste físico de atalhos nativos, clique no Dock/botão amarelo, arraste, VoiceOver, múltiplos monitores/Spaces/fullscreen ou medição de CPU/memória. Os testes comprovam comandos/estado da janela, navegação e semântica dos controles; não certificam toda a acessibilidade do SO. Swift e captura não executados, pois não mudaram e não fazem parte da T007. Sem captura, STT integrado, sugestão, proteção de compartilhamento ou jornada demo implementados por esta entrega; T008/T030 e demais tarefas permanecem pendentes. Sem APIs pagas, permissões TCC, push ou deploy.
+
+**Commit local da entrega:** `feat(T007): add accessible floating meeting panel` (este commit contém código, testes e registros; localizar hash com `git log -1 --format=%h --grep="feat(T007)"`). Escrita em `.git` pelo mecanismo de escalada autorizado, sem alterar permissões/locks/regras.
+
+**Blockers técnicos:** nenhum após a validação. **Próximo passo:** encerrar após o commit local da T007; T008 somente em nova sessão independente do operador/runner. Nenhuma outra tarefa iniciada.
 
 ## T006 — conclusão da POC — 2026-11-04
 
