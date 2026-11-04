@@ -3,6 +3,12 @@
 **Atualização:** 2026-11-04. **Marco:** M0 — fundação + viabilidade Swift.
 **Implementação concluída:** **T001–T005**. Retomada exclusivamente **T006**, com implementação parcial validada e estado **BLOCKED aguardando teste humano**. Nenhuma outra tarefa iniciada.
 
+## T006 — ensaio simultâneo e encerramento a esclarecer — 2026-11-04
+
+- O usuário relatou reconhecimento das duas fontes simultaneamente e funcionamento dos atalhos; não foram fornecidos texto de fala, contagens, estado dos indicadores ou saída final.
+- Também relatou que a POC encerrou sozinha após algum tempo. Há um limite intencional de 120 s após o início, incluindo pausas, que chama o encerramento normal e deve emitir `STOPPED_CAPTURE_OFF`; há também watchdog de 180 s, que emite `POC_WATCHDOG_TIMEOUT`. Sem duração ou mensagens finais não é possível atribuir o encerramento a um desses caminhos nem descartar erro.
+- Solicitado ao usuário, sem novos dados sensíveis, o tempo aproximado, se pressionou `q` e os marcadores finais. T006 permanece `BLOCKED` até esclarecer o encerramento, verificar limpeza/indicadores e registrar os limites dos testes, incluindo bilinguismo não validado.
+
 ## T006 — primeiro resultado real do áudio do sistema — 2026-11-04
 
 - O usuário forneceu saída parcial da POC com `source=system`, `locale=pt-BR` e `segment=1`: pelo menos seis eventos parciais e dois finais, um deles apenas pontuação. Não registrar as falas no repositório. Isso comprova que a fonte do sistema produziu eventos reais de reconhecimento, sem comprovar a execução de outras fontes em paralelo.
