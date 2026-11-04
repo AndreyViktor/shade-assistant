@@ -1,7 +1,31 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
 **Atualização:** 2026-11-04. **Marco:** M1 — UI e demo.
-**Implementação concluída:** **T001–T010**. T010 validada para cartões DEMO, descarte, deduplicação e expiração. Captura e envios reais continuam pendentes das integrações posteriores.
+**Implementação concluída:** **T001–T011**. M1 validado para a jornada DEMO offline e regressão de fronteiras de módulos. Captura e envios reais continuam pendentes das integrações posteriores.
+
+## T011 — regressão da jornada DEMO e fronteiras — DONE — 2026-11-04
+
+- Sessão exclusiva T011 em `main`, árvore inicialmente limpa, HEAD `8262584`. Dependências T010/T002 conferidas no Git/código. T011 passou por IN_PROGRESS e só recebeu DONE após os gates abaixo; nenhuma outra tarefa iniciada.
+- Novo e2e executa dois ciclos de iniciar → fala mic → fala sistema → cartão → pausa → stop pelo renderer/IPC real. Pausa ocorre antes do fim do roteiro; espera de 3,2 s em pausa e após stop verifica cancelamento e ausência de eventos tardios com relógio real. Confere limpeza, consentimentos desativados, captura inativa, IDs novos no reinício, ausência de erros de página e de credenciais, e **zero tentativas de rede detectadas** nos transportes instrumentados.
+- Smoke separado comprova os guards existentes com sete tentativas deliberadas bloqueadas (TCP, HTTP, HTTPS, UDP, fetch Node, fetch/request Electron), somente em loopback; contador inicial zero e final sete. Essas tentativas pertencem ao teste dos guards, não à jornada DEMO. Sem API externa ou cobrança.
+- Matriz da regra ESLint cobre os 36 pares de camadas, em caminhos aninhados de produto e testes, com cinco formas de import/re-export: 72 casos novos / 360 verificações, além dos 47 casos existentes. Confirma que arquivos de teste também respeitam as fronteiras. Runtime, contratos, regras ESLint, dependências e Swift não precisaram mudar; não há decisão arquitetural nova que exija ADR.
+
+| Comando / verificação                                               | Resultado real                                                                                                                                                                                                                            |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `export PATH=/opt/homebrew/bin:$PATH`; versões Node/npm e `sw_vers` | Node 26.0.0, npm 11.12.1, macOS 26.6.2 (25G83), já instalados.                                                                                                                                                                            |
+| `npm test -- tests/tooling/module-boundaries.test.ts`               | **119 testes passaram**, usando a regra/configuração de produção.                                                                                                                                                                         |
+| `npm run verify`                                                    | Passou: ESLint sem warnings, Prettier, três projetos TS strict, **328 testes TS em 23 arquivos**, **12 testes Python**, build main/preload/renderer.                                                                                      |
+| `npm run test:smoke` via escalada aprovada                          | **9/9 passaram no Electron real**, cerca de 1,5 min. Nova jornada: 27,3 s; guards: 0,7 s. Os sete smokes anteriores passaram, incluindo foco nativo, persistência/cofre com valor sintético, recarga, descarte e expiração real em pausa. |
+
+**Ajustes durante validação:** lint detectou `await` sobre retorno possivelmente síncrono no teste dos guards; corrigido com `Promise.resolve`, sem supressão. Prettier detectou realinhamento da tabela após IN_PROGRESS; corrigido. Gate final passou. Smoke emitiu apenas aviso herdado `NO_COLOR`/`FORCE_COLOR`, sem falha. Revisão documental final: `npm run format:check` e `git diff --check` passaram.
+
+**Arquivos:** `tests/e2e/demo-regression.spec.ts`, `tests/e2e/offline-guards.spec.ts`, `tests/tooling/module-boundaries.test.ts`, README (comandos e cobertura), TASKS e este handoff.
+
+**Limites:** testes automatizados no build Electron, sem inspeção visual/manual nova, STT, captura/TCC, chamadas OpenAI, Windows ou CI hospedado. Swift não foi alterado e seu gate não foi repetido. Zero rede significa zero tentativas nos guards Node/Electron/Chromium durante a jornada; não houve monitoramento de pacotes do SO. Os sete probes verificam os guards Node/Electron; o interceptor Chromium permanece coberto pelo uso nas jornadas, sem probe dedicado. Não prova helper Swift integrado nem sessão real de reunião ou ensaio prolongado T033. Nenhuma permissão de captura, chave real, push ou deploy.
+
+**Commit local da entrega:** `test(T011): cover demo lifecycle and module boundaries` (commit que contém este registro; localizar hash com `git log -1 --format=%h --grep="test(T011)"`). Escrita em `.git` pelo mecanismo de escalada autorizado, sem alterar permissões ou locks.
+
+**Blockers técnicos:** nenhum após os gates. **Próximo passo:** encerrar após o commit local da T011. T012 permanece TODO para nova sessão independente do operador/runner; não foi iniciada. Windows T036–T039 continua DEFERRED.
 
 ## T010 — cartões, descarte e expiração — DONE — 2026-11-04
 

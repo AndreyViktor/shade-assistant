@@ -63,6 +63,17 @@ O smoke verifica dois cartões, descarte por teclado e expiração real durante 
 
 `tests/tooling/quality-gates.test.ts` também comprova que ESLint rejeita violações, que os três projetos TypeScript detectam erros strict e que Prettier rejeita formatação inválida. As configurações existentes continuam obrigatórias, sem supressões.
 
+A regressão T011 acrescenta dois ciclos de **Iniciar → fala simulada → cartão → Pausar → Parar**, com uma etapa ainda pendente: verifica pausa estável, limpeza, ausência de eventos tardios e reinício sem cartões antigos. Usa relógio real do main e os controles da UI; não acelera o roteiro. Um smoke separado faz sete tentativas deliberadas em transportes Node/Electron para verificar os bloqueios e contadores, usando somente endereços loopback. Essas tentativas são esperadas nesse teste; os testes da jornada exigem contador zero. Isso não substitui monitoramento de tráfego do SO. A matriz de fronteiras cobre os 36 pares de camadas em arquivos aninhados de produto e teste, usando import, re-export, import type, import dinâmico e require. Para reproduzir a regressão:
+
+```bash
+npm run verify
+npm run test:smoke
+# Apenas a matriz de fronteiras:
+npm test -- tests/tooling/module-boundaries.test.ts
+# Apenas os novos e2e, após npm run build e com sessão gráfica:
+npx playwright test tests/e2e/demo-regression.spec.ts tests/e2e/offline-guards.spec.ts
+```
+
 ### CI básico
 
 [`.github/workflows/verify.yml`](.github/workflows/verify.yml) executa instalação pelo lockfile e `npm run verify` em Ubuntu 24.04, com Node de `.nvmrc`, em pull requests, push para `main` ou acionamento manual. Actions fixadas por SHA, permissão `contents: read`, sem credenciais persistidas, cache ou secrets. Não baixa o binário Electron nem abre janelas. Smoke gráfico e validação Apple ficam separados. O workflow foi preparado localmente; execução hospedada depende de publicação autorizada, não realizada nesta entrega. Decisões: [ADR 0002](docs/adr/0002-quality-gates.md).
@@ -97,7 +108,7 @@ Resultado histórico T005 (2026-11-03): `isAvailable = true`, pt-BR/en-US nas li
 - `src/renderer/app`: shell React e estilos; `src/renderer/main.tsx`: montagem da UI. Não importa Node, main ou infraestrutura.
 - `tests/e2e`: smoke do app real; testes unitários ficam junto do código; `tests/setup.ts` prepara RTL.
 - `src/contracts/ipc`: schema versionado de estado público, validado nas duas pontas; `src/preload`: API fechada `getStatus/getSettings/savePreferences/importSecret/removeSecret/session`; `src/main/ipc`: allowlist e autorização por janela/frame/URL. Sem chaves, IPC genérico ou captura física; comandos de sessão aceitam apenas DEMO.
-- `scripts/eslint/module-boundaries.mjs` e testes em `tests/tooling` verificam os limites entre os seis módulos, incluindo re-exports/imports dinâmicos e caminhos normalizados. `core` será criado quando tiver implementação real; `native/macos` contém o diagnóstico T005 e a POC independente T006, conforme `docs/ENGINEERING-STANDARDS.md`.
+- `scripts/eslint/module-boundaries.mjs` e testes em `tests/tooling` verificam os limites entre os seis módulos, incluindo re-exports/imports dinâmicos e caminhos normalizados. `core` contém as regras de sessão e cartões; `infrastructure/transcription/mock` reproduz o roteiro DEMO. `native/macos` contém o diagnóstico T005 e a POC independente T006, conforme `docs/ENGINEERING-STANDARDS.md`.
 - Janela com `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true` e `webSecurity: true`; navegação, popups e permissões de captura bloqueados. CSP de produção não permite conexões; exceções para HMR existem apenas em desenvolvimento.
 
 Escolhas de build, compatibilidade e correção transitiva de dependências: [ADR 0001](docs/adr/0001-desktop-scaffold.md).
