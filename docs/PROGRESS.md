@@ -1,7 +1,16 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
 **Atualização:** 2026-11-04. **Marco:** M1 — painel flutuante.
-**Implementação concluída:** **T001–T007**. T007 validada com gates e Electron real; T008 não iniciada.
+**Implementação concluída:** **T001–T008**. T008 validada para o ciclo de sessão DEMO e a política de consentimento; captura e envios reais continuam pendentes das integrações posteriores.
+
+## T008 — ciclo de sessão e consentimento — 2026-11-04
+
+- T008 retomada após a sessão do runner atingir seu limite de uso antes do smoke e do commit. As alterações foram preservadas; revisão e validação concluídas nesta sessão, sem iniciar outra tarefa.
+- `MeetingSession` mantém estados e consentimentos em memória, separa captura, contexto e áudio remoto, invalida trabalho pendente com `AbortSignal` e descarta resultados atrasados ao pausar/parar. Stop limpa consentimentos; testes com operações sintéticas cobrem bloqueio, cancelamento e transições.
+- Canal IPC restrito e validado expõe a sessão por janela autorizada; recarga, crash do renderer ou fechamento encerram a sessão. O main aceita **somente DEMO** nesta entrega, mesmo com preferências reais ou chave armazenada. A interface oferece início, pausa, retomada, parada e explica os dados e consentimentos por modalidade.
+- **Escopo e limites:** o fluxo DEMO não captura áudio, não gera transcrição/sugestões e não habilita rede. O controle de captura física, o cancelamento de adaptadores e de envios reais ainda não foram comprovados: dependem das integrações e ensaios das tarefas T014–T019 e posteriores. Os testes com fakes demonstram a política de sessão, não interrompem serviços reais inexistentes. Nenhuma chave real, áudio, permissão TCC ou chamada paga usados.
+- `npm run verify` passou: lint, formatação, três tsconfigs, **191 testes TypeScript, 12 testes Python e build**. `npm run test:smoke` passou com **5 testes Electron reais**, incluindo sessão DEMO pelo IPC, pausa/retomada/parada, recarga, rejeição de modos reais e nenhuma requisição HTTP(S) observada no renderer. A imagem do painel foi inspecionada; `test-results/session.png` permanece ignorada.
+- Handoff em `docs/TASKS.md` e [ADR 0009](adr/0009-session-lifecycle-and-consent.md). A próxima tarefa elegível é T009, em nova sessão; não foi iniciada. Nenhum push/deploy.
 
 ## T007 — painel flutuante acessível — 2026-11-04
 

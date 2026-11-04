@@ -195,3 +195,18 @@ button {
     max-width: 100%;
   }
 }
+
+.session-controls {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #314058;
+  border-radius: 16px;
+}
+.data-consent {
+  margin-top: 16px;
+}
+summary {
+  cursor: pointer;
+  min-height: 44px;
+  line-height: 1.5;
+}

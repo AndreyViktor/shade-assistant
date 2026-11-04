@@ -1,3 +1,4 @@
+import { registerSessionIpc } from '../ipc/registerSessionIpc';
 import { createSettingsService } from '../settings/createSettingsService';
 import { registerSettingsIpc } from '../ipc/registerSettingsIpc';
 import { join } from 'node:path';
@@ -15,7 +16,7 @@ export async function createMainWindow(): Promise<BrowserWindow> {
 
   const rendererFile = join(__dirname, '../renderer/index.html');
 
-  // Capture permissions remain denied until the explicit flow in T008.
+  // Capture stays native; renderer permissions remain denied, including in DEMO.
   windowSession.setPermissionRequestHandler(
     (_contents, _permission, callback) => callback(false),
   );
@@ -44,6 +45,10 @@ export async function createMainWindow(): Promise<BrowserWindow> {
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', (event) => event.preventDefault());
   window.once('ready-to-show', () => window.show());
+  registerSessionIpc(
+    window,
+    developmentUrl ?? pathToFileURL(rendererFile).href,
+  );
   registerAppIpc(window, developmentUrl ?? pathToFileURL(rendererFile).href);
 
   registerSettingsIpc(

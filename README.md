@@ -1,6 +1,6 @@
 # Meeting Copilot — painel desktop e POC Swift
 
-Scaffold executável de **Electron + React + TypeScript strict**, primeiro no macOS. A janela inicial exibe `DEMO`, captura inativa e IA desativada. Há um diagnóstico Swift independente de capacidades (T005) e uma POC própria de áudio (T006), validada em pt-BR no Mac pelo usuário; evidências e limites em `docs/PROGRESS.md`. Ainda não há fluxo de reunião, mocks de transcrição, integração OpenAI ou helper de produção integrado ao Electron. A arquitetura de produto abaixo descreve as próximas entregas, não capacidades já disponíveis.
+Scaffold executável de **Electron + React + TypeScript strict**, primeiro no macOS. A janela inicial exibe `DEMO`, captura inativa e IA desativada. Há um diagnóstico Swift independente de capacidades (T005) e uma POC própria de áudio (T006), validada em pt-BR no Mac pelo usuário; evidências e limites em `docs/PROGRESS.md`. Há controles de sessão DEMO (T008), ainda sem mocks de transcrição, integração OpenAI ou helper de produção integrado ao Electron. A arquitetura de produto abaixo descreve as próximas entregas, não capacidades já disponíveis.
 
 ## Executar localmente
 
@@ -30,6 +30,12 @@ Janela de 440 × 640, redimensionável até o mínimo de 360 × 400, sempre à f
 
 **Tab/Shift+Tab** navegam pelos controles; **Enter/Espaço** abrem ou recolhem Preferências. Dentro das preferências, **Esc** ou **Voltar ao painel** recolhem a seção e devolvem o foco ao botão. Rascunhos são preservados ao recolher. O menu **Exibir** permite ampliar o texto; o conteúdo rola verticalmente em janelas pequenas. O painel continua em DEMO, sem captura ou sugestões implementadas. Proteção em compartilhamento de tela pertence à T030, sem garantia de invisibilidade.
 
+## Controles de sessão e consentimento (T008)
+
+**Iniciar DEMO → Pausar → Retomar → Parar** exercita o estado de sessão pelo IPC real. Não captura áudio, gera transcrições/sugestões nem usa rede. A captura continua indicada como inativa. Pausa bloqueia trabalho novo; stop limpa consentimentos. Recarregar ou fechar a janela encerra a sessão, sem retomada automática. Falhas de comando mostram estado não confirmado e permitem tentar Parar.
+
+Abra **Consentimento e dados enviados à nuvem** para consultar as modalidades: áudio local Apple, texto de contexto autorizado, áudio remoto opt-in com custo, e imagens confirmadas individualmente. Modos reais permanecem indisponíveis. Salvar preferências/chave não autoriza serviços. O core tem testes de bloqueio/cancelamento e descarte de resultados tardios com operações sintéticas; a prova de captura/envio real depende dos futuros adapters. Ver [ADR 0009](docs/adr/0009-session-lifecycle-and-consent.md).
+
 ## Preferências e chave (T004)
 
 O painel salva modo, provedor STT e idiomas no perfil local do app. Padrão Mac: **DEMO**, **APPLE LOCAL (SWIFT)** como preferência e **pt-BR**. Salvar modo real ou idiomas bilíngues não inicia captura nem confirma suporte; integrações e validação Swift continuam pendentes. OPENAI STT permanece desabilitado até o fluxo de consentimento específico.
@@ -53,7 +59,7 @@ Arquivos: `preferences.v1.json` e `openai-key.enc` no `userData` do Electron. Pr
 | `npm run verify`       | Lint → formatação → tipos → testes TS/Python → build; para no primeiro erro         |
 | `npm run test:smoke`   | Build + Playwright abre o Electron real; exige sessão gráfica local                 |
 
-O smoke também verifica janela flutuante, minimização/restauração pelos comandos do menu, accelerators registrados, foco por teclado, redimensionamento e zoom de 200%. As teclas nativas do menu macOS não são emitidas pelo Playwright; os testes invocam os handlers reais do menu. Não é uma auditoria manual de VoiceOver. O smoke valida isolamento, API pública congelada, IPC real, argumentos inválidos, CSP, recarga sem HTTP(S), bloqueio de popups e preferências persistentes entre reinícios. No Mac também testa safeStorage/Keychain real com valor sintético, simulando somente a escolha do arquivo; não usa credencial real nem API. Pode exigir acesso à sessão gráfica/cofre pelo SO, sem automatizar aprovação. Perfil temporário e ambiente sem `OPENAI_API_KEY`; imagens do app de teste em `test-results/startup.png`, `test-results/settings.png`, `test-results/panel.png` e `test-results/panel-zoom.png`, ignoradas pelo Git. Não testa captura/STT/TCC. `verify` usa cifra simulada e não acessa o Keychain nem APIs pagas.
+O smoke verifica início/pausa/retomada/parada DEMO pelo IPC, encerramento na recarga e rejeição de modos reais. Também verifica janela flutuante, minimização/restauração pelos comandos do menu, accelerators registrados, foco por teclado, redimensionamento e zoom de 200%. As teclas nativas do menu macOS não são emitidas pelo Playwright; os testes invocam os handlers reais do menu. Não é uma auditoria manual de VoiceOver. O smoke valida isolamento, API pública congelada, IPC real, argumentos inválidos, CSP, recarga sem HTTP(S), bloqueio de popups e preferências persistentes entre reinícios. No Mac também testa safeStorage/Keychain real com valor sintético, simulando somente a escolha do arquivo; não usa credencial real nem API. Pode exigir acesso à sessão gráfica/cofre pelo SO, sem automatizar aprovação. Perfil temporário e ambiente sem `OPENAI_API_KEY`; imagens do app de teste em `test-results/startup.png`, `test-results/settings.png`, `test-results/panel.png` e `test-results/panel-zoom.png`, ignoradas pelo Git. Não testa captura/STT/TCC. `verify` usa cifra simulada e não acessa o Keychain nem APIs pagas.
 
 `tests/tooling/quality-gates.test.ts` também comprova que ESLint rejeita violações, que os três projetos TypeScript detectam erros strict e que Prettier rejeita formatação inválida. As configurações existentes continuam obrigatórias, sem supressões.
 
@@ -90,7 +96,7 @@ Resultado histórico T005 (2026-11-03): `isAvailable = true`, pt-BR/en-US nas li
 - `src/main/index.ts`: ciclo de vida Electron; `src/main/app`: criação da janela e validação do endereço local de desenvolvimento.
 - `src/renderer/app`: shell React e estilos; `src/renderer/main.tsx`: montagem da UI. Não importa Node, main ou infraestrutura.
 - `tests/e2e`: smoke do app real; testes unitários ficam junto do código; `tests/setup.ts` prepara RTL.
-- `src/contracts/ipc`: schema versionado de estado público, validado nas duas pontas; `src/preload`: API fechada `getStatus/getSettings/savePreferences/importSecret/removeSecret`; `src/main/ipc`: allowlist e autorização por janela/frame/URL. Sem chaves, IPC genérico ou comandos de captura.
+- `src/contracts/ipc`: schema versionado de estado público, validado nas duas pontas; `src/preload`: API fechada `getStatus/getSettings/savePreferences/importSecret/removeSecret/session`; `src/main/ipc`: allowlist e autorização por janela/frame/URL. Sem chaves, IPC genérico ou captura física; comandos de sessão aceitam apenas DEMO.
 - `scripts/eslint/module-boundaries.mjs` e testes em `tests/tooling` verificam os limites entre os seis módulos, incluindo re-exports/imports dinâmicos e caminhos normalizados. `core` será criado quando tiver implementação real; `native/macos` contém o diagnóstico T005 e a POC independente T006, conforme `docs/ENGINEERING-STANDARDS.md`.
 - Janela com `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true` e `webSecurity: true`; navegação, popups e permissões de captura bloqueados. CSP de produção não permite conexões; exceções para HMR existem apenas em desenvolvimento.
 

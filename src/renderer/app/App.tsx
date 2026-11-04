@@ -1,3 +1,4 @@
+import { SessionControls } from '../features/meeting/SessionControls';
 import { SettingsDisclosure } from '../features/settings/SettingsDisclosure';
 import { useEffect, useState } from 'react';
 import { ipcFailure } from '../../contracts/ipc/appStatus';
@@ -31,6 +32,7 @@ export function App() {
           DEMO
         </p>
       </header>
+      {result?.ok && <SessionControls />}
       <section aria-labelledby="welcome-title" className="welcome">
         <h2 id="welcome-title">Seu painel de reunião</h2>
         <p>

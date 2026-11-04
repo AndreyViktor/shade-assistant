@@ -1,4 +1,10 @@
 import {
+  SESSION_CHANNEL,
+  parseSessionRequest,
+  parseSessionResult,
+} from '../contracts/ipc/session';
+import type { SessionRequest } from '../contracts/ipc/session';
+import {
   APP_STATUS_CHANNEL,
   IPC_VERSION,
   ipcFailure,
@@ -17,14 +23,20 @@ import type {
 } from '../contracts/ipc/settings';
 
 type Invoke = (
-  channel: typeof APP_STATUS_CHANNEL | typeof SETTINGS_CHANNEL,
-  request: { version: 1 } | SettingsRequest,
+  channel:
+    | typeof APP_STATUS_CHANNEL
+    | typeof SETTINGS_CHANNEL
+    | typeof SESSION_CHANNEL,
+  request: { version: 1 } | SettingsRequest | SessionRequest,
 ) => Promise<unknown>;
 
 export function createMeetingCopilotApi(invoke: Invoke): MeetingCopilotApi {
   async function call(
-    channel: typeof APP_STATUS_CHANNEL | typeof SETTINGS_CHANNEL,
-    request: { version: 1 } | SettingsRequest,
+    channel:
+      | typeof APP_STATUS_CHANNEL
+      | typeof SETTINGS_CHANNEL
+      | typeof SESSION_CHANNEL,
+    request: { version: 1 } | SettingsRequest | SessionRequest,
     timeout: number,
   ): Promise<unknown> {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -56,6 +68,16 @@ export function createMeetingCopilotApi(invoke: Invoke): MeetingCopilotApi {
   }
 
   return Object.freeze({
+    async session(...args: unknown[]) {
+      const request = args.length === 1 ? parseSessionRequest(args[0]) : null;
+      if (!request)
+        return {
+          version: 1 as const,
+          ok: false as const,
+          code: 'INVALID_REQUEST' as const,
+        };
+      return parseSessionResult(await call(SESSION_CHANNEL, request, 5000));
+    },
     async getStatus(...args: unknown[]) {
       if (args.length !== 0) return ipcFailure('INVALID_REQUEST');
       return parseStatusResult(
