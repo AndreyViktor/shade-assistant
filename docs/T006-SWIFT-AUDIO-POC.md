@@ -1,18 +1,18 @@
 # T006 — POC Swift própria: preparação e teste manual
 
-**Estado: BLOCKED aguardando conclusão da validação.** A implementação está compilada e os assets pt-BR foram preparados. O usuário relatou transcrição real de mic/system, uso simultâneo e atalhos funcionais; o teste encerrou automaticamente após cerca de dois minutos com `STOPPED_CAPTURE_OFF`, e o usuário confirmou que o indicador do microfone apagou. Falta confirmar o comando manual `q`; PT+EN simultâneo é rejeitado e ainda não foi avaliado quanto à qualidade. Evidências em [PROGRESS.md](PROGRESS.md). Não abrir o Electron para este teste: a POC é um programa independente no Terminal.
+**Estado: DONE para a POC pt-BR.** O usuário relatou transcrição real de mic/system, uso simultâneo, atalhos funcionais e parada manual `q`; também confirmou que o indicador do microfone apagou após parada automática. En-US isolado e PT+EN simultâneo não foram testados; a mistura é rejeitada pela POC. Qualidade e latência não foram medidas formalmente. Evidências em [PROGRESS.md](PROGRESS.md). A POC é um programa independente no Terminal, ainda sem integração com Electron.
 
 ## Resultado independente — 2026-11-04
 
 - Mac arm64, macOS 26.6.2; Xcode 26.6 / SDK 26.5 / Swift 6.3.3. Mesmo ambiente de T005; target da POC/bundle: macOS 26+, diagnóstico anterior preservado.
 - Bundle: `native/macos/.build/MeetingCopilotAudioPOC.app`, assinatura ad hoc local verificada com `codesign --verify --strict`; plist validado. Isso não comprova distribuição, notarização ou atribuição de TCC.
 - `--prepare-assets --locale pt-BR`, por escalada aprovada e autorização prévia do usuário: `supported` → `installed` → `ASSETS_PREPARED_NO_CAPTURE_pt-BR`. A segunda execução começou/terminou `installed` e preparou novamente. A Apple retornou request de instalação nas duas execuções; não foi medido tráfego/volume, portanto não afirmamos se houve download ou reaproveitamento local. [Evidência](evidence/T006-assets-2026-11-04.json).
-- Nenhum comando de captura real ou pedido TCC executado. En-US não preparado/testado nesta sessão; PT+EN simultâneo rejeitado. Sem OpenAI, conteúdo de reunião ou arquivos de áudio.
+- Na implementação inicial, nenhum comando de captura real ou pedido TCC foi executado pelo agente. Posteriormente, o usuário realizou o teste local relatado em `docs/PROGRESS.md`. En-US não preparado/testado; PT+EN simultâneo rejeitado. Sem OpenAI, conteúdo de reunião ou arquivos de áudio.
 - Gates e contagens finais estão no [handoff](PROGRESS.md). Testes sintéticos e fakes não são evidência de captura Apple.
 
 ## 1. Preparar o Terminal
 
-**Agora é necessária a participação do usuário.** Antes de executar captura, feche reuniões, players, notificações sonoras e qualquer fonte de fala real. Para teste `system`/`both`, a POC recebe o áudio dos aplicativos do sistema no display selecionado, não apenas o áudio de um app específico. Use somente as frases sintéticas abaixo. Prefira fones para evitar que o microfone recapture a saída do sistema.
+Para repetir o ensaio, é necessária a participação do usuário. Antes de executar captura, feche reuniões, players, notificações sonoras e qualquer fonte de fala real. Para teste `system`/`both`, a POC recebe o áudio dos aplicativos do sistema no display selecionado, não apenas o áudio de um app específico. Use somente as frases sintéticas abaixo. Prefira fones para evitar que o microfone recapture a saída do sistema.
 
 Abra **Terminal.app** e execute:
 
@@ -86,7 +86,7 @@ Após `CAPTURE_ACTIVE`, reproduza a mesma frase sintética pelo segundo Terminal
 
 Os tempos do áudio são relativos **a cada fonte e segmento**; não representam relógio global ou latência ponta a ponta. `timestamp` é o horário de entrega. `AUDIO_SUMMARY_*` conta buffers/segundos processados, não frases reconhecidas. Qualidade/atraso só podem ser relatados após ouvir e comparar localmente; não há WER ou p95 medidos nesta sessão.
 
-Opcional, somente depois do pt-BR: repetir preparação com `--locale en-US` e captura em **uma execução separada**, se suportado. En-US ainda não foi validado aqui. `pt-BR,en-US` é recusado: esta POC não implementa detecção bilíngue, seleção entre hipóteses ou garantia de qualidade mista. A limitação está registrada para avaliação futura dentro de T006; não alegar percentual de precisão.
+Opcional, somente depois do pt-BR: repetir preparação com `--locale en-US` e captura em **uma execução separada**, se suportado. En-US ainda não foi validado aqui. `pt-BR,en-US` é recusado: esta POC não implementa detecção bilíngue, seleção entre hipóteses ou garantia de qualidade mista. A limitação permanece para avaliação futura antes de oferecer modo bilíngue; não alegar percentual de precisão.
 
 ## 5. Compartilhar resultado sem conteúdo sensível
 
@@ -106,4 +106,4 @@ Atraso aproximado após terminar frase: [segundos, estimativa humana]
 Erros: [somente códigos POC_* ou nenhum]
 ```
 
-Se negar uma permissão, isso é um teste de falha válido, mas não prova transcrição daquela fonte. T006 permanece BLOCKED até registrar evidência real das duas fontes e do lifecycle, revisar problemas observados e executar os gates após eventuais correções. Não avançar tarefa nem usar o runner para ignorar o bloqueio.
+Se negar uma permissão, isso é um teste de falha válido, mas não prova transcrição daquela fonte. T006 foi concluída para a POC pt-BR após os ensaios relatados e gates. A integração ao aplicativo e a validação de outros idiomas permanecem em tarefas posteriores.

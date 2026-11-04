@@ -1,25 +1,33 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
 **Atualização:** 2026-11-04. **Marco:** M0 — fundação + viabilidade Swift.
-**Implementação concluída:** **T001–T005**. Retomada exclusivamente **T006**, com implementação parcial validada e estado **BLOCKED aguardando teste humano**. Nenhuma outra tarefa iniciada.
+**Implementação concluída:** **T001–T006**. T006 validada no Mac pelo usuário e encerrada; nenhuma tarefa seguinte iniciada.
+
+## T006 — conclusão da POC — 2026-11-04
+
+- O usuário confirmou que **`q` também funciona**. Nos testes anteriores, relatou reconhecimento de mic e sistema separadamente e juntos, atalhos funcionais, parada automática após cerca de 120 s com `STOPPED_CAPTURE_OFF` e indicador de microfone apagado. Não foram fornecidos logs detalhados da execução de `q`; a confirmação é o relato do usuário. Não há fala ou áudio de reunião armazenados como evidência.
+- A POC própria usa AVAudioEngine e ScreenCaptureKit, com analyzer/transcriber independentes. O crash B003 no callback do microfone foi corrigido em `8704c0b`; o usuário depois obteve transcrições reais. Falhas de início/parada, cancelamento e filas têm testes com fakes; esses testes não substituem as observações humanas de captura.
+- **Limites explícitos:** modo pt-BR+en-US simultâneo não foi implementado e é rejeitado; en-US isolado não foi preparado/testado. Resultados em pt-BR tiveram omissões/distorções pontuais, sem amostra ou medição suficiente para precisão ou latência. Faixas temporais de resultados parciais variaram em relação aos finais e precisam de análise na reconciliação T018. Não há evidência de captura em app distribuído, reunião real, ponte Electron ou streaming bilíngue. A POC ainda para automaticamente após 120 s; isso não define duração do futuro app.
+- **Gates repetidos nesta conclusão:** `npm run verify` passou com 155 testes TS, 12 Python, lint, formato, tipos e build; `sh scripts/verify-swift.sh` passou com **20 testes Swift**, swift-format e builds com warnings como erros. Nenhuma captura real ou autorização TCC foi automatizada nesta sessão. Os artefatos anteriores de diagnóstico e build permanecem documentados abaixo.
+- T006 passa a **DONE para o escopo da POC**. Próxima tarefa elegível pelo runner: T007, em nova sessão; não foi iniciada. A integração ao app continua dependente das tarefas de protocolo/helper/ponte e exibição. Windows permanece DEFERRED. Commit de conclusão com T006 no título; sem push.
 
 ## T006 — ensaio simultâneo e parada automática — 2026-11-04
 
 - O usuário relatou reconhecimento das duas fontes simultaneamente e funcionamento dos atalhos; não foram fornecidos texto de fala, contagens, estado dos indicadores ou saída final.
 - O usuário esclareceu que, sem pressionar `q`, o programa encerrou após cerca de dois minutos e exibiu `STOPPED_CAPTURE_OFF`. Isso corresponde ao limite intencional de 120 s após o início, incluindo pausas, e à conclusão da rotina de parada; não há relato de `POC_WATCHDOG_TIMEOUT` ou de novo crash nessa execução.
-- O usuário confirmou que o indicador de microfone apagou após a parada automática. O comando manual `q` não foi confirmado: na execução que terminou aos dois minutos, ele informou não tê-lo pressionado. T006 permanece `BLOCKED` até confirmar esse caminho de parada. PT+EN simultâneo é rejeitado e não foi avaliado quanto à qualidade.
+- Naquele momento, o usuário havia confirmado que o indicador de microfone apagou após a parada automática, mas não havia confirmado o comando manual `q`; posteriormente confirmou que `q` também funciona. PT+EN simultâneo é rejeitado e não foi avaliado quanto à qualidade.
 
 ## T006 — primeiro resultado real do áudio do sistema — 2026-11-04
 
 - O usuário forneceu saída parcial da POC com `source=system`, `locale=pt-BR` e `segment=1`: pelo menos seis eventos parciais e dois finais, um deles apenas pontuação. Não registrar as falas no repositório. Isso comprova que a fonte do sistema produziu eventos reais de reconhecimento, sem comprovar a execução de outras fontes em paralelo.
 - Comparando com a frase sintética sugerida, o resultado final apresentou distorção no início e repetição de sílaba; não há amostra suficiente para quantificar qualidade. O início do intervalo dos parciais difere do final, como observado no microfone; sem diagnóstico ou medição de latência.
-- As saídas compartilhadas não informam parada, pausa, retomada ou estado dos indicadores. Permanecem pendentes o ensaio simultâneo `mic`/`system`, lifecycle das duas fontes, qualidade e limites bilíngues. T006 continua `BLOCKED` até conclusão e evidência desses testes.
+- As primeiras saídas compartilhadas não informavam parada, pausa, retomada ou estado dos indicadores; o usuário posteriormente relatou o ensaio simultâneo e os controles, conforme a conclusão acima. Qualidade e bilinguismo permanecem limitados conforme registrado.
 
 ## T006 — primeiro resultado real do microfone — 2026-11-04
 
 - Após o commit `8704c0b`, o usuário forneceu saída real da POC: sete eventos parciais e um final em `pt-BR`, `source=mic`, `segment=1`. O callback que antes encerrava o processo conseguiu receber áudio e produzir um resultado final. Não registrar o conteúdo falado no repositório.
 - Se a frase proferida correspondeu à frase sintética sugerida no roteiro, o resultado final omitiu parte dela; não há amostra suficiente para medir precisão. A faixa inicial dos resultados parciais variou em relação à faixa final; ainda não foi investigado se isso decorre da semântica dos parciais ou da normalização temporal.
-- As linhas recebidas não informam pausa, retomada, parada, indicador do microfone ou o estado do processo depois do resultado. Ainda faltam os ensaios de sistema e fontes simultâneas. **T006 permanece BLOCKED** até verificar as duas fontes e o lifecycle no Mac; B003 corrigido para o início/transcrição observados, com encerramento ainda pendente.
+- No primeiro resultado do microfone, ainda não havia relato de pausa, retomada, parada ou ensaios das duas fontes. Esses resultados foram relatados posteriormente, conforme a conclusão acima.
 
 ## T006 — correção do crash no microfone — 2026-11-04
 
@@ -27,7 +35,7 @@
 - O callback de `AVAudioEngine.installTap` era criado dentro de um método `@MainActor`, herdando o isolamento apesar de ser invocado em uma fila de áudio. A inferência é consistente com a pilha e com o [guia de migração Swift 6](https://www.swift.org/migration/documentation/swift-6-concurrency-migration-guide/incrementaladoption/). O callback agora é criado fora do ator com tipo e closure `@Sendable`, transferindo buffers diretamente ao `AudioIngress`, cujo estado é protegido por lock; controle de lifecycle permanece no ator principal.
 - Adicionado teste de regressão `microphoneTapAcceptsAudioFromBackgroundQueue`: callback criado a partir de contexto principal recebe buffer de silêncio sintético em `Task.detached`, entrega ao pipeline e verifica ausência de erros. Não usa microfone nem substitui ensaio físico. Não são armazenados o relatório completo, áudio ou falas.
 - `sh scripts/verify-swift.sh`: passou, **20 testes Swift**, swift-format e builds com warnings como erros. `sh scripts/build-audio-poc.sh`: passou e reconstruiu o bundle local; `python3 scripts/check-audio-poc.py`: 5 checks sem captura passaram. `npm run verify`: passou com **155 testes TS e 12 Python**, lint, formato, tipos e build. Sem chamadas OpenAI, acesso TCC ou captura pelo agente.
-- **Situação:** correção compilada e validada sinteticamente; falta o usuário repetir o teste real do microfone. T006 permanece `BLOCKED` até evidência real também de sistema, ambas as fontes e lifecycle. O bug B003 permanece em acompanhamento até o reteste físico; não se pode afirmar transcrição funcional apenas pelos testes sintéticos.
+- **Situação naquela etapa:** correção compilada e validada sinteticamente, ainda aguardando reteste físico. Depois o usuário obteve transcrição real e relatou os controles, conforme a conclusão acima.
 
 ## T006 — POC implementada; ensaio humano pendente — 2026-11-04
 
@@ -35,7 +43,7 @@
 - Criado `MeetingCopilotAudioPOC`: mic via AVAudioEngine, sistema via ScreenCaptureKit, SpeechTranscriber/SpeechAnalyzer independentes por fonte, conversão PCM e filas limitadas. Pausa cancela fontes/análise; retomada cria segmento novo; stop/interrupção/erros limpam ambas fontes. Sem áudio em arquivo, transcritor externo, OpenAI ou integração Electron. Saída redigida por padrão; exibição de texto somente opt-in no terminal interativo. Ajuda sem efeitos por padrão e recusa de execução de captura via pipes.
 - Bundle local ad hoc construído/verificado, com `Info.plist` e scripts reproduzíveis. Não prova identidade TCC nem distribuição. [ADR 0007](adr/0007-independent-swift-audio-trial.md) registra limites, concorrência, privacidade e decisão de não antecipar protocolo T012/helper T013.
 - **Assets pt-BR desbloqueados:** execução autorizada no bundle às **03:34:12 UTC**, status `supported` → `installed`; analyzer preparado/cancelado sem áudio. Repetição às **03:34:29 UTC** começou/terminou `installed`, também preparada. A Apple retornou request de instalação; não medimos bytes nem afirmamos download novo versus cache. [Evidência sem fala](evidence/T006-assets-2026-11-04.json). Reserva do idioma mantida no contexto do app. Sem remoção de modelos ou reservas de outros apps.
-- **Bloqueio atual:** faltam teste humano de TCC, transcrição pt-BR real de mic/system/both, pausa/retomada/parada, indicadores do SO e avaliação local de qualidade/atraso. Nenhuma captura nem request TCC foi executado pelo agente. O `notDetermined` histórico não foi tratado como bloqueio de desenvolvimento. En-US não preparado/testado; PT+EN simultâneo rejeitado, sem alegação de precisão bilíngue.
+- **Bloqueio naquela etapa:** faltavam teste humano de TCC, transcrição pt-BR real de mic/system/both, pausa/retomada/parada, indicadores do SO e avaliação local de qualidade/atraso. Nenhuma captura nem request TCC foi executado pelo agente. O `notDetermined` histórico não foi tratado como bloqueio de desenvolvimento. En-US não preparado/testado; PT+EN simultâneo rejeitado, sem alegação de precisão bilíngue.
 
 | Comando / verificação                                              | Resultado real                                                                                                                                                                                                                                                                                                                                              |
 | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -51,9 +59,9 @@
 
 **Arquivos:** `native/macos/Package.swift`, `Sources/MeetingCopilotAudioPOC/*`, `Tests/MeetingCopilotAudioPOCTests/*`, `POC/Info.plist`, `scripts/build-audio-poc.sh`, `scripts/check-audio-poc.py`, README, [roteiro T006](T006-SWIFT-AUDIO-POC.md), ADR 0007, evidência de assets, TASKS e este handoff. Binários/caches ficam em `.build` ignorado. Diagnóstico T005 e contratos/runtime Electron preservados.
 
-**Participação humana necessária agora:** executar o [roteiro detalhado T006](T006-SWIFT-AUDIO-POC.md), começando pelo microfone. Há comandos exatos de build/assets/captura, indicação de quando falar, frases sintéticas, fonte de sistema com `say`, controles `p`/`r`/`q` + Enter e Ctrl-C, comportamento esperado dos prompts e modelo de relato sem falas/segredos. O operador deve apresentar esse roteiro ao usuário antes de qualquer captura.
+**Roteiro apresentado ao usuário:** executar o [roteiro detalhado T006](T006-SWIFT-AUDIO-POC.md), começando pelo microfone. Há comandos exatos de build/assets/captura, indicação de quando falar, frases sintéticas, fonte de sistema com `say`, controles `p`/`r`/`q` + Enter e Ctrl-C, comportamento esperado dos prompts e modelo de relato sem falas/segredos. O operador deve apresentar esse roteiro ao usuário antes de qualquer captura.
 
-**Commit local parcial:** `feat(T006): prepare native audio POC for manual validation` (este commit; obter hash com `git log -1 --format=%h --grep="feat(T006)"`). Não é conclusão de T006. Encerrar aqui; retomar exclusivamente T006 em nova sessão após o resultado humano, corrigir eventuais falhas e registrar evidência real antes de DONE. Não avançar tarefa nem pular o bloqueio no runner.
+**Commit local parcial:** `feat(T006): prepare native audio POC for manual validation` (este commit; obter hash com `git log -1 --format=%h --grep="feat(T006)"`). Não representava conclusão de T006; a evidência humana e o estado final estão na seção de conclusão acima.
 
 **Histórico do bloqueio anterior:** `a00c556` registrou em 2026-11-03 mic `notDetermined`, preflight de tela `false` e assets `supported`, sem implementar captura. A evidência anterior permanece em `evidence/T006-capabilities-2026-11-03.json`; a autorização atual permitiu implementar e preparar assets, mantendo a concessão TCC humana.
 
