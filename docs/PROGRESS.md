@@ -7,7 +7,7 @@
 
 - O usuário relatou reconhecimento das duas fontes simultaneamente e funcionamento dos atalhos; não foram fornecidos texto de fala, contagens, estado dos indicadores ou saída final.
 - O usuário esclareceu que, sem pressionar `q`, o programa encerrou após cerca de dois minutos e exibiu `STOPPED_CAPTURE_OFF`. Isso corresponde ao limite intencional de 120 s após o início, incluindo pausas, e à conclusão da rotina de parada; não há relato de `POC_WATCHDOG_TIMEOUT` ou de novo crash nessa execução.
-- A saída informa conclusão da rotina de parada, mas não confirma o estado dos indicadores do macOS nem o comando manual `q`; o usuário ainda não relatou esses pontos. T006 permanece `BLOCKED` enquanto a evidência de cleanup e os limites dos testes são revisados. PT+EN simultâneo ainda é rejeitado e não foi avaliado quanto à qualidade.
+- O usuário confirmou que o indicador de microfone apagou após a parada automática. O comando manual `q` não foi confirmado: na execução que terminou aos dois minutos, ele informou não tê-lo pressionado. T006 permanece `BLOCKED` até confirmar esse caminho de parada. PT+EN simultâneo é rejeitado e não foi avaliado quanto à qualidade.
 
 ## T006 — primeiro resultado real do áudio do sistema — 2026-11-04
 
