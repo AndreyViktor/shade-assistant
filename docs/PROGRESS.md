@@ -3,11 +3,11 @@
 **Atualização:** 2026-11-04. **Marco:** M0 — fundação + viabilidade Swift.
 **Implementação concluída:** **T001–T005**. Retomada exclusivamente **T006**, com implementação parcial validada e estado **BLOCKED aguardando teste humano**. Nenhuma outra tarefa iniciada.
 
-## T006 — ensaio simultâneo e encerramento a esclarecer — 2026-11-04
+## T006 — ensaio simultâneo e parada automática — 2026-11-04
 
 - O usuário relatou reconhecimento das duas fontes simultaneamente e funcionamento dos atalhos; não foram fornecidos texto de fala, contagens, estado dos indicadores ou saída final.
-- Também relatou que a POC encerrou sozinha após algum tempo. Há um limite intencional de 120 s após o início, incluindo pausas, que chama o encerramento normal e deve emitir `STOPPED_CAPTURE_OFF`; há também watchdog de 180 s, que emite `POC_WATCHDOG_TIMEOUT`. Sem duração ou mensagens finais não é possível atribuir o encerramento a um desses caminhos nem descartar erro.
-- Solicitado ao usuário, sem novos dados sensíveis, o tempo aproximado, se pressionou `q` e os marcadores finais. T006 permanece `BLOCKED` até esclarecer o encerramento, verificar limpeza/indicadores e registrar os limites dos testes, incluindo bilinguismo não validado.
+- O usuário esclareceu que, sem pressionar `q`, o programa encerrou após cerca de dois minutos e exibiu `STOPPED_CAPTURE_OFF`. Isso corresponde ao limite intencional de 120 s após o início, incluindo pausas, e à conclusão da rotina de parada; não há relato de `POC_WATCHDOG_TIMEOUT` ou de novo crash nessa execução.
+- A saída informa conclusão da rotina de parada, mas não confirma o estado dos indicadores do macOS nem o comando manual `q`; o usuário ainda não relatou esses pontos. T006 permanece `BLOCKED` enquanto a evidência de cleanup e os limites dos testes são revisados. PT+EN simultâneo ainda é rejeitado e não foi avaliado quanto à qualidade.
 
 ## T006 — primeiro resultado real do áudio do sistema — 2026-11-04
 

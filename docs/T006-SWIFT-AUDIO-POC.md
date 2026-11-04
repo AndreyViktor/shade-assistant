@@ -1,6 +1,6 @@
 # T006 — POC Swift própria: preparação e teste manual
 
-**Estado: BLOCKED aguardando teste humano.** A implementação está compilada, o bundle local foi preparado e os assets pt-BR foram preparados sem captura. Ainda não há evidência de transcrição real mic/system, TCC ou qualidade. Não abrir o Electron para este teste: a POC é um programa independente no Terminal.
+**Estado: BLOCKED aguardando conclusão da validação.** A implementação está compilada e os assets pt-BR foram preparados. O usuário relatou transcrição real de mic/system, uso simultâneo e atalhos funcionais; o teste também encerrou automaticamente após cerca de dois minutos com `STOPPED_CAPTURE_OFF`. Ainda faltam a confirmação dos indicadores após a parada, a verificação do comando manual `q` e a avaliação dos limites de idioma. Evidências em [PROGRESS.md](PROGRESS.md). Não abrir o Electron para este teste: a POC é um programa independente no Terminal.
 
 ## Resultado independente — 2026-11-04
 
