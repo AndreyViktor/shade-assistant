@@ -28,7 +28,7 @@
 
 **Limite observado:** o teste de foco nativo falhou nas primeiras execuções e passou no reteste completo. O caso parece intermitente e dependente da ativação do app, mas sua causa não foi provada; a asserção permanece intacta. A T009 cumpre seu critério e os gates finais passaram. Não executados Swift/captura/TCC, API paga ou validação de STT real: não são o escopo da demo. Nenhum push/deploy, chave real, concessão de permissão ou bypass de sandbox.
 
-**Próximo passo:** commit local T009 desta entrega e handoff para T010 em nova sessão independente. Se o teste de painel voltar a falhar por foco, repetir com sessão gráfica ativa e investigar antes de alterar o teste ou o controlador.
+**Commit local da implementação:** `7151eca` — `feat(T009): add deterministic demo playback`. Próxima tarefa elegível: T010, somente em nova sessão independente. Se o teste de painel voltar a falhar por foco, repetir com sessão gráfica ativa e investigar antes de alterar o teste ou o controlador.
 
 ## T008 — ciclo de sessão e consentimento — 2026-11-04
 
