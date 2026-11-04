@@ -9,6 +9,12 @@ protocol AudioCapture: AnyObject {
   func stop() async throws
 }
 
+// AVAudioEngine invokes the tap on an audio queue, independently of MainActor.
+@available(macOS 26.0, *)
+func makeMicrophoneTap(ingress: AudioIngress) -> @Sendable (AVAudioPCMBuffer, AVAudioTime) -> Void {
+  { @Sendable buffer, _ in ingress.receive(buffer) }
+}
+
 @available(macOS 26.0, *)
 @MainActor
 final class MicrophoneCapture: AudioCapture {
@@ -25,10 +31,8 @@ final class MicrophoneCapture: AudioCapture {
     let input = engine.inputNode
     let format = input.outputFormat(forBus: 0)
     guard format.sampleRate > 0, format.channelCount > 0 else { throw TrialFailure.audioFormat }
-    let ingress = self.ingress
-    input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
-      ingress.receive(buffer)
-    }
+    input.installTap(
+      onBus: 0, bufferSize: 1024, format: format, block: makeMicrophoneTap(ingress: ingress))
     tapped = true
     do {
       try engine.start()

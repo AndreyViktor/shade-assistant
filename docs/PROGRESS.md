@@ -3,6 +3,14 @@
 **Atualização:** 2026-11-04. **Marco:** M0 — fundação + viabilidade Swift.
 **Implementação concluída:** **T001–T005**. Retomada exclusivamente **T006**, com implementação parcial validada e estado **BLOCKED aguardando teste humano**. Nenhuma outra tarefa iniciada.
 
+## T006 — correção do crash no microfone — 2026-11-04
+
+- O usuário autorizou o microfone e relatou encerramento antes da transcrição. O relatório aponta `EXC_BREAKPOINT` em `_dispatch_assert_queue_fail`, seguido de `_swift_task_checkIsolatedSwift` e do callback `MicrophoneCapture.start()` na fila `RealtimeMessenger.mServiceQueue`. Não há evidência de falha de permissão nem de resultado de reconhecimento.
+- O callback de `AVAudioEngine.installTap` era criado dentro de um método `@MainActor`, herdando o isolamento apesar de ser invocado em uma fila de áudio. A inferência é consistente com a pilha e com o [guia de migração Swift 6](https://www.swift.org/migration/documentation/swift-6-concurrency-migration-guide/incrementaladoption/). O callback agora é criado fora do ator com tipo e closure `@Sendable`, transferindo buffers diretamente ao `AudioIngress`, cujo estado é protegido por lock; controle de lifecycle permanece no ator principal.
+- Adicionado teste de regressão `microphoneTapAcceptsAudioFromBackgroundQueue`: callback criado a partir de contexto principal recebe buffer de silêncio sintético em `Task.detached`, entrega ao pipeline e verifica ausência de erros. Não usa microfone nem substitui ensaio físico. Não são armazenados o relatório completo, áudio ou falas.
+- `sh scripts/verify-swift.sh`: passou, **20 testes Swift**, swift-format e builds com warnings como erros. `sh scripts/build-audio-poc.sh`: passou e reconstruiu o bundle local; `python3 scripts/check-audio-poc.py`: 5 checks sem captura passaram. `npm run verify`: passou com **155 testes TS e 12 Python**, lint, formato, tipos e build. Sem chamadas OpenAI, acesso TCC ou captura pelo agente.
+- **Situação:** correção compilada e validada sinteticamente; falta o usuário repetir o teste real do microfone. T006 permanece `BLOCKED` até evidência real também de sistema, ambas as fontes e lifecycle. O bug B003 permanece em acompanhamento até o reteste físico; não se pode afirmar transcrição funcional apenas pelos testes sintéticos.
+
 ## T006 — POC implementada; ensaio humano pendente — 2026-11-04
 
 - Início em `main`, árvore limpa, HEAD `a00c556` (bloqueio anterior). Usuário autorizou explicitamente retomar T006, implementar antes de pedir intervenção e preparar assets Apple, inclusive eventual download. T006 passou por `IN_PROGRESS` e voltou a `BLOCKED` porque esta sessão é não interativa e captura/TCC devem ser executados manualmente pelo usuário.

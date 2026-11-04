@@ -15,6 +15,25 @@ private func silence(sampleRate: Double = 48_000) throws -> AVAudioPCMBuffer {
   return buffer
 }
 
+@Test @MainActor @available(macOS 26.0, *)
+func microphoneTapAcceptsAudioFromBackgroundQueue() async throws {
+  let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1))
+  let errors = Mutex<[TrialFailure]>([])
+  let ingress = AudioIngress(format: format) { error in errors.withLock { $0.append(error) } }
+  let tap = makeMicrophoneTap(ingress: ingress)
+
+  try await Task.detached {
+    let buffer = try silence()
+    tap(buffer, AVAudioTime(sampleTime: 0, atRate: 48_000))
+  }.value
+
+  ingress.finish()
+  var received = 0
+  for await _ in ingress.inputs { received += 1 }
+  #expect(received == 1)
+  #expect(errors.withLock { $0.isEmpty })
+}
+
 @Test @available(macOS 26.0, *)
 func conversionOwnsBuffersAndFinishRejectsLateAudio() async throws {
   let errors = Mutex<[TrialFailure]>([])
