@@ -1,7 +1,10 @@
-import { app, BrowserWindow } from 'electron';
+import { app } from 'electron';
 import { createMainWindow } from './app/createMainWindow';
+import { createPanelController } from './app/createPanelController';
+import { installApplicationMenu } from './app/installApplicationMenu';
 
 app.setName('Meeting Copilot');
+const showPanel = createPanelController(createMainWindow);
 
 function reportStartupFailure(): void {
   console.error('Não foi possível iniciar o Meeting Copilot.');
@@ -11,12 +14,13 @@ function reportStartupFailure(): void {
 app
   .whenReady()
   .then(async () => {
-    await createMainWindow();
+    installApplicationMenu(() => {
+      showPanel().catch(reportStartupFailure);
+    });
+    await showPanel();
 
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) {
-        createMainWindow().catch(reportStartupFailure);
-      }
+      showPanel().catch(reportStartupFailure);
     });
   })
   .catch(reportStartupFailure);

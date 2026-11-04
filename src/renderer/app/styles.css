@@ -13,8 +13,8 @@ body {
   margin: 0;
 }
 .app-shell {
-  max-width: 900px;
-  padding: 48px;
+  max-width: 680px;
+  padding: 20px;
   margin: 0 auto;
 }
 header {
@@ -28,8 +28,8 @@ header {
   font-weight: 600;
 }
 h1 {
-  margin: 12px 0 32px;
-  font-size: 34px;
+  margin: 10px 0 24px;
+  font-size: 26px;
   letter-spacing: -0.04em;
 }
 .mode {
@@ -47,11 +47,11 @@ h1 {
   border: 1px solid #314058;
   border-radius: 16px;
   background: #182338;
-  padding: 28px;
+  padding: 18px;
 }
 h2 {
   margin: 0 0 16px;
-  font-size: 23px;
+  font-size: 20px;
   line-height: 1.35;
 }
 p {
@@ -63,14 +63,14 @@ footer {
 }
 .status-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin: 28px 0 0;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 20px 0 0;
 }
 dt {
   color: #aebed5;
   font-size: 13px;
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 dd {
   margin: 0;
@@ -81,21 +81,10 @@ footer {
   font-size: 13px;
   line-height: 1.6;
 }
-@media (max-width: 600px) {
-  .app-shell {
-    padding: 24px;
-  }
-  h1 {
-    font-size: 28px;
-  }
-  .status-grid {
-    grid-template-columns: 1fr;
-  }
-}
 
 .settings {
-  margin-top: 28px;
-  padding: 28px;
+  margin-top: 12px;
+  padding: 18px;
   border: 1px solid #314058;
   border-radius: 16px;
 }
@@ -117,7 +106,7 @@ footer {
   margin-bottom: 16px;
 }
 .settings select,
-.settings button {
+button {
   color: #eef3fb;
   background: #243652;
   border: 1px solid #7592bc;
@@ -130,10 +119,10 @@ footer {
   margin-top: 8px;
   width: 100%;
 }
-.settings button {
+button {
   cursor: pointer;
 }
-.settings button:disabled,
+button:disabled,
 .settings fieldset:disabled {
   opacity: 0.6;
   cursor: default;
@@ -143,7 +132,66 @@ footer {
   flex-wrap: wrap;
   gap: 12px;
 }
-.settings :focus-visible {
+:focus-visible {
   outline: 3px solid #bcd8ff;
   outline-offset: 3px;
+}
+
+.status-grid > div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+.settings-disclosure {
+  margin-top: 18px;
+}
+.settings-disclosure > button {
+  width: 100%;
+  text-align: left;
+}
+#panel-settings > button {
+  margin-top: 12px;
+}
+button,
+select {
+  min-height: 44px;
+}
+p,
+dd,
+button {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 380px) {
+  .app-shell {
+    padding: 16px;
+  }
+  h1 {
+    font-size: 23px;
+  }
+  .eyebrow {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 300px) {
+  header {
+    padding-right: 0;
+  }
+  .mode {
+    position: static;
+    display: inline-block;
+    margin-top: 0;
+  }
+  h1,
+  h2 {
+    overflow-wrap: anywhere;
+  }
+  .settings {
+    padding: 12px;
+  }
+  button,
+  select {
+    max-width: 100%;
+  }
 }

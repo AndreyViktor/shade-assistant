@@ -1,4 +1,4 @@
-import { SettingsPanel } from '../features/settings/SettingsPanel';
+import { SettingsDisclosure } from '../features/settings/SettingsDisclosure';
 import { useEffect, useState } from 'react';
 import { ipcFailure } from '../../contracts/ipc/appStatus';
 import type { AppStatusResult } from '../../contracts/ipc/appStatus';
@@ -25,17 +25,16 @@ export function App() {
   return (
     <main className="app-shell">
       <header>
-        <p className="eyebrow">SEU ASSISTENTE DE REUNIÕES</p>
+        <p className="eyebrow">ASSISTENTE DE REUNIÕES</p>
         <h1>Meeting Copilot</h1>
         <p className="mode" aria-label="Modo demonstração">
           DEMO
         </p>
       </header>
       <section aria-labelledby="welcome-title" className="welcome">
-        <h2 id="welcome-title">Um espaço para acompanhar sua conversa.</h2>
+        <h2 id="welcome-title">Seu painel de reunião</h2>
         <p>
-          A base do aplicativo está pronta para as próximas etapas. A
-          demonstração com transcrições e sugestões ainda não está disponível.
+          A demonstração com transcrições e sugestões ainda não está disponível.
         </p>
         {result && !result.ok && (
           <p role="alert">
@@ -57,9 +56,13 @@ export function App() {
           </div>
         </dl>
       </section>
-      <SettingsPanel />
+      <SettingsDisclosure />
       <footer>
-        Nenhum áudio é capturado. Nenhuma chave de API é necessária.
+        <p>Nenhum áudio é capturado. Nenhuma chave de API é necessária.</p>
+        <p>
+          Para minimizar ou mostrar o painel, use o menu Janela e seus atalhos.
+          Você também pode reabrir pelo Dock.
+        </p>
       </footer>
     </main>
   );

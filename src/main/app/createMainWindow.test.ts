@@ -39,6 +39,15 @@ describe('secure window composition', () => {
 
   it('loads a local preload and registers IPC before loading the renderer', async () => {
     await createMainWindow();
+    expect(mocks.options).toHaveBeenCalledWith(
+      expect.objectContaining({
+        width: 440,
+        height: 640,
+        minWidth: 360,
+        minHeight: 400,
+        alwaysOnTop: true,
+      }),
+    );
     const preferences = mocks.options.mock.calls[0]?.[0].webPreferences;
     expect(preferences?.preload).toMatch(/\/preload\/index\.js$/);
     expect(preferences).toMatchObject({
