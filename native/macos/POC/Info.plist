@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key><string>local.meetingcopilot.audio-poc</string>
+  <key>CFBundleName</key><string>Meeting Copilot Audio POC</string>
+  <key>CFBundleExecutable</key><string>MeetingCopilotAudioPOC</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleVersion</key><string>1</string>
+  <key>CFBundleShortVersionString</key><string>0.0.6</string>
+  <key>LSMinimumSystemVersion</key><string>26.0</string>
+  <key>NSMicrophoneUsageDescription</key><string>Teste manual T006: transcrever frases sintéticas localmente, sem gravar áudio.</string>
+  <key>NSSpeechRecognitionUsageDescription</key><string>Teste manual T006: reconhecimento Apple local de frases sintéticas.</string>
+  <key>NSAudioCaptureUsageDescription</key><string>Teste manual T006: transcrever somente áudio de teste do sistema, sem salvar áudio ou imagens.</string>
+</dict>
+</plist>

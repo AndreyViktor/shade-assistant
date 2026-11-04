@@ -1,0 +1,31 @@
+{
+  "task": "T006",
+  "scope": "Apple pt-BR asset preparation in local ad-hoc POC bundle; no capture or TCC request",
+  "bundleIdentifier": "local.meetingcopilot.audio-poc",
+  "command": "native/macos/.build/MeetingCopilotAudioPOC.app/Contents/MacOS/MeetingCopilotAudioPOC --prepare-assets --locale pt-BR",
+  "runs": [
+    {
+      "observedAt": "2026-11-04T03:34:12Z",
+      "exitCode": 0,
+      "events": [
+        "ASSETS_BEFORE_supported",
+        "ASSETS_INSTALLING_APPLE_DOWNLOAD_MAY_BE_REQUIRED",
+        "ASSETS_AFTER_installed",
+        "ASSETS_PREPARED_NO_CAPTURE_pt-BR"
+      ]
+    },
+    {
+      "observedAt": "2026-11-04T03:34:29Z",
+      "exitCode": 0,
+      "events": [
+        "ASSETS_BEFORE_installed",
+        "ASSETS_INSTALLING_APPLE_DOWNLOAD_MAY_BE_REQUIRED",
+        "ASSETS_AFTER_installed",
+        "ASSETS_PREPARED_NO_CAPTURE_pt-BR"
+      ]
+    }
+  ],
+  "downloadBytesMeasured": false,
+  "captureTested": false,
+  "bilingualValidated": false
+}
