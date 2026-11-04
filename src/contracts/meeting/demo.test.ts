@@ -8,17 +8,25 @@ const transcript = {
   locale: 'pt-BR',
   text: 'Pergunta sintética?',
 };
+const card = {
+  id: 'demo-1-2',
+  category: 'question',
+  title: 'Contexto',
+  body: 'Esclareça o contexto.',
+  groundedIn: 'inference',
+  expiresAt: 30000,
+};
 const snapshot = {
   transcript,
-  suggestion: { sequence: 2, text: 'Esclareça o contexto.' },
+  suggestions: [card],
   completed: false,
 };
 describe('strict bounded demo snapshot', () => {
-  it('accepts empty, transcript-only and correlated suggestion snapshots', () => {
+  it('accepts empty, transcript-only and suggestion card snapshots', () => {
     for (const value of [
       emptyDemo(),
       snapshot,
-      { ...snapshot, suggestion: null },
+      { ...snapshot, suggestions: [] },
       { ...snapshot, completed: true },
     ])
       expect(parseDemoSnapshot(value)).toEqual(value);
@@ -36,19 +44,29 @@ describe('strict bounded demo snapshot', () => {
     { ...snapshot, transcript: { ...transcript, text: 'x'.repeat(501) } },
     { ...snapshot, transcript: { ...transcript, text: '  ' } },
     { ...snapshot, transcript: { ...transcript, key: 'synthetic' } },
-    { ...snapshot, transcript: null },
-    { ...snapshot, suggestion: { sequence: 1, text: 'Unrelated' } },
-    { ...snapshot, suggestion: { sequence: 2, text: 'x'.repeat(501) } },
-    { ...snapshot, suggestion: { sequence: 2, text: '' } },
+    { ...snapshot, suggestion: null }, // Legacy v1 payload is rejected.
+    { ...snapshot, suggestions: null },
     {
       ...snapshot,
-      suggestion: { sequence: 2, text: 'valid', secret: 'synthetic' },
+      suggestions: [card, { ...card, id: 'second' }, { ...card, id: 'third' }],
     },
+    { ...snapshot, suggestions: [card, card] },
+    { ...snapshot, suggestions: [{ ...card, category: 'unknown' }] },
+    { ...snapshot, suggestions: [{ ...card, body: 'x'.repeat(301) }] },
+    { ...snapshot, suggestions: [{ ...card, title: 'x'.repeat(81) }] },
+    { ...snapshot, suggestions: [{ ...card, title: ' ' }] },
+    { ...snapshot, suggestions: [{ ...card, body: '' }] },
+    { ...snapshot, suggestions: [{ ...card, id: '../path' }] },
+    { ...snapshot, suggestions: [{ ...card, groundedIn: 'fact' }] },
+    { ...snapshot, suggestions: [{ ...card, expiresAt: Infinity }] },
+    { ...snapshot, suggestions: [{ ...card, expiresAt: -1 }] },
+    { ...snapshot, suggestions: [{ ...card, expiresAt: 0.5 }] },
+    { ...snapshot, suggestions: [{ ...card, secret: 'synthetic' }] },
   ])('rejects invalid content at the parser and IPC boundary %#', (value) => {
     expect(parseDemoSnapshot(value)).toBeNull();
     expect(
       parseSessionResult({
-        version: 1,
+        version: 2,
         ok: true,
         session: {
           phase: 'running',
@@ -57,6 +75,6 @@ describe('strict bounded demo snapshot', () => {
         },
         demo: value,
       }),
-    ).toEqual({ version: 1, ok: false, code: 'INVALID_RESPONSE' });
+    ).toEqual({ version: 2, ok: false, code: 'INVALID_RESPONSE' });
   });
 });

@@ -1,7 +1,30 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
 **Atualização:** 2026-11-04. **Marco:** M1 — UI e demo.
-**Implementação concluída:** **T001–T009**. T009 passou no reteste do smoke; a primeira execução havia falhado transitoriamente ao confirmar foco nativo. T008 validada para o ciclo de sessão DEMO e a política de consentimento; captura e envios reais continuam pendentes das integrações posteriores.
+**Implementação concluída:** **T001–T010**. T010 validada para cartões DEMO, descarte, deduplicação e expiração. Captura e envios reais continuam pendentes das integrações posteriores.
+
+## T010 — cartões, descarte e expiração — DONE — 2026-11-04
+
+- Sessão exclusiva T010 em `main`, árvore inicialmente limpa, HEAD `2f2013f`; T009 DONE conferida no Git/código. T010 marcada IN_PROGRESS antes da implementação e DONE somente após os gates abaixo. Nenhuma outra tarefa iniciada.
+- `SuggestionStore` puro mantém até dois cartões, quatro categorias e expiração padrão de 30 s; terceiro cartão substitui o mais antigo. Deduplica ID/corpo normalizado, sem renovar prazo; descarte/evicção preservam supressão temporária. Stop/recarga/crash/fechamento limpam estado. IDs por execução impedem descarte de uma sessão anterior.
+- DEMO apresenta cartões com título, corpo, categoria, fundamento e botão Descartar. Main controla estado/prazo; renderer consulta também durante pausa e após conclusão enquanto houver cartões. Respostas atrasadas não restauram descartes. Canal de sessão migrou integralmente a v2 com schemas estritos; status/preferências permanecem v1. Decisão e limites em [ADR 0011](adr/0011-session-suggestion-cards.md).
+
+| Comando / verificação                                   | Resultado real                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `export PATH=/opt/homebrew/bin:$PATH`; `npm run verify` | Passou: ESLint sem warnings, Prettier, três projetos TypeScript strict, **256 testes TS em 23 arquivos**, **12 testes Python**, build main/preload/renderer. Sem novas dependências.                                                                                                                                                                                                                      |
+| `npm run test:smoke`, via escalada aprovada             | **7/7 passaram no Electron real** (cerca de 1,1 min). Novo teste comprovou dois cartões, categorias DEMO, descarte por foco + Enter, expiração com relógio real durante pausa, retomada sem cartões expirados e limpeza. DEMO e novo teste usaram guards Node/Electron/Chromium: **zero tentativas de rede detectadas**, sem chave/API. Os seis smokes anteriores também passaram, incluindo foco nativo. |
+| Inspeção de `test-results/suggestions.png`              | Cartões, categorias, texto e descarte legíveis no painel compacto; segundo cartão requer rolagem. Imagem do app de teste ignorada pelo Git.                                                                                                                                                                                                                                                               |
+| Revisão final                                           | `git diff --check` passou; formatação documental verificada antes do commit.                                                                                                                                                                                                                                                                                                                              |
+
+**Ajustes durante validação:** primeira rodada de testes encontrou uma fixture React ainda no formato antigo (`suggestion`); migrada para `suggestions`. Primeiro `verify` parou em formatação de TASKS/fixture; corrigida, sem desabilitar regras. Gate final passou. Smoke emitiu somente aviso herdado NO_COLOR/FORCE_COLOR. Nenhuma recusa de aprovação na execução gráfica.
+
+**Arquivos:** `src/contracts/meeting/{suggestion.ts,demo*}`, `src/contracts/ipc/session*`, `src/core/suggestions/*`, `src/infrastructure/transcription/mock/*`, `src/main/ipc/registerSessionIpc*`, `src/preload/createMeetingCopilotApi*`, `src/renderer/features/{meeting,suggestions}/*`, estilos/fixture App, `tests/e2e/{demo,session,suggestions}.spec.ts`, README, ADR 0011, TASKS e este handoff. Dependências/lockfile e Swift preservados.
+
+**Limites:** deduplicação textual, não semântica; supressão limitada a 100 entradas dentro do prazo. UI atualiza em intervalos de 500 ms e depende do processo ativo; mudanças no relógio do SO afetam prazos absolutos. Categoria/fundamento usam fixtures, sem avaliação de IA real. Não executados Swift/captura/TCC, APIs pagas, VoiceOver ou ensaio humano de reunião: não são critérios da T010. Não há invalidação por tópico nem integração real de sugestões. Sem credencial real, captura, push ou deploy.
+
+**Commit local da entrega:** `feat(T010): add expiring dismissible suggestion cards` (inclui código, testes e registros; obter hash com `git log -1 --format=%h --grep="feat(T010)"`). Escrita em `.git` somente pelo mecanismo de escalada autorizado.
+
+**Blockers técnicos:** nenhum após os gates. **Próximo passo:** encerrar após o commit local T010. T011 permanece TODO, somente em nova sessão independente; não foi iniciada.
 
 ## T009 — mocks determinísticos — DONE — 2026-11-04
 

@@ -15,7 +15,10 @@ function setup() {
   demo.start();
   return { session, demo };
 }
-beforeEach(() => vi.useFakeTimers());
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(0);
+});
 afterEach(() => {
   vi.clearAllTimers();
   vi.useRealTimers();
@@ -34,30 +37,38 @@ describe('deterministic offline playback', () => {
           source: sequence === 2 ? 'system' : 'mic',
           locale: 'pt-BR',
         },
-        suggestion: null,
       });
       vi.advanceTimersByTime(1000);
       const snapshot = demo.snapshot();
       expect(parseDemoSnapshot(snapshot)).toEqual(snapshot);
-      if (sequence === 1) expect(snapshot.suggestion).toBeNull();
-      else expect(snapshot.suggestion).toMatchObject({ sequence });
+      if (sequence === 1) expect(snapshot.suggestions).toEqual([]);
+      else expect(snapshot.suggestions.at(-1)?.id).toBe(`demo-1-${sequence}`);
       firstRun.push(snapshot);
     }
     expect(demo.snapshot().completed).toBe(true);
     expect(vi.getTimerCount()).toBe(0);
     vi.advanceTimersByTime(3600000);
-    expect(demo.snapshot()).toEqual(firstRun.at(-1));
+    expect(demo.snapshot().suggestions).toEqual([]);
     session.stop();
     demo.stop();
     expect(demo.snapshot()).toEqual(emptyDemo());
     session.start(options);
     demo.start();
+    vi.setSystemTime(0);
     const secondRun = [];
     for (let turn = 0; turn < 3; turn += 1) {
       vi.advanceTimersByTime(3000);
       secondRun.push(demo.snapshot());
     }
-    expect(secondRun).toEqual(firstRun);
+    expect(
+      secondRun.map((value) => ({
+        ...value,
+        suggestions: value.suggestions.map((card) => ({
+          ...card,
+          id: card.id.replace('demo-2-', 'demo-1-'),
+        })),
+      })),
+    ).toEqual(firstRun);
     expect(session.snapshot().consent).toEqual(options.consent);
   });
 
@@ -81,7 +92,7 @@ describe('deterministic offline playback', () => {
       vi.advanceTimersByTime(elapsed === 1000 ? 2000 : 1000);
       if (elapsed === 1000)
         expect(demo.snapshot().transcript?.sequence).toBe(1);
-      else expect(demo.snapshot().suggestion?.sequence).toBe(2);
+      else expect(demo.snapshot().suggestions[0]?.id).toBe('demo-1-2');
     },
   );
 
@@ -126,12 +137,12 @@ describe('deterministic offline playback', () => {
     const { demo } = setup();
     vi.advanceTimersByTime(6000);
     const snapshot = demo.snapshot();
-    if (!snapshot.transcript || !snapshot.suggestion)
+    if (!snapshot.transcript || !snapshot.suggestions[0])
       throw new Error('Missing fixture');
     snapshot.transcript.text = 'changed';
-    snapshot.suggestion.text = 'changed';
+    snapshot.suggestions[0].body = 'changed';
     expect(demo.snapshot().transcript?.text).not.toBe('changed');
-    expect(demo.snapshot().suggestion?.text).not.toBe('changed');
+    expect(demo.snapshot().suggestions[0]?.body).not.toBe('changed');
     demo.start();
     vi.advanceTimersByTime(6000);
     expect(demo.snapshot().transcript?.text).not.toBe('changed');

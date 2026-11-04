@@ -35,7 +35,7 @@ test('manual demo session uses real IPC, stops on reload and never enables real 
         await page.evaluate(
           (mode) =>
             window.meetingCopilot.session({
-              version: 1,
+              version: 2,
               action: 'start',
               options: {
                 mode,
@@ -44,7 +44,7 @@ test('manual demo session uses real IPC, stops on reload and never enables real 
             }),
           mode,
         ),
-      ).toEqual({ version: 1, ok: false, code: 'UNAVAILABLE' });
+      ).toEqual({ version: 2, ok: false, code: 'UNAVAILABLE' });
     }
     await page.locator('summary').click();
     await expect(page.getByText(/Texto de contexto só poderá/)).toBeVisible();
@@ -56,7 +56,7 @@ test('manual demo session uses real IPC, stops on reload and never enables real 
     await page.screenshot({ path: 'test-results/session.png' });
     expect(outgoing).toEqual([]);
     const result = await page.evaluate(() =>
-      window.meetingCopilot.session({ version: 1, action: 'read' }),
+      window.meetingCopilot.session({ version: 2, action: 'read' }),
     );
     expect(result).toMatchObject({
       ok: true,

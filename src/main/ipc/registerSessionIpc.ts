@@ -23,14 +23,14 @@ export function registerSessionIpc(
     SESSION_CHANNEL,
     (event, ...args: unknown[]): SessionResult => {
       if (!isAuthorizedRenderer(window, rendererUrl, event))
-        return { version: 1, ok: false, code: 'FORBIDDEN' };
+        return { version: 2, ok: false, code: 'FORBIDDEN' };
       const request = args.length === 1 ? parseSessionRequest(args[0]) : null;
-      if (!request) return { version: 1, ok: false, code: 'INVALID_REQUEST' };
+      if (!request) return { version: 2, ok: false, code: 'INVALID_REQUEST' };
       let accepted = true;
       if (request.action === 'start') {
         // T014/T016 provide real adapters. Preferences/credentials are not consent.
         if (request.options.mode !== 'demo')
-          return { version: 1, ok: false, code: 'UNAVAILABLE' };
+          return { version: 2, ok: false, code: 'UNAVAILABLE' };
         accepted = session.start(request.options);
         if (accepted) demo.start();
       }
@@ -42,15 +42,16 @@ export function registerSessionIpc(
         accepted = session.resume();
         if (accepted) demo.resume();
       }
+      if (request.action === 'dismiss-suggestion') demo.dismiss(request.id);
       if (request.action === 'stop') stop();
       return accepted
         ? {
-            version: 1,
+            version: 2,
             ok: true,
             session: session.snapshot(),
             demo: demo.snapshot(),
           }
-        : { version: 1, ok: false, code: 'INVALID_REQUEST' };
+        : { version: 2, ok: false, code: 'INVALID_REQUEST' };
     },
   );
   // Reload/crash/close must not leave work authorized in an unattended renderer.

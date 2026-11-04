@@ -27,7 +27,7 @@ export function SessionControls() {
           disabled={busy || !canStart}
           onClick={() => {
             void command({
-              version: 1,
+              version: 2,
               action: 'start',
               options: {
                 mode: 'demo',
@@ -41,7 +41,7 @@ export function SessionControls() {
         <button
           disabled={busy || session?.phase !== 'running'}
           onClick={() => {
-            void command({ version: 1, action: 'pause' });
+            void command({ version: 2, action: 'pause' });
           }}
         >
           Pausar
@@ -49,7 +49,7 @@ export function SessionControls() {
         <button
           disabled={busy || session?.phase !== 'paused'}
           onClick={() => {
-            void command({ version: 1, action: 'resume' });
+            void command({ version: 2, action: 'resume' });
           }}
         >
           Retomar
@@ -57,13 +57,22 @@ export function SessionControls() {
         <button
           disabled={busy}
           onClick={() => {
-            void command({ version: 1, action: 'stop' });
+            void command({ version: 2, action: 'stop' });
           }}
         >
           Parar
         </button>
       </div>
-      {session && <DemoPreview demo={demo} phase={session.phase} />}
+      {session && (
+        <DemoPreview
+          demo={demo}
+          phase={session.phase}
+          busy={busy}
+          onDismiss={(id) => {
+            void command({ version: 2, action: 'dismiss-suggestion', id });
+          }}
+        />
+      )}
       <details className="data-consent">
         <summary>Consentimento e dados enviados à nuvem</summary>
         <p>

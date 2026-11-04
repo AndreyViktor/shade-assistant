@@ -1,12 +1,17 @@
+import { SuggestionCards } from '../suggestions/SuggestionCards';
 import type { DemoSnapshot } from '../../../contracts/meeting/demo';
 import type { SessionPhase } from '../../../contracts/meeting/session';
 
 export function DemoPreview({
   demo,
   phase,
+  busy,
+  onDismiss,
 }: {
   demo: DemoSnapshot;
   phase: SessionPhase;
+  busy: boolean;
+  onDismiss: (id: string) => void;
 }) {
   if (phase === 'idle' || phase === 'stopped') return null;
   return (
@@ -28,8 +33,11 @@ export function DemoPreview({
       ) : (
         <p>Aguardando fala simulada…</p>
       )}
-      <h3>Sugestão simulada</h3>
-      <p>{demo.suggestion?.text ?? 'Nenhuma sugestão neste momento.'}</p>
+      <SuggestionCards
+        suggestions={demo.suggestions}
+        busy={busy}
+        onDismiss={onDismiss}
+      />
       {phase === 'paused' && (
         <p>Roteiro pausado. Retomar continua da próxima etapa.</p>
       )}

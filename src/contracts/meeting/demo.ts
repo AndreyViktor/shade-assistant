@@ -1,3 +1,5 @@
+import { parseSuggestions } from './suggestion';
+import type { Suggestion } from './suggestion';
 import { hasExactKeys } from '../validation';
 
 // Synthetic DEMO data only; this is not the native STT protocol (T012).
@@ -7,15 +9,14 @@ export type DemoTranscript = {
   locale: 'pt-BR';
   text: string;
 };
-export type DemoSuggestion = { sequence: number; text: string };
 export type DemoSnapshot = {
   transcript: DemoTranscript | null;
-  suggestion: DemoSuggestion | null;
+  suggestions: Suggestion[];
   completed: boolean;
 };
 
 export function emptyDemo(): DemoSnapshot {
-  return { transcript: null, suggestion: null, completed: false };
+  return { transcript: null, suggestions: [], completed: false };
 }
 
 function isSequence(value: unknown): value is number {
@@ -30,12 +31,13 @@ function isText(value: unknown): value is string {
 
 export function parseDemoSnapshot(value: unknown): DemoSnapshot | null {
   if (
-    !hasExactKeys(value, ['transcript', 'suggestion', 'completed']) ||
+    !hasExactKeys(value, ['transcript', 'suggestions', 'completed']) ||
     typeof value.completed !== 'boolean'
   )
     return null;
   const transcript = value.transcript;
-  const suggestion = value.suggestion;
+  const suggestions = parseSuggestions(value.suggestions);
+  if (!suggestions) return null;
   let parsedTranscript: DemoTranscript | null = null;
   if (transcript !== null) {
     if (
@@ -53,20 +55,9 @@ export function parseDemoSnapshot(value: unknown): DemoSnapshot | null {
       text: transcript.text,
     };
   }
-  let parsedSuggestion: DemoSuggestion | null = null;
-  if (suggestion !== null) {
-    if (
-      !hasExactKeys(suggestion, ['sequence', 'text']) ||
-      !isSequence(suggestion.sequence) ||
-      suggestion.sequence !== parsedTranscript?.sequence ||
-      !isText(suggestion.text)
-    )
-      return null;
-    parsedSuggestion = { sequence: suggestion.sequence, text: suggestion.text };
-  }
   return {
     transcript: parsedTranscript,
-    suggestion: parsedSuggestion,
+    suggestions,
     completed: value.completed,
   };
 }
