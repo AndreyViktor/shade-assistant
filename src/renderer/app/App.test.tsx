@@ -7,7 +7,18 @@ describe('App scaffold', () => {
   const getStatus = vi.fn();
   beforeEach(() => {
     getStatus.mockResolvedValue({ version: 1, ok: true, status: APP_STATUS });
-    vi.stubGlobal('meetingCopilot', { getStatus });
+    vi.stubGlobal('meetingCopilot', {
+      getStatus,
+      session: vi.fn().mockResolvedValue({
+        version: 1,
+        ok: true,
+        session: {
+          phase: 'idle',
+          mode: 'demo',
+          consent: { capture: false, context: false, remoteAudio: false },
+        },
+      }),
+    });
   });
   afterEach(() => vi.unstubAllGlobals());
 
@@ -27,14 +38,14 @@ describe('App scaffold', () => {
     ).toBeVisible();
   });
 
-  it('shows inactive capture and does not offer a misleading start control', async () => {
+  it('shows inactive capture and offers only explicit demo start', async () => {
     render(<App />);
     expect(await screen.findByText('Inativa')).toBeVisible();
     expect(screen.getByText('Desativada')).toBeVisible();
     expect(screen.getByText('Nenhum')).toBeVisible();
     expect(
-      screen.queryByRole('button', { name: /iniciar/i }),
-    ).not.toBeInTheDocument();
+      screen.getByRole('button', { name: 'Iniciar DEMO' }),
+    ).toBeInTheDocument();
   });
 
   it('does not claim a verified status while waiting for main', () => {

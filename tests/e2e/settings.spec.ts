@@ -21,9 +21,11 @@ test('persists preferences across real Electron restarts without network or rend
     await page.getByLabel('Modo preferido').selectOption('real');
     await page.getByLabel('Idiomas preferidos').selectOption('pt-BR+en-US');
     await page.getByRole('button', { name: 'Salvar preferências' }).click();
-    await expect(page.getByRole('status')).toContainText(
-      'Nenhum serviço foi iniciado',
-    );
+    await expect(
+      page
+        .getByRole('region', { name: 'Preferências', exact: true })
+        .getByRole('status'),
+    ).toContainText('Nenhum serviço foi iniciado');
     expect(outgoing).toEqual([]);
     await app.close();
     app = await fixture.launch();

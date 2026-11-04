@@ -1,3 +1,4 @@
+import type { SessionRequest, SessionResult } from './session';
 import { hasExactKeys } from '../validation';
 import type { Preferences } from '../settings/preferences';
 import type { SettingsResult } from './settings';
@@ -28,6 +29,7 @@ export type AppStatusResult =
   | { version: typeof IPC_VERSION; ok: false; code: IpcErrorCode };
 
 export interface MeetingCopilotApi {
+  readonly session: (request: SessionRequest) => Promise<SessionResult>;
   readonly getStatus: () => Promise<AppStatusResult>;
   readonly getSettings: () => Promise<SettingsResult>;
   readonly savePreferences: (

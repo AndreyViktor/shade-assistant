@@ -30,6 +30,11 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
       name: 'Preferências',
       exact: true,
     });
+    await page.getByRole('button', { name: 'Iniciar DEMO' }).focus();
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('button', { name: 'Parar' })).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(page.locator('summary')).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(toggle).toBeFocused();
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
