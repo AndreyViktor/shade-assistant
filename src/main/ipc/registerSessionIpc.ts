@@ -1,3 +1,4 @@
+import { DemoPlayback } from '../../infrastructure/transcription/mock/DemoPlayback';
 import { ipcMain } from 'electron';
 import type { BrowserWindow } from 'electron';
 import {
@@ -13,6 +14,11 @@ export function registerSessionIpc(
   rendererUrl: string,
 ): void {
   const session = new MeetingSession();
+  const demo = new DemoPlayback(session);
+  function stop() {
+    session.stop();
+    demo.stop();
+  }
   ipcMain.handle(
     SESSION_CHANNEL,
     (event, ...args: unknown[]): SessionResult => {
@@ -26,22 +32,34 @@ export function registerSessionIpc(
         if (request.options.mode !== 'demo')
           return { version: 1, ok: false, code: 'UNAVAILABLE' };
         accepted = session.start(request.options);
+        if (accepted) demo.start();
       }
-      if (request.action === 'pause') accepted = session.pause();
-      if (request.action === 'resume') accepted = session.resume();
-      if (request.action === 'stop') session.stop();
+      if (request.action === 'pause') {
+        accepted = session.pause();
+        if (accepted) demo.pause();
+      }
+      if (request.action === 'resume') {
+        accepted = session.resume();
+        if (accepted) demo.resume();
+      }
+      if (request.action === 'stop') stop();
       return accepted
-        ? { version: 1, ok: true, session: session.snapshot() }
+        ? {
+            version: 1,
+            ok: true,
+            session: session.snapshot(),
+            demo: demo.snapshot(),
+          }
         : { version: 1, ok: false, code: 'INVALID_REQUEST' };
     },
   );
   // Reload/crash/close must not leave work authorized in an unattended renderer.
   window.webContents.on('did-start-loading', () => {
-    if (session.snapshot().phase !== 'idle') session.stop();
+    if (session.snapshot().phase !== 'idle') stop();
   });
-  window.webContents.on('render-process-gone', () => session.stop());
+  window.webContents.on('render-process-gone', stop);
   window.once('closed', () => {
-    session.stop();
+    stop();
     ipcMain.removeHandler(SESSION_CHANNEL);
   });
 }

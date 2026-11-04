@@ -1,3 +1,4 @@
+import { emptyDemo } from '../meeting/demo';
 import { describe, expect, it } from 'vitest';
 import { parseSessionRequest, parseSessionResult } from './session';
 const options = {
@@ -16,6 +17,7 @@ describe('strict session contract', () => {
     const result = {
       version: 1,
       ok: true,
+      demo: emptyDemo(),
       session: { phase: 'running', ...options },
     };
     expect(parseSessionResult(result)).toEqual(result);

@@ -1,3 +1,5 @@
+import { parseDemoSnapshot } from '../meeting/demo';
+import type { DemoSnapshot } from '../meeting/demo';
 import { hasExactKeys } from '../validation';
 import { parseSessionSnapshot, parseSessionStart } from '../meeting/session';
 import type { SessionSnapshot, SessionStart } from '../meeting/session';
@@ -9,7 +11,7 @@ export type SessionRequest =
   | { version: 1; action: 'read' | 'pause' | 'resume' | 'stop' }
   | { version: 1; action: 'start'; options: SessionStart };
 export type SessionResult =
-  | { version: 1; ok: true; session: SessionSnapshot }
+  | { version: 1; ok: true; session: SessionSnapshot; demo: DemoSnapshot }
   | { version: 1; ok: false; code: IpcErrorCode };
 
 export function parseSessionRequest(value: unknown): SessionRequest | null {
@@ -36,12 +38,13 @@ export function parseSessionRequest(value: unknown): SessionRequest | null {
 
 export function parseSessionResult(value: unknown): SessionResult {
   if (
-    hasExactKeys(value, ['version', 'ok', 'session']) &&
+    hasExactKeys(value, ['version', 'ok', 'session', 'demo']) &&
     value.version === 1 &&
     value.ok === true
   ) {
     const session = parseSessionSnapshot(value.session);
-    if (session) return { version: 1, ok: true, session };
+    const demo = parseDemoSnapshot(value.demo);
+    if (session && demo) return { version: 1, ok: true, session, demo };
   }
   const failure = parseStatusResult(value);
   return failure.ok

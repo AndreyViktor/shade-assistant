@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import type { SessionRequest } from '../../../contracts/ipc/session';
-import type { SessionSnapshot } from '../../../contracts/meeting/session';
+import { useMeetingSession } from './useMeetingSession';
+import { DemoPreview } from './DemoPreview';
 
 const phaseLabels = {
   idle: 'Não iniciada',
@@ -10,67 +9,7 @@ const phaseLabels = {
 };
 
 export function SessionControls() {
-  const [session, setSession] = useState<SessionSnapshot | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const mounted = useRef(false);
-  const pending = useRef(false);
-  const revision = useRef(0);
-
-  useEffect(() => {
-    mounted.current = true;
-    let active = true;
-    const initialRevision = revision.current;
-    async function load() {
-      try {
-        const result = await window.meetingCopilot.session({
-          version: 1,
-          action: 'read',
-        });
-        if (!active || revision.current !== initialRevision) return;
-        if (result.ok) setSession(result.session);
-        else setError('Não foi possível verificar a sessão. Reabra o app.');
-      } catch {
-        if (active && revision.current === initialRevision)
-          setError('Não foi possível verificar a sessão. Reabra o app.');
-      }
-    }
-    void load();
-    return () => {
-      active = false;
-      mounted.current = false;
-    };
-  }, []);
-
-  async function command(request: SessionRequest) {
-    if (pending.current) return;
-    pending.current = true;
-    revision.current += 1;
-    setBusy(true);
-    setError('');
-    try {
-      const result = await window.meetingCopilot.session(request);
-      if (!mounted.current) return;
-      if (result.ok) setSession(result.session);
-      else {
-        setSession(null);
-        setError(
-          'Não foi possível confirmar a ação. Use Parar ou reabra o app.',
-        );
-      }
-    } catch {
-      if (mounted.current) {
-        setSession(null);
-        setError(
-          'Não foi possível confirmar a ação. Use Parar ou reabra o app.',
-        );
-      }
-    } finally {
-      pending.current = false;
-      if (mounted.current) setBusy(false);
-    }
-  }
-
+  const { session, demo, busy, error, command } = useMeetingSession();
   const canStart = session?.phase === 'idle' || session?.phase === 'stopped';
   return (
     <section className="session-controls" aria-labelledby="session-title">
@@ -79,8 +18,8 @@ export function SessionControls() {
         {session ? phaseLabels[session.phase] : 'Estado não confirmado'}
       </p>
       <p>
-        Iniciar DEMO exercita os controles sem microfone, áudio do sistema ou
-        rede. Transcrições e sugestões simuladas ainda não estão disponíveis.
+        Iniciar DEMO reproduz falas e sugestões fixas em pt-BR. As fontes são
+        simuladas: sem captura, rede, chave ou custo de API.
       </p>
       {error && <p role="alert">{error}</p>}
       <div className="settings-actions">
@@ -124,6 +63,7 @@ export function SessionControls() {
           Parar
         </button>
       </div>
+      {session && <DemoPreview demo={demo} phase={session.phase} />}
       <details className="data-consent">
         <summary>Consentimento e dados enviados à nuvem</summary>
         <p>
