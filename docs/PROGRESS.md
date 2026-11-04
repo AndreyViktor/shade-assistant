@@ -3,6 +3,12 @@
 **Atualização:** 2026-11-04. **Marco:** M0 — fundação + viabilidade Swift.
 **Implementação concluída:** **T001–T005**. Retomada exclusivamente **T006**, com implementação parcial validada e estado **BLOCKED aguardando teste humano**. Nenhuma outra tarefa iniciada.
 
+## T006 — primeiro resultado real do áudio do sistema — 2026-11-04
+
+- O usuário forneceu saída parcial da POC com `source=system`, `locale=pt-BR` e `segment=1`: pelo menos seis eventos parciais e dois finais, um deles apenas pontuação. Não registrar as falas no repositório. Isso comprova que a fonte do sistema produziu eventos reais de reconhecimento, sem comprovar a execução de outras fontes em paralelo.
+- Comparando com a frase sintética sugerida, o resultado final apresentou distorção no início e repetição de sílaba; não há amostra suficiente para quantificar qualidade. O início do intervalo dos parciais difere do final, como observado no microfone; sem diagnóstico ou medição de latência.
+- As saídas compartilhadas não informam parada, pausa, retomada ou estado dos indicadores. Permanecem pendentes o ensaio simultâneo `mic`/`system`, lifecycle das duas fontes, qualidade e limites bilíngues. T006 continua `BLOCKED` até conclusão e evidência desses testes.
+
 ## T006 — primeiro resultado real do microfone — 2026-11-04
 
 - Após o commit `8704c0b`, o usuário forneceu saída real da POC: sete eventos parciais e um final em `pt-BR`, `source=mic`, `segment=1`. O callback que antes encerrava o processo conseguiu receber áudio e produzir um resultado final. Não registrar o conteúdo falado no repositório.
