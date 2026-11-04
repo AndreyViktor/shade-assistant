@@ -1,7 +1,8 @@
 // @vitest-environment node
 import type { BrowserWindow } from 'electron';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { registerSessionIpc } from './registerSessionIpc';
+import { emptyDemo } from '../../contracts/meeting/demo';
 import { SESSION_CHANNEL } from '../../contracts/ipc/session';
 const mocks = vi.hoisted(() => ({
   handle:
@@ -43,8 +44,37 @@ function setup() {
     call: (request: unknown) => listener(event, request),
   };
 }
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.useFakeTimers();
+});
+afterEach(() => {
+  vi.clearAllTimers();
+  vi.useRealTimers();
+});
 describe('session main boundary', () => {
+  it('publishes deterministic demo data only after start and clears it on stop', () => {
+    const { call } = setup();
+    const read = () => call({ version: 1, action: 'read' });
+    vi.advanceTimersByTime(10000);
+    expect(read()).toMatchObject({ demo: emptyDemo() });
+    call(start);
+    vi.advanceTimersByTime(5000);
+    expect(read()).toMatchObject({
+      demo: { transcript: { sequence: 2, source: 'system' }, suggestion: null },
+    });
+    call({ version: 1, action: 'pause' });
+    const paused = read();
+    vi.advanceTimersByTime(10000);
+    expect(read()).toEqual(paused);
+    call({ version: 1, action: 'resume' });
+    vi.advanceTimersByTime(1000);
+    expect(read()).toMatchObject({ demo: { suggestion: { sequence: 2 } } });
+    call({ version: 1, action: 'stop' });
+    vi.advanceTimersByTime(10000);
+    expect(read()).toMatchObject({ demo: emptyDemo() });
+    expect(vi.getTimerCount()).toBe(0);
+  });
   it('owns state across reads, allows only manual demo and prevents invalid transitions', () => {
     const { call } = setup();
     expect(call({ version: 1, action: 'read' })).toMatchObject({
@@ -117,13 +147,23 @@ describe('session main boundary', () => {
         ([event]) => event === name,
       )?.[1];
       if (!callback) throw new Error('Missing cleanup');
+      vi.advanceTimersByTime(6000);
       callback();
+      expect(vi.getTimerCount()).toBe(0);
+      expect(call({ version: 1, action: 'read' })).toMatchObject({
+        demo: emptyDemo(),
+      });
       expect(call({ version: 1, action: 'read' })).toMatchObject({
         session: { phase: 'stopped' },
       });
     }
     call(start);
+    vi.advanceTimersByTime(6000);
     window.once.mock.calls[0]?.[1]();
+    expect(vi.getTimerCount()).toBe(0);
+    expect(call({ version: 1, action: 'read' })).toMatchObject({
+      demo: emptyDemo(),
+    });
     expect(call({ version: 1, action: 'read' })).toMatchObject({
       session: { phase: 'stopped' },
     });

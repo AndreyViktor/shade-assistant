@@ -1,3 +1,4 @@
+import { emptyDemo } from '../../../contracts/meeting/demo';
 import {
   act,
   fireEvent,
@@ -11,10 +12,139 @@ const consent = { capture: false, context: false, remoteAudio: false };
 const reply = (phase: string) => ({
   version: 1,
   ok: true,
+  demo: emptyDemo(),
   session: { mode: 'demo', phase, consent },
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
 describe('session controls', () => {
+  it('polls simulated content, labels its source and stops polling after unmount', async () => {
+    vi.useFakeTimers();
+    const session = vi.fn().mockResolvedValue(reply('running'));
+    vi.stubGlobal('meetingCopilot', { session });
+    const view = render(<SessionControls />);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(screen.getByText('Aguardando fala simulada…')).toBeVisible();
+    session.mockResolvedValue({
+      ...reply('running'),
+      demo: {
+        transcript: {
+          sequence: 2,
+          source: 'system',
+          locale: 'pt-BR',
+          text: 'Pergunta sintética?',
+        },
+        suggestion: { sequence: 2, text: 'Sugestão sintética.' },
+        completed: false,
+      },
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+    expect(screen.getByText('Pergunta sintética?')).toBeVisible();
+    expect(screen.getByText('Sugestão sintética.')).toBeVisible();
+    expect(screen.getByText(/Fonte simulada: sistema · pt-BR/)).toBeVisible();
+    const calls = session.mock.calls.length;
+    view.unmount();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10000);
+    });
+    expect(session).toHaveBeenCalledTimes(calls);
+  });
+
+  it('discards a polled transcript that arrives after stop', async () => {
+    vi.useFakeTimers();
+    const session = vi.fn().mockResolvedValue(reply('running'));
+    vi.stubGlobal('meetingCopilot', { session });
+    render(<SessionControls />);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    let finish: (value: unknown) => void = () => {};
+    session.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+    session.mockResolvedValue(reply('stopped'));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Parar' }));
+      await Promise.resolve();
+    });
+    await act(async () => {
+      finish({
+        ...reply('running'),
+        demo: {
+          transcript: {
+            sequence: 1,
+            source: 'mic',
+            locale: 'pt-BR',
+            text: 'Late content',
+          },
+          suggestion: null,
+          completed: false,
+        },
+      });
+      await Promise.resolve();
+    });
+    expect(screen.getByText('Encerrada')).toBeVisible();
+    expect(screen.queryByText('Late content')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('region', { name: 'Roteiro DEMO' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('stops polling on completion and safely reports a polling failure', async () => {
+    vi.useFakeTimers();
+    const session = vi.fn().mockResolvedValue(reply('running'));
+    vi.stubGlobal('meetingCopilot', { session });
+    render(<SessionControls />);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    session.mockResolvedValue({
+      ...reply('running'),
+      demo: { ...emptyDemo(), completed: true },
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+    expect(screen.getByText(/Roteiro concluído/)).toBeVisible();
+    const calls = session.mock.calls.length;
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10000);
+    });
+    expect(session).toHaveBeenCalledTimes(calls);
+    session.mockResolvedValue(reply('paused'));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
+      await Promise.resolve();
+    });
+    session.mockResolvedValue(reply('running'));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Retomar' }));
+      await Promise.resolve();
+    });
+    session.mockRejectedValue(new Error('private payload'));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Não foi possível atualizar',
+    );
+    expect(screen.queryByText('private payload')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Parar' })).toBeEnabled();
+    expect(
+      screen.queryByRole('region', { name: 'Roteiro DEMO' }),
+    ).not.toBeInTheDocument();
+  });
   it('waits for manual start, confirms state from main and exposes separate data notices', async () => {
     const session = vi.fn().mockResolvedValue(reply('idle'));
     vi.stubGlobal('meetingCopilot', { session });

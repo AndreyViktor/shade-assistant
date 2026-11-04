@@ -1,3 +1,4 @@
+import { emptyDemo } from '../contracts/meeting/demo';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   APP_STATUS,
@@ -146,6 +147,7 @@ describe('session preload boundary', () => {
     const reply = {
       version: 1,
       ok: true,
+      demo: emptyDemo(),
       session: {
         phase: 'idle',
         mode: 'demo',

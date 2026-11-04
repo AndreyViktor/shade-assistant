@@ -36,7 +36,8 @@ export function App() {
       <section aria-labelledby="welcome-title" className="welcome">
         <h2 id="welcome-title">Seu painel de reunião</h2>
         <p>
-          A demonstração com transcrições e sugestões ainda não está disponível.
+          A demonstração usa um roteiro fixo. Transcrições e sugestões reais
+          ainda não estão disponíveis.
         </p>
         {result && !result.ok && (
           <p role="alert">

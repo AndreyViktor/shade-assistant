@@ -1,3 +1,4 @@
+import { emptyDemo } from '../../contracts/meeting/demo';
 import { render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { APP_STATUS, ipcFailure } from '../../contracts/ipc/appStatus';
@@ -12,6 +13,7 @@ describe('App scaffold', () => {
       session: vi.fn().mockResolvedValue({
         version: 1,
         ok: true,
+        demo: emptyDemo(),
         session: {
           phase: 'idle',
           mode: 'demo',
@@ -22,7 +24,7 @@ describe('App scaffold', () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  it('identifies the demo and states that the meeting flow is not implemented', async () => {
+  it('identifies the fixed demo and the unavailable real meeting flow', async () => {
     render(<App />);
     await screen.findByText('Inativa');
     expect(
@@ -32,9 +34,7 @@ describe('App scaffold', () => {
       'DEMO',
     );
     expect(
-      screen.getByText(
-        /a demonstração com transcrições e sugestões ainda não está disponível/i,
-      ),
+      screen.getByText(/a demonstração usa um roteiro fixo/i),
     ).toBeVisible();
   });
 
