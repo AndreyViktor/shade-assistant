@@ -1,11 +1,24 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
 **Atualização:** 2026-11-05. **Marco:** M2 — contrato nativo Swift ↔ Electron.
-**Implementação concluída:** **T001–T013**. M1 validado para DEMO offline; T013 entrega o helper Swift próprio e a captura compartilhada testada manualmente no Mac. A ponte Electron da T014 ainda não foi implementada.
+**Implementação concluída:** **T001–T014**. M1 validado para DEMO offline; T013 entrega o helper Swift próprio e T014 valida a ponte Electron/helper com captura real no Mac.
 
 ## Estado atual — 2026-11-05
 
-**T013 está `DONE`, validada nesta sessão e commitada localmente.** O helper Swift próprio compila; gates Swift, testes de subprocesso e `npm run verify` passaram. O usuário também confirmou captura pt-BR de microfone e áudio do sistema, com pausa, retomada e parada, na POC reconstruída que reutiliza o módulo de áudio compartilhado. T014 é a próxima tarefa elegível; não foi iniciada.
+**T014 está `DONE` nesta sessão; T013 continua `DONE` e commitada em `ecf6f35`.** Gates automatizados passaram e o usuário confirmou captura pt-BR no provider Electron→helper Swift, com resultados finais de microfone e áudio do sistema. Nenhuma tarefa posterior foi iniciada.
+
+## T014 — ponte do helper Swift ao Electron main — DONE — 2026-11-05
+
+- Sessão iniciada em `main`, HEAD `ecf6f35`, árvore Git limpa. Dependências T013/T003 verificadas; escopo limitado ao provider Apple nativo, `spawn` seguro, transporte JSONL e testes, sem iniciar T015.
+- Plano: resolver o binário somente de caminhos controlados pelo main, executar com `shell:false` e ambiente mínimo, validar stdout pelo decoder/order do contrato T012, drenar stderr sem expor conteúdo, cobrir lifecycle/backpressure/encerramento e preparar um roteiro manual de captura real.
+- Implementação: `AppleNativeTranscriptionProvider` gerencia um helper por sessão, envia start/pause/resume/stop pela fila stdin, valida eventos JSONL incrementalmente, drena stderr sem guardar seu texto, aplica timeouts e espera o evento `close` real mesmo após SIGKILL. O helper é resolvido apenas de caminhos fixos de desenvolvimento ou recursos empacotados e conferido com `realpath`, arquivo regular e permissão executável. Factory Electron main criada; não conectada ao fluxo de sessão, mantendo escolha/consentimento para T015. Testes unitários cobrem eventos/lifecycle e caminhos confiáveis; `tests/manual/nativeProviderCapture.test.ts` e `npm run test:native-capture` exercitam mic+system, contam finais sem imprimir texto e duram 45 s.
+- Gates: `PATH=/opt/homebrew/bin:$PATH npm run verify` passou (Node v26.0.0; lint, Prettier, typecheck, 448 testes passaram, 17 skipped, 12 testes runner e build). O `verify` com Node v20.20.2 falhou ao iniciar workers jsdom/undici (`Cannot read properties of undefined (reading 'bind')`); com o Node 26 instalado no ambiente passou. `npm run verify:swift` passou (47 testes Swift + builds debug/release) e `npm run test:helper` passou (16 testes). SwiftPM precisou de execução fora do sandbox devido ao cache do Xcode.
+- Ajuste após o primeiro ensaio manual: o Vitest não descobria `tests/manual/nativeProviderCapture.test.ts`; `vitest.config.mts` agora inclui `tests/manual/**/*.test.ts`; suíte focada confirmou 8 testes unitários aprovados e o teste manual descoberto/skipped sem ativação.
+- Ensaio manual do usuário em 2026-11-05 iniciou o helper, mas terminou em 94 ms com `permission-denied`, antes de captura/transcrição. Diagnóstico `npm run probe:swift` no contexto de ferramentas indicou microfone `authorized` e `screenCapturePreflight: false`. Após a permissão, duas tentativas terminaram em 229/115 ms com `assets-unavailable`. O usuário então confirmou `ASSETS_AFTER_installed` e `ASSETS_PREPARED_NO_CAPTURE_pt-BR` via `npm run prepare:native-assets`, mas o helper ainda reportou `assets-unavailable`.
+- Causa de integração identificada: a POC reserva o locale via `AssetInventory.reserve`, mas o helper consultava assets sem fazer sua reserva de locale por app. O helper agora reserva pt-BR/en-US solicitado antes da checagem; não baixa assets durante captura. `npm run prepare:native-assets` continua sendo a ação explícita que pode acessar a rede/baixar modelos Apple.
+- Após a correção da reserva, `PATH=/opt/homebrew/bin:$PATH npm run verify` passou (448 testes TS, 17 skipped, 12 testes runner e build); `npm run verify:swift` passou (47 testes Swift e builds debug/release) e `npm run test:helper` passou (16 testes). `sh -n` nos scripts e `git diff --check` passaram.
+- Validação final relatada pelo usuário: `npm run prepare:native-assets` terminou com `ASSETS_PREPARED_NO_CAPTURE_pt-BR`; depois `npm run test:native-capture` mostrou `CAPTURE_ACTIVE_SPEAK_SYNTHETIC_PHRASES_NOW` e passou em 48,66 s. As asserções confirmaram pelo menos um resultado final em cada fonte (mic e system); o harness não imprime texto nem contagens, e nenhum texto de transcrição foi compartilhado.
+- Limites/handoff: provider e factory estão no Electron main, mas ainda não conectados ao fluxo IPC/sessão; consentimento e seleção pertencem à T015, overlay à T017. Próxima tarefa elegível T015, em sessão Codex nova. Nenhuma tarefa posterior foi iniciada.
 
 ## T013 — helper Swift próprio — DONE — 2026-11-05
 
@@ -23,7 +36,7 @@
 
 **Limites:** o teste manual validou a POC após ela passar a compartilhar o módulo de captura; os testes do processo helper não capturaram áudio. A integração Electron, permissões sob o host final e transcrição no overlay continuam na T014/T017. Sem OpenAI, rede paga, push ou distribuição.
 
-**Handoff:** T013 concluída com commit local identificado abaixo; próxima tarefa elegível T014, em sessão Codex nova. Nenhuma tarefa posterior foi iniciada.
+**Handoff:** T013 concluída com commit local `ecf6f35`. T014 iniciou nesta sessão; nenhuma tarefa posterior foi iniciada.
 
 ## T012 — protocolo JSONL próprio e TranscriptionProvider — DONE — 2026-11-04
 
