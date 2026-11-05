@@ -1,7 +1,31 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
-**Atualização:** 2026-11-04. **Marco:** M1 — UI e demo.
-**Implementação concluída:** **T001–T011**. M1 validado para a jornada DEMO offline e regressão de fronteiras de módulos. Captura e envios reais continuam pendentes das integrações posteriores.
+**Atualização:** 2026-11-04. **Marco:** M2 — contrato nativo Swift ↔ Electron.
+**Implementação concluída:** **T001–T012**. M1 validado para DEMO offline; T012 entrega protocolo e interface com testes nos dois runtimes. Helper de produção, integração de captura e envios reais continuam pendentes.
+
+## T012 — protocolo JSONL próprio e TranscriptionProvider — DONE — 2026-11-04
+
+- Retomada exclusiva autorizada após limite de uso da sessão anterior, em `main`, HEAD `e0c0563`. T012 já estava IN_PROGRESS; arquivos existentes preservados, revisados e completados. Dependência T003 conferida no código/Git; documentos obrigatórios relidos. Nenhuma tarefa seguinte iniciada.
+- Contrato v1 com comandos start/pause/resume/stop e eventos ready/status/partial/final/error/stopped; validação estrita de campos, IDs, fontes, locale único, inteiros seguros, texto e erros allowlisted. Interface `TranscriptionProvider` explicita autorização no main, abort/start, pausa, retomada e stop idempotente. Contrato/limites em [ADR 0012](adr/0012-native-jsonl-protocol.md) e README.
+- TS recebe eventos em bytes UTF-8, limita linhas a 16.384 bytes e texto a 4.096 unidades UTF-16, verifica sequência/estado/tempo por fonte e sessão, exige stopped por fonte no EOF e fecha definitivamente em falhas. Swift codifica eventos e recebe comandos com framing incremental limitado, rejeita UTF-8 inválido/truncamento e redige erros Foundation. Fixtures únicas compartilhadas de comandos válidos/inválidos, eventos, framing e texto.
+- Revisão corrigiu narrowing/literal types do TS e tabela parametrizada do Vitest (cada sequência inválida deve ser um caso inteiro), alinhou whitespace Unicode entre JS/Swift, rejeitou surrogates isolados e permitiu cancelamento antes de ready. Sem supressão de regras, novas dependências ou alteração do lockfile.
+
+| Verificação                                            | Resultado observado nesta retomada                                                                                                                                                                                        |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ambiente                                               | macOS 26.6.2 (25G83), arm64; Xcode 26.6 (17F113), Swift 6.3.3; Node 26.0.0/npm 11.12.1 selecionados em `/opt/homebrew/bin`, sem instalação/configuração global.                                                           |
+| `npm test -- tests/integration/nativeProtocol.test.ts` | 112 testes passaram; fixtures de ambos os sentidos, todos os splits/chunks de um byte, emoji/acentos, CRLF, bytes/JSON inválidos, limites exatos/overflow, EOF, sanitização e estados/sessões/fontes.                     |
+| `npm run verify` final de código                       | **Passou:** lint sem warnings, Prettier, três projetos TS strict, **440 testes TS em 24 arquivos**, **12 testes Python**, build main/preload/renderer. Inclui os 112 testes do protocolo após correção da parametrização. |
+| `npm run verify:swift` na sandbox                      | SwiftPM/Clang bloqueados ao escrever caches fora do workspace; não foi falha do contrato.                                                                                                                                 |
+| `npm run verify:swift` via escalada aprovada           | **Passou no Mac:** swift-format 6.3.0 estrito, **35 testes Swift** (20 anteriores + 15 do protocolo, incluindo casos parametrizados), build debug/test e release com warnings como erros. Sem captura ou consulta TCC.    |
+| Revisão                                                | `git diff --check` passou; formatação documental conferida após atualizar este handoff.                                                                                                                                   |
+
+**Arquivos:** `src/contracts/native/*`, `src/core/transcription/TranscriptionProvider.ts`, `tests/integration/nativeProtocol.test.ts`, target e testes/fixtures `MeetingCopilotProtocol` em `native/macos`, Package.swift, configurações Vitest/TS de tooling, README, ADR 0012, TASKS e este handoff.
+
+**Limites:** testes reais dos codecs nos runtimes TS/Swift com dados sintéticos, sem subprocesso de produção nem parser executado dentro do Electron. Interface não é implementação do adapter. Captura, lifecycle de comandos no helper, spawn/IPC, filas/backpressure, timeouts, reconhecimento en-US/bilíngue e reconciliação de segmentos/eco permanecem nas tarefas próprias. Smoke gráfico não repetido: UI/runtime Electron não usam ainda o novo contrato. Não houve ensaio novo de áudio/TCC, OpenAI, rede paga, segredo, Windows, CI hospedado ou distribuição; nenhuma alegação de STT integrado pronto.
+
+**Commit local da entrega:** `feat(T012): define validated native JSONL protocol` (commit que contém este registro; localizar hash com `git log -1 --format=%h --grep="feat(T012)"`). Escrita em `.git` exclusivamente pelo mecanismo normal de aprovação, sem alterar permissões/locks; sem push.
+
+**Blockers técnicos:** nenhum após os gates. **Handoff:** encerrar após o commit local T012. T013 continua TODO para nova sessão independente; não foi iniciada.
 
 ## T011 — regressão da jornada DEMO e fronteiras — DONE — 2026-11-04
 

@@ -1,0 +1,38 @@
+[
+  { "name": "plain", "prefix": [], "suffix": [], "valid": true },
+  { "name": "CRLF", "prefix": [], "suffix": [13], "valid": true },
+  {
+    "name": "JSON whitespace",
+    "prefix": [32, 9],
+    "suffix": [32, 9],
+    "valid": true
+  },
+  { "name": "BOM", "prefix": [239, 187, 191], "suffix": [], "valid": false },
+  { "name": "invalid UTF-8", "prefix": [], "suffix": [255], "valid": false },
+  {
+    "name": "incomplete UTF-8",
+    "prefix": [],
+    "suffix": [240, 159],
+    "valid": false
+  },
+  {
+    "name": "overlong UTF-8",
+    "prefix": [],
+    "suffix": [192, 175],
+    "valid": false
+  },
+  {
+    "name": "UTF-8 surrogate",
+    "prefix": [],
+    "suffix": [237, 160, 128],
+    "valid": false
+  },
+  {
+    "name": "trailing object",
+    "prefix": [],
+    "suffix": [123, 125],
+    "valid": false
+  },
+  { "name": "trailing garbage", "prefix": [], "suffix": [120], "valid": false },
+  { "name": "NUL", "prefix": [], "suffix": [0], "valid": false }
+]

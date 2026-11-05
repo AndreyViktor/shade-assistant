@@ -74,6 +74,18 @@ npm test -- tests/tooling/module-boundaries.test.ts
 npx playwright test tests/e2e/demo-regression.spec.ts tests/e2e/offline-guards.spec.ts
 ```
 
+### Protocolo Swift ↔ Electron (T012)
+
+Contrato próprio JSONL v1 e interface `TranscriptionProvider` em `src/contracts/native` e `src/core/transcription`. O target Swift `MeetingCopilotProtocol` serializa eventos e valida comandos; o parser TS valida eventos, sessão, sequência e estados por fonte. Framing UTF-8 incremental, linhas de até 16 KiB, EOF/truncamento e erros sem conteúdo bruto são cobertos por fixtures compartilhadas e testes nos dois runtimes. Especificação e limites: [ADR 0012](docs/adr/0012-native-jsonl-protocol.md).
+
+```bash
+npm test -- tests/integration/nativeProtocol.test.ts
+npm run verify
+npm run verify:swift
+```
+
+Esses testes são sintéticos, sem captura, TCC ou rede. O helper `MeetingCopilotTranscriber` e o adapter `AppleNativeTranscriptionProvider` ainda serão implementados/integrados em T013/T014; a interface não habilita STT real na UI. En-US é aceito como locale único no contrato, sem comprovar reconhecimento ou modo bilíngue.
+
 ### CI básico
 
 [`.github/workflows/verify.yml`](.github/workflows/verify.yml) executa instalação pelo lockfile e `npm run verify` em Ubuntu 24.04, com Node de `.nvmrc`, em pull requests, push para `main` ou acionamento manual. Actions fixadas por SHA, permissão `contents: read`, sem credenciais persistidas, cache ou secrets. Não baixa o binário Electron nem abre janelas. Smoke gráfico e validação Apple ficam separados. O workflow foi preparado localmente; execução hospedada depende de publicação autorizada, não realizada nesta entrega. Decisões: [ADR 0002](docs/adr/0002-quality-gates.md).

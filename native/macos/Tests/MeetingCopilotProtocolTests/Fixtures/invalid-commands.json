@@ -1,0 +1,100 @@
+[
+  null,
+  [],
+  {},
+  {
+    "version": 2,
+    "sessionId": "fixture-session",
+    "type": "start",
+    "sources": ["mic", "system"],
+    "locale": "pt-BR"
+  },
+  {
+    "version": 1,
+    "sessionId": "bad id",
+    "type": "start",
+    "sources": ["mic", "system"],
+    "locale": "pt-BR"
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "type": "start",
+    "sources": [],
+    "locale": "pt-BR"
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "type": "start",
+    "sources": ["mic", "mic"],
+    "locale": "pt-BR"
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "type": "start",
+    "sources": ["unknown"],
+    "locale": "pt-BR"
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "type": "start",
+    "sources": ["mic", "system"],
+    "locale": "pt_BR"
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "type": "start",
+    "sources": ["mic", "system"],
+    "locale": ["pt-BR", "en-US"]
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "type": "start",
+    "sources": ["mic", "system", "mic"],
+    "locale": "pt-BR"
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "type": "start",
+    "sources": ["mic", "system"],
+    "locale": "pt-BR",
+    "secret": "synthetic-secret"
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "type": "pause",
+    "source": "mic"
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "type": "unknown"
+  },
+  {
+    "version": 1,
+    "sessionId": "",
+    "type": "pause"
+  },
+  {
+    "version": true,
+    "sessionId": "fixture-session",
+    "type": "pause"
+  },
+  {
+    "version": "1",
+    "sessionId": "fixture-session",
+    "type": "pause"
+  },
+  {
+    "version": 1,
+    "sessionId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "type": "pause"
+  }
+]
