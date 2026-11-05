@@ -88,7 +88,7 @@ meeting-copilot-codex/
 - **TypeScript:** `tsc --noEmit` para tipos de core/main/preload/renderer, com tsconfigs separados caso necessário; não suavizar `strict` para contornar erro.
 - **Testes TS/React:** Vitest e React Testing Library; fake timers e mocks determinísticos; verificar saída e falhas, não detalhes de implementação. **E2E:** Playwright ou mecanismo equivalente adequado ao Electron, após existir UI executável.
 - **Swift:** usar Swift Package Manager/`swift test` quando viável. Selecionar SwiftLint/SwiftFormat como ferramentas nativas, travando versões/configuração; antes de exigir executáveis no pipeline, confirmar disponibilidade/instalação autorizada no Mac. Não fingir que rodaram fora do macOS.
-- Criar scripts npm abaixo (nomes estáveis; podem apontar para tarefas agregadas) e documentar os comandos exatos em `README.md`. `verify` deve parar no primeiro erro e **não efetuar chamadas externas pagas**:
+- Criar scripts npm abaixo (nomes estáveis; podem apontar para tarefas agregadas) e documentar os comandos exatos em `README.md` ou no guia de desenvolvimento referenciado por ele. `verify` deve parar no primeiro erro e **não efetuar chamadas externas pagas**:
 
 ```bash
 npm run lint

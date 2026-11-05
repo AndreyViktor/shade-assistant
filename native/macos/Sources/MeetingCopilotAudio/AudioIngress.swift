@@ -5,8 +5,8 @@ import Speech
 // Apple callbacks arrive on non-actor queues. The lock owns converter/closed state;
 // each yielded PCM buffer is newly allocated and never mutated after transfer.
 @available(macOS 26.0, *)
-final class AudioIngress: @unchecked Sendable {
-  let inputs: AsyncStream<AnalyzerInput>
+public final class AudioIngress: @unchecked Sendable {
+  public let inputs: AsyncStream<AnalyzerInput>
   private let continuation: AsyncStream<AnalyzerInput>.Continuation
   private let format: AVAudioFormat
   private let lock = NSLock()
@@ -14,32 +14,32 @@ final class AudioIngress: @unchecked Sendable {
   private var closed = false
   private var frames: Int64 = 0
   private var buffers = 0
-  private let failure: @Sendable (TrialFailure) -> Void
+  private let failure: @Sendable (AudioFailure) -> Void
 
-  init(format: AVAudioFormat, failure: @escaping @Sendable (TrialFailure) -> Void) {
+  public init(format: AVAudioFormat, failure: @escaping @Sendable (AudioFailure) -> Void) {
     self.format = format
     self.failure = failure
     (inputs, continuation) = AsyncStream.makeStream(bufferingPolicy: .bufferingOldest(32))
   }
 
-  func receive(_ buffer: AVAudioPCMBuffer) {
-    let error: TrialFailure? = lock.withLock {
+  public func receive(_ buffer: AVAudioPCMBuffer) {
+    let error: AudioFailure? = lock.withLock {
       guard !closed else { return nil }
       do {
         guard buffer.frameLength > 0, buffer.format.sampleRate > 0,
           Double(buffer.frameLength) <= buffer.format.sampleRate * 2
         else {
-          throw TrialFailure.audioFormat
+          throw AudioFailure.audioFormat
         }
         if converter?.inputFormat != buffer.format {
           converter = AVAudioConverter(from: buffer.format, to: format)
         }
-        guard let converter else { throw TrialFailure.audioFormat }
+        guard let converter else { throw AudioFailure.audioFormat }
         let capacity =
           AVAudioFrameCount(
             ceil(Double(buffer.frameLength) * format.sampleRate / buffer.format.sampleRate)) + 256
         guard let converted = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: capacity) else {
-          throw TrialFailure.audioFormat
+          throw AudioFailure.audioFormat
         }
         let input = ConversionInput(buffer: buffer)
         var conversionError: NSError?
@@ -48,7 +48,7 @@ final class AudioIngress: @unchecked Sendable {
           inputStatus.pointee = next == nil ? .noDataNow : .haveData
           return next
         }
-        guard status != .error, conversionError == nil else { throw TrialFailure.audioFormat }
+        guard status != .error, conversionError == nil else { throw AudioFailure.audioFormat }
         guard converted.frameLength > 0 else { return nil }
         let time = CMTime(value: frames, timescale: CMTimeScale(format.sampleRate))
         frames += Int64(converted.frameLength)
@@ -56,23 +56,23 @@ final class AudioIngress: @unchecked Sendable {
         switch continuation.yield(AnalyzerInput(buffer: converted, bufferStartTime: time)) {
         case .enqueued: return nil
         case .terminated: return nil
-        case .dropped: throw TrialFailure.audioOverflow
-        @unknown default: throw TrialFailure.audioOverflow
+        case .dropped: throw AudioFailure.audioOverflow
+        @unknown default: throw AudioFailure.audioOverflow
         }
       } catch {
         closed = true
         continuation.finish()
-        return (error as? TrialFailure) ?? .audioFormat
+        return (error as? AudioFailure) ?? .audioFormat
       }
     }
     if let error { failure(error) }
   }
 
-  func statistics() -> (buffers: Int, seconds: Double) {
+  public func statistics() -> (buffers: Int, seconds: Double) {
     lock.withLock { (buffers, Double(frames) / format.sampleRate) }
   }
 
-  func finish() {
+  public func finish() {
     lock.withLock {
       closed = true
       converter = nil

@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import MeetingCopilotAudio
 import Speech
 
 @MainActor
@@ -48,11 +49,13 @@ final class SpeechChannel: TrialChannel {
     let analyzer = SpeechAnalyzer(modules: [module])
     self.analyzer = analyzer
     try await analyzer.prepareToAnalyze(in: format)
-    let ingress = AudioIngress(format: format, failure: failure)
+    let failure = self.failure
+    let ingress = AudioIngress(format: format, failure: { failure(TrialFailure.audio($0)) })
     self.ingress = ingress
     switch source {
     case .mic: capture = MicrophoneCapture(ingress: ingress)
-    case .system: capture = SystemCapture(ingress: ingress, failure: failure)
+    case .system:
+      capture = SystemCapture(ingress: ingress, failure: { failure(TrialFailure.audio($0)) })
     }
     resultsTask = Task { [weak self] in
       do {

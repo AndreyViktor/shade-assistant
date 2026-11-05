@@ -1,7 +1,29 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
-**Atualização:** 2026-11-04. **Marco:** M2 — contrato nativo Swift ↔ Electron.
-**Implementação concluída:** **T001–T012**. M1 validado para DEMO offline; T012 entrega protocolo e interface com testes nos dois runtimes. Helper de produção, integração de captura e envios reais continuam pendentes.
+**Atualização:** 2026-11-05. **Marco:** M2 — contrato nativo Swift ↔ Electron.
+**Implementação concluída:** **T001–T013**. M1 validado para DEMO offline; T013 entrega o helper Swift próprio e a captura compartilhada testada manualmente no Mac. A ponte Electron da T014 ainda não foi implementada.
+
+## Estado atual — 2026-11-05
+
+**T013 está `DONE`, validada nesta sessão e commitada localmente.** O helper Swift próprio compila; gates Swift, testes de subprocesso e `npm run verify` passaram. O usuário também confirmou captura pt-BR de microfone e áudio do sistema, com pausa, retomada e parada, na POC reconstruída que reutiliza o módulo de áudio compartilhado. T014 é a próxima tarefa elegível; não foi iniciada.
+
+## T013 — helper Swift próprio — DONE — 2026-11-05
+
+- Extraído `MeetingCopilotAudio` para compartilhar captura de microfone (`AVAudioEngine`), áudio de sistema (`ScreenCaptureKit`) e ingresso PCM entre a POC e o helper. Criado o executável `MeetingCopilotTranscriber`, com um canal `SpeechAnalyzer` por fonte, locale único, comandos start/pause/resume/stop e eventos JSONL validados pelo protocolo T012. Permissões são pré-verificadas sem acionar prompts automaticamente; falhas, encerramento e backpressure são tratados sem expor texto bruto em logs.
+- Criados testes Swift de lifecycle/serialização e integração que inicia o binário real sem captura. `npm run test:helper` passou com **16 testes**, incluindo argumentos inválidos, framing, saída interrompida e encerramento por sinais. Nenhuma integração Electron foi iniciada; pertence à T014.
+- **Validação manual relatada pelo usuário:** POC reconstruída com o módulo compartilhado transcreveu mic e sistema em pt-BR; pausa, retomada e parada passaram. Texto reconhecido não foi registrado.
+
+| Gate / verificação                                                     | Resultado                                                                                                |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `npm run verify` (Node 26)                                             | Passou: lint, Prettier, typecheck, **440 testes TS**, 16 skipped, **12 testes Python** e build Electron. |
+| `npm run verify:swift`                                                 | Passou: swift-format 6.3.0 estrito, **47 testes Swift**, build debug e release com warnings como erros.  |
+| `npm run test:helper`                                                  | Passou: build release do helper e **16 testes de subprocesso**.                                          |
+| `sh scripts/build-audio-poc.sh` + `python3 scripts/check-audio-poc.py` | Passaram: bundle rebuilt/assinado localmente e 5 checks sem captura.                                     |
+| Teste manual da POC (usuário)                                          | Mic + system em pt-BR; pausa, retomada e parada confirmadas.                                             |
+
+**Limites:** o teste manual validou a POC após ela passar a compartilhar o módulo de captura; os testes do processo helper não capturaram áudio. A integração Electron, permissões sob o host final e transcrição no overlay continuam na T014/T017. Sem OpenAI, rede paga, push ou distribuição.
+
+**Handoff:** T013 concluída com commit local identificado abaixo; próxima tarefa elegível T014, em sessão Codex nova. Nenhuma tarefa posterior foi iniciada.
 
 ## T012 — protocolo JSONL próprio e TranscriptionProvider — DONE — 2026-11-04
 
@@ -25,7 +47,7 @@
 
 **Commit local da entrega:** `feat(T012): define validated native JSONL protocol` (commit que contém este registro; localizar hash com `git log -1 --format=%h --grep="feat(T012)"`). Escrita em `.git` exclusivamente pelo mecanismo normal de aprovação, sem alterar permissões/locks; sem push.
 
-**Blockers técnicos:** nenhum após os gates. **Handoff:** encerrar após o commit local T012. T013 continua TODO para nova sessão independente; não foi iniciada.
+**Blockers técnicos:** nenhum após os gates de T012. **Handoff naquele momento:** encerrar após o commit local T012; T013 ainda estava TODO e não havia sido iniciada. O estado atual, após a sessão posterior, está registrado no início deste documento.
 
 ## T011 — regressão da jornada DEMO e fronteiras — DONE — 2026-11-04
 

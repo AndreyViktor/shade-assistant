@@ -1,4 +1,5 @@
 import Foundation
+import MeetingCopilotAudio
 
 enum AudioSource: String, CaseIterable, Sendable {
   case mic, system
@@ -72,5 +73,17 @@ struct TrialOptions: Equatable {
       guard !options.sources.isEmpty else { throw TrialFailure.invalidArguments }
     }
     return options
+  }
+}
+
+extension TrialFailure {
+  static func audio(_ failure: AudioFailure) -> TrialFailure {
+    switch failure {
+    case .microphoneDenied: return .microphoneDenied
+    case .systemDenied: return .systemDenied
+    case .audioFormat: return .audioFormat
+    case .audioOverflow: return .audioOverflow
+    case .capture: return .capture
+    }
   }
 }

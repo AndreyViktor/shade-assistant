@@ -1,0 +1,64 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:meeting-copilot-codex}/native/macos",
+            "name": "Debug MeetingCopilotCapabilities (native/macos)",
+            "target": "MeetingCopilotCapabilities",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug MeetingCopilotCapabilities (native/macos)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:meeting-copilot-codex}/native/macos",
+            "name": "Release MeetingCopilotCapabilities (native/macos)",
+            "target": "MeetingCopilotCapabilities",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release MeetingCopilotCapabilities (native/macos)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:meeting-copilot-codex}/native/macos",
+            "name": "Debug MeetingCopilotAudioPOC (native/macos)",
+            "target": "MeetingCopilotAudioPOC",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug MeetingCopilotAudioPOC (native/macos)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:meeting-copilot-codex}/native/macos",
+            "name": "Release MeetingCopilotAudioPOC (native/macos)",
+            "target": "MeetingCopilotAudioPOC",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release MeetingCopilotAudioPOC (native/macos)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:meeting-copilot-codex}/native/macos",
+            "name": "Debug MeetingCopilotTranscriber (native/macos)",
+            "target": "MeetingCopilotTranscriber",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug MeetingCopilotTranscriber (native/macos)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:meeting-copilot-codex}/native/macos",
+            "name": "Release MeetingCopilotTranscriber (native/macos)",
+            "target": "MeetingCopilotTranscriber",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release MeetingCopilotTranscriber (native/macos)"
+        }
+    ]
+}

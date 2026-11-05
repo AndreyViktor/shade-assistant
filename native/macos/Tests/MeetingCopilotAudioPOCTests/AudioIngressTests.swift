@@ -3,7 +3,7 @@ import Speech
 import Synchronization
 import Testing
 
-@testable import MeetingCopilotAudioPOC
+@testable import MeetingCopilotAudio
 
 @available(macOS 26.0, *)
 private func silence(sampleRate: Double = 48_000) throws -> AVAudioPCMBuffer {
@@ -18,7 +18,7 @@ private func silence(sampleRate: Double = 48_000) throws -> AVAudioPCMBuffer {
 @Test @MainActor @available(macOS 26.0, *)
 func microphoneTapAcceptsAudioFromBackgroundQueue() async throws {
   let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1))
-  let errors = Mutex<[TrialFailure]>([])
+  let errors = Mutex<[AudioFailure]>([])
   let ingress = AudioIngress(format: format) { error in errors.withLock { $0.append(error) } }
   let tap = makeMicrophoneTap(ingress: ingress)
 
@@ -36,7 +36,7 @@ func microphoneTapAcceptsAudioFromBackgroundQueue() async throws {
 
 @Test @available(macOS 26.0, *)
 func conversionOwnsBuffersAndFinishRejectsLateAudio() async throws {
-  let errors = Mutex<[TrialFailure]>([])
+  let errors = Mutex<[AudioFailure]>([])
   let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 16_000, channels: 1))
   let ingress = AudioIngress(format: format) { error in errors.withLock { $0.append(error) } }
   let input = try silence()
@@ -56,7 +56,7 @@ func conversionOwnsBuffersAndFinishRejectsLateAudio() async throws {
 
 @Test @available(macOS 26.0, *)
 func slowConsumerFailsClosedWithBoundedQueue() async throws {
-  let errors = Mutex<[TrialFailure]>([])
+  let errors = Mutex<[AudioFailure]>([])
   let input = try silence()
   let ingress = AudioIngress(format: input.format) { error in errors.withLock { $0.append(error) } }
   for _ in 0..<100 { ingress.receive(input) }
@@ -93,7 +93,7 @@ func sourceClocksAreIndependentAndMonotonic() async throws {
 
 @Test @available(macOS 26.0, *)
 func invalidBufferFailsOnceAndRejectsSubsequentInput() throws {
-  let errors = Mutex<[TrialFailure]>([])
+  let errors = Mutex<[AudioFailure]>([])
   let input = try silence()
   let ingress = AudioIngress(format: input.format) { error in errors.withLock { $0.append(error) } }
   input.frameLength = 0
