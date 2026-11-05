@@ -21,6 +21,8 @@
     "test:runner": "python3 -m unittest discover -s tests/runner -p 'test_*.py' -v",
     "test:smoke": "npm run build && playwright test",
     "test:helper": "sh scripts/test-native-helper.sh",
+    "test:native-capture": "sh scripts/test-native-provider-capture.sh",
+    "prepare:native-assets": "sh scripts/prepare-native-assets.sh",
     "verify:swift": "sh scripts/verify-swift.sh",
     "probe:swift": "swift run --package-path native/macos MeetingCopilotCapabilities",
     "build": "electron-vite build",

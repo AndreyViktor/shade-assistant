@@ -79,6 +79,13 @@ final class AppleTranscriptionChannel: TranscriptionChannel {
       let supported = await SpeechTranscriber.supportedLocale(
         equivalentTo: Locale(identifier: locale.rawValue))
     else { throw HelperFailure(.unsupportedLocale) }
+    do {
+      // Reservations are per app even though installed model assets are shared.
+      // Reserve only; downloads remain an explicit setup action outside capture.
+      _ = try await AssetInventory.reserve(locale: Locale(identifier: locale.rawValue))
+    } catch {
+      throw HelperFailure(.assetsUnavailable)
+    }
     let installed = await SpeechTranscriber.installedLocales
     guard installed.contains(where: { $0.identifier == supported.identifier }) else {
       throw HelperFailure(.assetsUnavailable)
