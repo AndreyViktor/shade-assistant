@@ -1,0 +1,131 @@
+[
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "source": "mic",
+    "locale": "pt-BR",
+    "seq": 1,
+    "timestampMs": 0,
+    "type": "ready",
+    "supportsPartial": true
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "source": "system",
+    "locale": "pt-BR",
+    "seq": 1,
+    "timestampMs": 0,
+    "type": "ready",
+    "supportsPartial": false
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "source": "mic",
+    "locale": "pt-BR",
+    "seq": 2,
+    "timestampMs": 1,
+    "type": "status",
+    "state": "listening"
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "source": "system",
+    "locale": "pt-BR",
+    "seq": 2,
+    "timestampMs": 2,
+    "type": "status",
+    "state": "listening"
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "source": "mic",
+    "locale": "pt-BR",
+    "seq": 3,
+    "timestampMs": 100,
+    "type": "partial",
+    "segmentId": "m1",
+    "startMs": 10,
+    "endMs": 90,
+    "text": "Olá 👋"
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "source": "mic",
+    "locale": "pt-BR",
+    "seq": 4,
+    "timestampMs": 110,
+    "type": "final",
+    "segmentId": "m1",
+    "startMs": 15,
+    "endMs": 100,
+    "text": "Olá 👋\nTeste sintético."
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "source": "system",
+    "locale": "pt-BR",
+    "seq": 3,
+    "timestampMs": 105,
+    "type": "final",
+    "segmentId": "s1",
+    "startMs": 20,
+    "endMs": 100,
+    "text": "Sim, ação sintética."
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "source": "mic",
+    "locale": "pt-BR",
+    "seq": 5,
+    "timestampMs": 120,
+    "type": "status",
+    "state": "paused"
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "source": "mic",
+    "locale": "pt-BR",
+    "seq": 6,
+    "timestampMs": 130,
+    "type": "status",
+    "state": "listening"
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "source": "mic",
+    "locale": "pt-BR",
+    "seq": 7,
+    "timestampMs": 140,
+    "type": "stopped",
+    "reason": "cancelled"
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "source": "system",
+    "locale": "pt-BR",
+    "seq": 4,
+    "timestampMs": 150,
+    "type": "error",
+    "code": "capture-failed"
+  },
+  {
+    "version": 1,
+    "sessionId": "fixture-session",
+    "source": "system",
+    "locale": "pt-BR",
+    "seq": 5,
+    "timestampMs": 151,
+    "type": "stopped",
+    "reason": "error"
+  }
+]
