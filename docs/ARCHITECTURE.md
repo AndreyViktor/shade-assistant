@@ -1,7 +1,9 @@
-# Arquitetura técnica — proposta V0.6
+# Arquitetura técnica — proposta
 
 ## Objetivo
-Aplicativo desktop **Electron + React + TypeScript**, macOS primeiro. A transcrição local **será implementada por nós em Swift**, com `SpeechAnalyzer`/`SpeechTranscriber` para STT e `ScreenCaptureKit`/captura Apple apropriada para áudio do sistema e microfone. A implementação do MVP **não terá executável de transcrição de terceiros como dependência**. IA OpenAI remota atende sugestões e screenshots aprovadas; fallback remoto de STT apenas opt-in. Codex implementa o software, não é modelo embarcado. Demo 100% local sem chamadas pagas.
+Esta é uma **proposta técnica**, não uma descrição de integrações já entregues. O documento cobre fluxo e fronteiras: o [PRD](PRD.md) é a fonte dos requisitos, [DECISIONS.md](DECISIONS.md) das decisões, [TASKS.md](TASKS.md) do aceite por tarefa, [PROGRESS.md](PROGRESS.md) das evidências atuais e [ENGINEERING-STANDARDS.md](ENGINEERING-STANDARDS.md) das regras de implementação.
+
+O alvo do MVP é Electron + React + TypeScript no macOS, com transcrição Apple local feita pelo projeto em Swift. OpenAI é opcional para sugestões/imagens autorizadas e fallback STT opt-in. Demo offline não faz chamadas pagas. Não usar executáveis externos de STT no produto.
 
 ## Fluxo principal
 ```text
@@ -82,12 +84,6 @@ Fontes `mic` e `system` **não identificam participantes**. O app não promete d
 - Tela compartilhada: não confundir **o usuário não ver o overlay no vídeo** com **o app não aparecer na captura**; provar por gravação/teste, conforme SO e modo de captura.
 - IPC restrito, `contextIsolation: true`, `nodeIntegration: false`, sem `webSecurity: false`.
 
-## Organização e padrões de manutenção
-
-A arquitetura modular, estrutura de diretórios detalhada, regras de dependência, convenções TypeScript/React/Swift, lint/format, testes, CI e **Definition of Done** estão em **[`docs/ENGINEERING-STANDARDS.md`](ENGINEERING-STANDARDS.md)** e são obrigatórias para o Codex.
-
-**Limites essenciais:** `core` não conhece UI, Electron ou SDK; `infrastructure` implementa adaptadores; `main` compõe e gerencia sessão/segredos/processos; `preload` é bridge IPC mínima; `renderer` não conhece Node/OpenAI/Swift; helper Swift é processo próprio ligado por protocolo versionado. Evitar tanto "tudo no `main.ts`" quanto abstrações sem uso. O arquivo de padrões traz a árvore proposta e testes de fronteira.
-
 ## Riscos e checkpoints antecipados
 1. **Hardware, SDK e assets:** verificar em Mac real suporte a `SpeechTranscriber`, locales pt-BR/en-US e modelos instalados; documentar versão de macOS/Xcode efetivamente exigida. Não extrapolar compatibilidade a partir de POCs externas.
 2. **Mic e áudio do sistema:** capturar fontes independentemente, definir permissão Screen Recording/áudio/mic aplicável; `ScreenCaptureKit` deve ser testado com Meet/Teams/Zoom e exclusão de áudio próprio. `SpeechAnalyzer` aceita uma sequência por vez.
@@ -97,13 +93,6 @@ A arquitetura modular, estrutura de diretórios detalhada, regras de dependênci
 6. **Dados e custos:** áudio permanece local com Swift STT; texto da reunião/screenshot aprovado podem ser enviados para sugestões via OpenAI. Remoto STT somente opt-in.
 7. **Overlay:** proteção visual pode variar por capturador; testar tela/janela sem prometer invisibilidade universal.
 8. **Windows:** tarefa futura fora do gate Mac.
-
-## POC obrigatória Swift → Electron no MVP
-1. Checar `isAvailable`, `supportedLocales`/`installedLocales`, assets e permissões no Mac do desenvolvimento; não marcar `DONE` com base apenas em experimentos anteriores.
-2. Compilar helper Swift **nosso** com entrada mic + sistema, transcrição em português, emissão de eventos tipados (`source`, `locale`, `timestamp`, `seq`, `sessionId`, `final/partial?`) em JSONL; isolar stdout e stderr.
-3. Electron main invoca o helper com `spawn`/`shell:false`, args allowlisted, lê linhas incrementalmente e valida schemas; pause/stop/quit cancelam streams e processo sem órfãos.
-4. React mostra canais/idiomas/estado, com teste real de captura em reunião autorizada. Medir erros bilíngues, eco e latência.
-5. Ao distribuir, incluir helper próprio assinado com o app. Bibliotecas e repositórios públicos poderão ser consultados como **referência de implementação**, nunca como dependência de runtime. Ver `docs/REFERENCIA-STT-APPLE.md`.
 
 ## Fontes técnicas
 - https://developers.openai.com/api/docs/guides/realtime-transcription

@@ -4,33 +4,35 @@ import Foundation
 import ScreenCaptureKit
 
 @MainActor
-protocol AudioCapture: AnyObject {
+public protocol AudioCapture: AnyObject {
   func start() async throws
   func stop() async throws
 }
 
 // AVAudioEngine invokes the tap on an audio queue, independently of MainActor.
 @available(macOS 26.0, *)
-func makeMicrophoneTap(ingress: AudioIngress) -> @Sendable (AVAudioPCMBuffer, AVAudioTime) -> Void {
+public func makeMicrophoneTap(ingress: AudioIngress)
+  -> @Sendable (AVAudioPCMBuffer, AVAudioTime) -> Void
+{
   { @Sendable buffer, _ in ingress.receive(buffer) }
 }
 
 @available(macOS 26.0, *)
 @MainActor
-final class MicrophoneCapture: AudioCapture {
+public final class MicrophoneCapture: AudioCapture {
   private let engine = AVAudioEngine()
   private let ingress: AudioIngress
   private var tapped = false
 
-  init(ingress: AudioIngress) { self.ingress = ingress }
+  public init(ingress: AudioIngress) { self.ingress = ingress }
 
-  func start() async throws {
+  public func start() async throws {
     guard AVCaptureDevice.authorizationStatus(for: .audio) == .authorized else {
-      throw TrialFailure.microphoneDenied
+      throw AudioFailure.microphoneDenied
     }
     let input = engine.inputNode
     let format = input.outputFormat(forBus: 0)
-    guard format.sampleRate > 0, format.channelCount > 0 else { throw TrialFailure.audioFormat }
+    guard format.sampleRate > 0, format.channelCount > 0 else { throw AudioFailure.audioFormat }
     input.installTap(
       onBus: 0, bufferSize: 1024, format: format, block: makeMicrophoneTap(ingress: ingress))
     tapped = true
@@ -38,11 +40,11 @@ final class MicrophoneCapture: AudioCapture {
       try engine.start()
     } catch {
       try await stop()
-      throw TrialFailure.capture
+      throw AudioFailure.capture
     }
   }
 
-  func stop() async throws {
+  public func stop() async throws {
     engine.stop()
     if tapped { engine.inputNode.removeTap(onBus: 0) }
     tapped = false
@@ -52,19 +54,19 @@ final class MicrophoneCapture: AudioCapture {
 
 @available(macOS 26.0, *)
 @MainActor
-final class SystemCapture: AudioCapture {
+public final class SystemCapture: AudioCapture {
   private var stream: SCStream?
   private let receiver: SystemAudioReceiver
 
-  init(ingress: AudioIngress, failure: @escaping @Sendable (TrialFailure) -> Void) {
+  public init(ingress: AudioIngress, failure: @escaping @Sendable (AudioFailure) -> Void) {
     receiver = SystemAudioReceiver(ingress: ingress, failure: failure)
   }
 
-  func start() async throws {
-    // Only called after the CLI's explicit manual --capture command and warning.
+  public func start() async throws {
+    // Callers must check consent and permissions before starting capture.
     let content = try await SCShareableContent.excludingDesktopWindows(
       false, onScreenWindowsOnly: true)
-    guard let display = content.displays.first else { throw TrialFailure.systemDenied }
+    guard let display = content.displays.first else { throw AudioFailure.systemDenied }
     let filter = SCContentFilter(display: display, excludingApplications: [], exceptingWindows: [])
     let config = SCStreamConfiguration()
     config.capturesAudio = true
@@ -82,7 +84,7 @@ final class SystemCapture: AudioCapture {
     try await stream.startCapture()
   }
 
-  func stop() async throws {
+  public func stop() async throws {
     receiver.ingress.finish()
     guard let stream else { return }
     self.stream = nil
@@ -93,10 +95,10 @@ final class SystemCapture: AudioCapture {
 @available(macOS 26.0, *)
 private final class SystemAudioReceiver: NSObject, SCStreamOutput, SCStreamDelegate, Sendable {
   let ingress: AudioIngress
-  let queue = DispatchQueue(label: "MeetingCopilotPOC.system")
-  let failure: @Sendable (TrialFailure) -> Void
+  let queue = DispatchQueue(label: "MeetingCopilotAudio.system")
+  let failure: @Sendable (AudioFailure) -> Void
 
-  init(ingress: AudioIngress, failure: @escaping @Sendable (TrialFailure) -> Void) {
+  public init(ingress: AudioIngress, failure: @escaping @Sendable (AudioFailure) -> Void) {
     self.ingress = ingress
     self.failure = failure
   }

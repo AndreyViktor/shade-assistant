@@ -20,7 +20,7 @@ git commit -m "chore: initialize meeting copilot planning"
 
 ## 2. Uma tarefa por sessão, sem acúmulo de histórico
 - Cada execução começa como uma **nova sessão `codex exec`** (não `codex resume` nem `codex exec resume`) e trabalha **somente em uma tarefa**, mesmo que sobre tempo ou tokens.
-- O Codex lê apenas os arquivos necessários: `AGENTS.md`, este fluxo, as decisões e padrões relevantes, a linha da tarefa, `docs/PROGRESS.md`, `git status/log` e **os arquivos de código relacionados**; não carregar toda a transcrição de sessões passadas. Use o README para navegação quando preciso.
+- No início da sessão, leia os documentos obrigatórios listados em `AGENTS.md`. Durante a implementação, consulte somente o material adicional relevante à tarefa: linha de aceite, `docs/PROGRESS.md`, `git status/log` e arquivos de código relacionados. Não carregue transcrições antigas nem releia referências técnicas sem necessidade; use o README para navegação.
 - Marcar `IN_PROGRESS` ao iniciar. Implementar, validar, registrar evidências e limitações, marcar `DONE` **somente após aceitação real**, criar commit local e **encerrar a sessão**. Não começar tarefa seguinte na mesma sessão.
 - `docs/PROGRESS.md` deve manter um handoff **curto e objetivo**: tarefa, resumo técnico, testes realmente executados, resultado e limites, hash do commit, impedimentos, próximo trabalho elegível. Git + arquivos são a fonte de verdade; não confiar em resumos sem verificar.
 - Nova sessão ≠ contexto zero absoluto: AGENTS.md e os arquivos do projeto serão relidos, mas não o histórico de conversa da sessão anterior. Isso reduz deriva e esgotamento de janela, não elimina erros de modelo. Code review e testes continuam obrigatórios.

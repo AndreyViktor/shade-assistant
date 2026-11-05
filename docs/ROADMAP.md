@@ -1,4 +1,4 @@
-# Roadmap — Meeting Copilot V0.7 (Swift nativo, arquitetura sustentável)
+# Roadmap — Meeting Copilot
 
 **Decisão confirmada em 2026-11-02:** A aplicação macOS implementará **sua própria captura/transcrição em Swift** utilizando `SpeechAnalyzer`/`SpeechTranscriber` e `ScreenCaptureKit`, com integração segura ao Electron + React. **Não incorporar, invocar nem empacotar CLIs de STT externas no MVP.** Windows permanece uma fase posterior. Marcos não são estimativas de prazo.
 
@@ -17,26 +17,8 @@
 - Usuário testou `pt-BR,en-US`: alternância teve confusões pontuais; estimativa subjetiva de **~80%**, sem amostra controlada ou métrica de precisão formal.
 - A experiência valida **viabilidade preliminar da tecnologia Apple**, não o SDK Swift escrito por nós, nem o JSONL próprio, nem Electron, assinatura, permissões do nosso app ou precisão bilíngue da nossa implementação.
 
-## Gates permanentes de engenharia
-- `docs/ENGINEERING-STANDARDS.md` é normativo: estrutura modular simples, limites de import, ESLint, Prettier, TypeScript strict, testes TS/React e Swift, scripts `npm run verify`, revisão de dependências e ADRs relevantes.
-- T001–T003 estabelecem o padrão **antes** de aumentar o código; todos os outros marcos herdam os gates. Regressão de qualidade é bloqueio da entrega, não dívida invisível.
-- Evitar complexidade desnecessária: não impor microserviços, frameworks extras ou infraestrutura de nuvem para um aplicativo desktop.
+## Como usar este roadmap
 
-## Gates e sequência técnica
-1. **T005:** no Mac de desenvolvimento, confirmar compatibilidade, `SpeechTranscriber.isAvailable`, `supportedLocales`/`installedLocales`, `AssetInventory`, permissões e ferramentas Swift/Xcode.
-2. **T006:** desenvolver POC Swift independente que capture áudio de mic e sistema via mecanismos Apple; usar `SpeechAnalyzer`/`SpeechTranscriber`, streaming e eventos anotados por fonte. Testar idioma único; testar bilíngue com cuidado. Verificar que `SpeechAnalyzer` aceita uma sequência de entrada por vez: separar canais e estados de análise.
-3. **T012–T014:** definir contrato tipado de eventos, implementar **helper próprio**, integrá-lo ao main do Electron por `spawn` (`shell:false`) e canal JSONL/IPC. Um processo Swift separado é **proposta de engenharia**.
-4. **T017–T019:** fazer texto chegar à UI em tempo real; testar pause/stop/quit, falhas e autorizações em ambiente real.
-5. **T032–T035:** avaliar empacotamento, permissões TCC, `Info.plist`, assinatura/notarização, distribuição do helper nativo e sessões prolongadas.
+O roadmap resume marcos e escopo; tarefas/dependências e critérios verificáveis estão em [TASKS.md](TASKS.md). Padrões e gates de engenharia estão em [ENGINEERING-STANDARDS.md](ENGINEERING-STANDARDS.md), o fluxo de sessão/commit em [WORKFLOW.md](WORKFLOW.md), e o resultado atual em [PROGRESS.md](PROGRESS.md). Windows (M6, T036–T039) continua `DEFERRED` até nova decisão.
 
-## Regras
-- Implementar M0–M5 agora. M6 Windows é `DEFERRED` e **não bloqueia o MVP no Mac**.
-- Repositórios públicos podem ser consultados apenas como **referência de implementação**, nunca como dependência de runtime nem evidência de que o Swift próprio funciona. Ver `docs/REFERENCIA-STT-APPLE.md`.
-- No modo Apple local, áudio permanece no dispositivo; **texto** usado para sugestões e screenshots confirmadas ainda poderão ser enviados à OpenAI conforme autorização. STT OpenAI remoto exige consentimento específico e pode gerar custos.
-- `DONE` exige resultado verificável; quando hardware/permissões não estiverem disponíveis, registrar `BLOCKED` e prosseguir com tarefas independentes.
-
-Referências: https://developer.apple.com/documentation/speech/speechanalyzer · https://developer.apple.com/documentation/speech/speechtranscriber · https://developer.apple.com/documentation/screencapturekit/capturing-screen-content-in-macos · `docs/REFERENCIA-STT-APPLE.md` (POC e referência opcional)
-
-## Sequência de implementação isolada (V0.7)
-- Marcos e dependências permanecem inalterados. Cada `Txxx` é tratada **numa sessão Codex nova**, concluída com testes, atualização de `docs/TASKS.md`/`docs/PROGRESS.md` e commit local com ID. Sessões posteriores usam o estado no Git/arquivos, sem reutilizar histórico. Ver `docs/WORKFLOW.md`.
-- A execução multi-tarefa automática, quando desejada, deve passar por um **executor externo limitado** (`scripts/run-codex-tasks.py --max-tasks N`) que valida a conclusão antes de criar a próxima sessão. Padrão `N=1`.
+Referências técnicas: [Apple SpeechAnalyzer](https://developer.apple.com/documentation/speech/speechanalyzer), [SpeechTranscriber](https://developer.apple.com/documentation/speech/speechtranscriber), [ScreenCaptureKit](https://developer.apple.com/documentation/screencapturekit/capturing-screen-content-in-macos) e [referência exploratória](REFERENCIA-STT-APPLE.md).

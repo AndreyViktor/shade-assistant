@@ -1,6 +1,6 @@
 # Backlog executável — V0.7 | 39 tarefas (35 MVP Mac + 4 futuras Windows)
 
-**Estados:** `TODO`, `IN_PROGRESS`, `BLOCKED`, `DONE`, `DEFERRED`. `DONE` requer teste/evidência verificáveis, `BLOCKED` descreve desbloqueio. **Decisão atual:** a implementação de STT será **Swift própria + Electron** no MVP macOS, sem dependência de ferramentas externas de STT; Windows é M6 futuro. T001–T012 concluídas; as demais tarefas permanecem TODO/DEFERRED.
+**Estados:** `TODO`, `IN_PROGRESS`, `BLOCKED`, `DONE`, `DEFERRED`. `DONE` requer teste/evidência verificáveis, `BLOCKED` descreve desbloqueio. **Decisão atual:** a implementação de STT será **Swift própria + Electron** no MVP macOS, sem dependência de ferramentas externas de STT; Windows é M6 futuro. T001–T013 concluídas; T014 é a próxima tarefa elegível. Windows (T036–T039) permanece DEFERRED.
 
 ## M0–M5 — MVP macOS
 
@@ -18,7 +18,7 @@
 | T010 | DONE   | T009                | Cartões de sugestão e descarte/expiração                                                                                                                                   | Máximo dois cartões, quatro categorias, descarte e expiração de 30 s; deduplicação e respostas tardias testadas. `verify`: 256 TS + 12 Python; 7 smokes Electron passaram, incluindo descarte por Enter e expiração real sem rede. Ver `docs/PROGRESS.md`.                    |
 | T011 | DONE   | T010,T002           | Smoke/e2e da jornada demo e regressão dos limites de camada                                                                                                                | Dois ciclos iniciar → fala → cartão → pausa → stop, sem eventos tardios nem tentativas de rede; guards verificados separadamente. `verify`: 328 TS + 12 Python; 119 testes de fronteira e 9/9 smokes Electron reais passaram. Ver `docs/PROGRESS.md`.                         |
 | T012 | DONE   | T003                | Contrato `TranscriptionProvider` e protocolo **JSONL próprio** Swift↔Electron                                                                                              | JSONL v1, codecs TS/Swift e fixtures compartilhadas; schemas, UTF-8/limites, ordem por fonte/sessão, EOF/truncamento e erros sanitizados. `verify`: 440 TS + 12 Python; `verify:swift`: 35 testes + build release. ADR 0012 e limites em `docs/PROGRESS.md`.                  |
-| T013 | TODO   | T005,T006,T012      | Implementar **`MeetingCopilotTranscriber`**, helper Swift próprio, com captura/`SpeechAnalyzer`/`SpeechTranscriber` e saída JSONL, command/stop controlado                 | Build Swift reproduzível; streams separados mic/system; nenhuma dependência externa de STT; suporte a pt-BR, tratamento de compatibilidade/perm. Testes de processo e serialização.                                                                                           |
+| T013 | DONE    | T005,T006,T012      | Implementar **`MeetingCopilotTranscriber`**, helper Swift próprio, com captura/`SpeechAnalyzer`/`SpeechTranscriber` e saída JSONL, command/stop controlado                 | `npm run verify`, `npm run verify:swift` (47 testes Swift, debug/release) e `npm run test:helper` (16 testes de processo) passaram; POC rebuild validada manualmente pelo usuário com mic/system pt-BR e pause/resume/stop. Sem integração Electron (T014).                    |
 | T014 | TODO   | T013,T003           | **Swift próprio → Electron main** por `child_process.spawn` e `AppleNativeTranscriptionProvider`                                                                           | `shell:false`, binário confiável, parse incremental/validação JSONL, exit/stderr, filas, sem subprocesso órfão; **teste real** mic/system no Mac.                                                                                                                             |
 | T015 | TODO   | T004,T012,T014      | Seleção de STT e fallback com consentimento                                                                                                                                | Mac prioriza helper Swift próprio, mock sempre disponível, OpenAI remoto só opt-in; erro claro se idioma/hardware indisponível.                                                                                                                                               |
 | T016 | TODO   | T004,T012           | Adapter de STT OpenAI remoto como fallback opt-in                                                                                                                          | Contrato/testes; teste API real só com chave/custo/consentimento explícito; verificar modelo disponível.                                                                                                                                                                      |
@@ -51,27 +51,6 @@
 | T038 | DEFERRED | T037       | POC real no Windows com duas fontes e idiomas alvo                                  | Evidência em máquina Windows, resultado medido, limitações registradas.                                         |
 | T039 | DEFERRED | T038       | Planejamento de empacotamento, distribuição e paridade                              | Critérios de release Windows, testes e segurança; execução exige aprovação do usuário.                          |
 
-## Qualidade obrigatória para toda tarefa
+## Critérios gerais
 
-Ocorrência **B003 — resolvida no reteste real**: POC encerrava com `EXC_BREAKPOINT` ao receber áudio do microfone devido ao isolamento herdado pelo callback do `AVAudioEngine`. Callback `@Sendable` criado fora do ator; teste de regressão passou e usuário obteve transcrição real. O usuário confirmou parada automática prevista, indicador de microfone apagado e funcionamento da parada manual `q`. Ver `docs/PROGRESS.md`.
-
-Ocorrência **B002 — resolvido e validado no runner real**: `workspace-write` protege `.git`, e a invocação anterior não habilitava revisão de escaladas para finalizar o commit. Runner atualizado com `--approve-for-me`, verificação de suporte e parada diante de qualquer `BLOCKED`/`IN_PROGRESS`; regressões testadas com Git temporário e Codex simulado. Execução real da T003 concluída com saída zero e commit `aa6a0c3`. Ver ADR 0003 e evidências de execução em `docs/PROGRESS.md`.
-
-Ocorrência **B001 — resolvida na T001**: auditoria inicial detectou GHSA-g3hv-75wg-m249 em `minimatch` transitivo do tooling (11 entradas moderadas). Override para 11.0.1, instalação limpa e gates passaram; auditoria voltou a zero. Revisar remoção do override quando os consumidores adotarem a correção. Ver ADR 0001.
-
-- Aplicar `docs/ENGINEERING-STANDARDS.md` e preservar a direção das dependências. Tarefa de código não é `DONE` com lint/typecheck/test/build falhando ou sem testes pertinentes. Relatar comandos e resultados, incluindo impossibilidade real de rodar Swift/macOS.
-- Ao mudar schema JSONL/IPC, alterar ambos os lados + testes de contrato; ao alterar arquitetura, adicionar ADR. Refatorar incrementalmente, sem reescrever módulos inteiros ou adicionar bibliotecas desnecessárias.
-
-## Instruções para o Codex
-
-- **Ponto decisivo:** a implementação Swift local é parte do produto; não integrar CLI de STT externo nem usar protocolo/flags de ferramenta externa como contrato do app sem desenho próprio e testes.
-- `SpeechAnalyzer` processa uma sequência de entrada por vez; avaliar instâncias/fluxos separados para mic e sistema, com normalização temporal. Cada locale deve ser configurado e avaliado; a seleção bilíngue precisa de decisão com base em resultados reais do código próprio.
-- Nunca prometer ou marcar como concluída a precisão bilíngue com base na estimativa subjetiva de ~80% relatada na POC externa.
-- No modo Apple local, áudio não sai do Mac; texto/screenshot autorizado pode ir à API. Fallback STT remoto requer opt-in com aviso de custo e envio de áudio.
-- Criar bugs `B001...` quando encontrar falhas. Não instalar drivers nem conceder permissão administrativa, não fazer `push`/deploy/compras sem aprovação.
-
-## Controle de versão e isolamento da execução (V0.7)
-
-- Execução **limitada a uma tarefa por sessão Codex**; o operador ou `scripts/run-codex-tasks.py` reinicia o processo `codex exec` para a tarefa seguinte.
-- Cada tarefa `DONE` deve ter **pelo menos um commit local** de código, testes e documentos atualizados, com o respectivo `Txxx` no título. Preferir um único commit atômico e verificável. Não realizar `git push` automático.
-- `docs/PROGRESS.md` precisa guardar um handoff conciso com ID, testes reais, evidências, commit e bloqueios. O runner só pode prosseguir se a tarefa concluída está `DONE`, há commit com ID e árvore Git limpa. Ver `docs/WORKFLOW.md`.
+Uma tarefa só pode ser `DONE` quando cumprir seus critérios específicos e os gates aplicáveis definidos em [ENGINEERING-STANDARDS.md](ENGINEERING-STANDARDS.md), com resultados e limitações registrados em [PROGRESS.md](PROGRESS.md). O histórico de bugs e execução permanece em `PROGRESS.md`; regras técnicas globais estão em [AGENTS.md](../AGENTS.md) e o fluxo de sessão/Git está em [WORKFLOW.md](WORKFLOW.md).

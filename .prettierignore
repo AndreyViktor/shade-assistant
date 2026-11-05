@@ -6,6 +6,7 @@ playwright-report/
 .azul-engai/
 native/macos/.build/
 native/macos/.swiftpm/
+.vscode/
 # Documentos de planejamento originais: preservar sua formatação histórica.
 AGENTS.md
 docs/ARCHITECTURE.md
@@ -16,3 +17,4 @@ docs/PROMPT-CODEX.md
 docs/ROADMAP.md
 docs/WORKFLOW.md
 docs/REFERENCIA-STT-APPLE.md
+docs/TASKS.md

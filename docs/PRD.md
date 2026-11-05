@@ -1,14 +1,11 @@
-# PRD — Meeting Copilot | Versão 0.6 (refinamento de produto)
+# PRD — Meeting Copilot
 
-**Data:** 2026-11-02. **Status:** definição inicial para validação, não produto implementado. **Alvo:** Electron + React + TypeScript no macOS e Windows. **Execução:** desktop local; **transcrição Apple local própria em Swift no MVP Mac**; OpenAI para sugestões/imagens autorizadas, e STT remoto somente como fallback opt-in.
-
-## Requisito não funcional: manutenção sustentável
-A primeira versão deve permanecer fácil de modificar por um desenvolvedor que não participou da POC: módulos com limites claros, lógica testável, contratos IPC/JSONL explícitos, sem acoplamento do React às APIs de sistema ou OpenAI; lint, formatação, tipos, testes e build reproduzíveis. **Regras detalhadas e critérios de aceite em `docs/ENGINEERING-STANDARDS.md`.** Não criar complexidade abstrata sem necessidade. Este requisito não substitui o teste real de captura/STT em Mac.
+**Status:** requisitos de produto para validação; não representam funcionalidades já implementadas. **Alvo atual:** Electron + React + TypeScript, macOS primeiro. O MVP prevê transcrição Apple local implementada pelo projeto em Swift; OpenAI para sugestões/imagens autorizadas e STT remoto somente como fallback opt-in. Windows é futuro.
 
 ## 1. Problema e valor
 Durante reuniões, o usuário precisa de ajuda **enquanto a conversa acontece**, não somente de resumos posteriores. O aplicativo deve ouvir fontes autorizadas, transcrever em fluxo, reconhecer o momento em que uma intervenção ajuda e exibir sugestões objetivas e relevantes sem distrair.
 
-**Exemplo:** se um participante pergunta “Que riscos temos ao migrar esse módulo?”, o painel sugere 2–3 pontos pertinentes ao contexto já discutido e uma possível pergunta de esclarecimento. Se a conversa for trivial, o painel permanece silencioso.
+**Exemplo:** se um participante pergunta “Que riscos temos ao migrar esse módulo?”, o painel sugere até duas contribuições concisas e pertinentes ao contexto já discutido. Se a conversa for trivial, o painel permanece silencioso.
 
 ## 2. Público e escopo da primeira versão utilizável
 - Profissional em reunião online (Google Meet, Zoom, Teams ou qualquer app compatível com as fontes de áudio do SO); sessões individuais; seleção de `pt-BR` (padrão) ou `pt-BR,en-US` antes da sessão. A alternância bilíngue só será liberada após testes e critérios de qualidade no Swift próprio.
@@ -101,11 +98,9 @@ SaaS multiusuário, deploy remoto, integração CRM, gravação automática perm
 - Medir p50/p95 de latência e uso estimado da API; controle de orçamento funcional.
 - Typecheck, testes, lint, build e documentação reproduzíveis; `docs/TASKS.md`/`docs/PROGRESS.md` sempre com evidências reais.
 
-## 10. Questões abertas para nossa próxima revisão
-- Estilo pessoal das dicas (mais direto, técnico, comercial ou misto); granularidade e nível de intervenção.
-- Distribuição segura do **helper Swift de autoria própria** junto ao Electron, requisitos macOS/SDK, TCC, assinatura/notarização e comportamento em Mac recém-instalado; validar em POC.
-- Retenção opcional de histórico e perfis de reunião (V1 mantém somente memória temporária).
-- Necessidade de consultar material próprio/documentos ao vivo — fora do MVP atual.
+## 10. Decisões e questões abertas
+
+As decisões confirmadas, propostas reversíveis e questões em aberto são mantidas em [DECISIONS.md](DECISIONS.md), para evitar listas divergentes neste documento.
 
 ## Referências verificadas em 2026-11-02
 - Transcrição Realtime: https://developers.openai.com/api/docs/guides/realtime-transcription
