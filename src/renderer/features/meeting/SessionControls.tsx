@@ -1,3 +1,4 @@
+import { LocalTranscriptPreview } from './LocalTranscriptPreview';
 import { useState } from 'react';
 import type {
   AudioSource,
@@ -26,7 +27,7 @@ function selectedSources(choice: SourceChoice): AudioSource[] {
 }
 
 export function SessionControls() {
-  const { session, demo, busy, error, preferences, command } =
+  const { session, demo, local, busy, error, preferences, command } =
     useMeetingSession();
   const [localeOverride, setLocaleOverride] =
     useState<TranscriptionLocale | null>(null);
@@ -35,6 +36,7 @@ export function SessionControls() {
   const [source, setSource] = useState<SourceChoice>('both');
   const [confirming, setConfirming] = useState(false);
   const canStart = session?.phase === 'idle' || session?.phase === 'stopped';
+  const localActive = session?.mode === 'apple-local' && !canStart;
 
   function startLocal(): void {
     if (!canStart || busy) return;
@@ -44,7 +46,7 @@ export function SessionControls() {
   function confirmLocalConsent(): void {
     setConfirming(false);
     void command({
-      version: 2,
+      version: 3,
       action: 'start',
       options: {
         mode: 'apple-local',
@@ -57,7 +59,7 @@ export function SessionControls() {
 
   function startDemo(): void {
     void command({
-      version: 2,
+      version: 3,
       action: 'start',
       options: {
         mode: 'demo',
@@ -75,37 +77,42 @@ export function SessionControls() {
         </p>
       </div>
 
-      <fieldset className="capture-options" disabled={busy || !canStart}>
-        <label>
-          Fonte de áudio
-          <select
-            value={source}
-            onChange={(event) => setSource(event.target.value as SourceChoice)}
-          >
-            <option value="both">Ambas as fontes</option>
-            <option value="mic">Microfone</option>
-            <option value="system">Áudio do sistema</option>
-          </select>
-        </label>
-        <label>
-          Idioma
-          <select
-            value={locale}
-            onChange={(event) =>
-              setLocaleOverride(event.target.value as TranscriptionLocale)
-            }
-          >
-            <option value="pt-BR">Português (Brasil)</option>
-            <option value="en-US">English (US)</option>
-          </select>
-        </label>
-      </fieldset>
+      {!localActive && (
+        <fieldset className="capture-options" disabled={busy || !canStart}>
+          <label>
+            Fonte de áudio
+            <select
+              value={source}
+              onChange={(event) =>
+                setSource(event.target.value as SourceChoice)
+              }
+            >
+              <option value="both">Ambas as fontes</option>
+              <option value="mic">Microfone</option>
+              <option value="system">Áudio do sistema</option>
+            </select>
+          </label>
+          <label>
+            Idioma
+            <select
+              value={locale}
+              onChange={(event) =>
+                setLocaleOverride(event.target.value as TranscriptionLocale)
+              }
+            >
+              <option value="pt-BR">Português (Brasil)</option>
+              <option value="en-US">English (US)</option>
+            </select>
+          </label>
+        </fieldset>
+      )}
 
       {session?.mode === 'apple-local' && session.phase !== 'stopped' ? (
         <p className="capture-status" role="status">
           Captura {session.phase === 'paused' ? 'pausada' : 'ativa'} de{' '}
-          {sourceNames[source]}. O áudio é processado neste Mac; a transcrição
-          ainda não aparece no painel.
+          {local?.config.sources.map((item) => sourceNames[item]).join(' e ') ??
+            sourceNames[source]}
+          . O áudio é processado neste Mac.
         </p>
       ) : (
         <p className="capture-description">
@@ -116,18 +123,20 @@ export function SessionControls() {
       {error && <p role="alert">{error}</p>}
 
       <div className="session-actions">
-        <button
-          className="primary-action"
-          disabled={busy || !canStart}
-          onClick={startLocal}
-        >
-          Iniciar transcrição local
-        </button>
+        {!localActive && (
+          <button
+            className="primary-action"
+            disabled={busy || !canStart}
+            onClick={startLocal}
+          >
+            Iniciar transcrição local
+          </button>
+        )}
         {session?.phase === 'running' && (
           <button
             disabled={busy}
             onClick={() => {
-              void command({ version: 2, action: 'pause' });
+              void command({ version: 3, action: 'pause' });
             }}
           >
             Pausar
@@ -137,7 +146,7 @@ export function SessionControls() {
           <button
             disabled={busy}
             onClick={() => {
-              void command({ version: 2, action: 'resume' });
+              void command({ version: 3, action: 'resume' });
             }}
           >
             Retomar
@@ -149,13 +158,17 @@ export function SessionControls() {
           <button
             disabled={busy}
             onClick={() => {
-              void command({ version: 2, action: 'stop' });
+              void command({ version: 3, action: 'stop' });
             }}
           >
             Parar
           </button>
         )}
       </div>
+
+      {session?.mode === 'apple-local' && (
+        <LocalTranscriptPreview transcript={local} />
+      )}
 
       <details
         className="secondary-mode"
@@ -175,7 +188,7 @@ export function SessionControls() {
             phase={session.phase}
             busy={busy}
             onDismiss={(id) => {
-              void command({ version: 2, action: 'dismiss-suggestion', id });
+              void command({ version: 3, action: 'dismiss-suggestion', id });
             }}
           />
         )}
@@ -190,8 +203,8 @@ export function SessionControls() {
           participantes autorizaram a transcrição.
         </p>
         <p>
-          A transcrição não é enviada à OpenAI. O texto ainda não é exibido ou
-          salvo pelo app. A DEMO é apenas uma simulação.
+          A transcrição não é enviada à OpenAI. As falas recentes ficam apenas
+          em memória e são limpas ao parar. A DEMO é apenas uma simulação.
         </p>
       </details>
 

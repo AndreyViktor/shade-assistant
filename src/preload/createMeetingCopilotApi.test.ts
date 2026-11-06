@@ -145,9 +145,10 @@ describe('settings preload boundary', () => {
 describe('session preload boundary', () => {
   it('uses only the fixed channel, validates requests and redacts replies', async () => {
     const reply = {
-      version: 2,
+      version: 3,
       ok: true,
       demo: emptyDemo(),
+      local: null,
       session: {
         phase: 'idle',
         mode: 'demo',
@@ -156,39 +157,39 @@ describe('session preload boundary', () => {
     };
     const invoke = vi.fn().mockResolvedValue(reply);
     const api = createMeetingCopilotApi(invoke);
-    expect(await api.session({ version: 2, action: 'read' })).toEqual(reply);
+    expect(await api.session({ version: 3, action: 'read' })).toEqual(reply);
     expect(invoke).toHaveBeenCalledExactlyOnceWith('meeting-copilot:session', {
-      version: 2,
+      version: 3,
       action: 'read',
     });
     invoke.mockClear();
     for (const args of [
       [],
-      [{ version: 2, action: 'send' }],
-      [{ version: 2, action: 'stop' }, 'extra'],
+      [{ version: 3, action: 'send' }],
+      [{ version: 3, action: 'stop' }, 'extra'],
     ])
       expect(await Reflect.apply(api.session, null, args)).toEqual({
         ...ipcFailure('INVALID_REQUEST'),
-        version: 2,
+        version: 3,
       });
     expect(invoke).not.toHaveBeenCalled();
     invoke.mockResolvedValue({ ...reply, secret: 'synthetic' });
-    expect(await api.session({ version: 2, action: 'read' })).toEqual({
+    expect(await api.session({ version: 3, action: 'read' })).toEqual({
       ...ipcFailure('INVALID_RESPONSE'),
-      version: 2,
+      version: 3,
     });
     invoke.mockRejectedValue(new Error('private'));
-    expect(await api.session({ version: 2, action: 'stop' })).toEqual({
+    expect(await api.session({ version: 3, action: 'stop' })).toEqual({
       ...ipcFailure('UNAVAILABLE'),
-      version: 2,
+      version: 3,
     });
   });
   it('times out session commands with an explicit unconfirmed result', async () => {
     vi.useFakeTimers();
     const api = createMeetingCopilotApi(() => new Promise(() => {}));
-    const result = api.session({ version: 2, action: 'stop' });
-    await vi.advanceTimersByTimeAsync(5000);
-    expect(await result).toEqual({ ...ipcFailure('TIMEOUT'), version: 2 });
+    const result = api.session({ version: 3, action: 'stop' });
+    await vi.advanceTimersByTimeAsync(15000);
+    expect(await result).toEqual({ ...ipcFailure('TIMEOUT'), version: 3 });
     expect(vi.getTimerCount()).toBe(0);
   });
 });

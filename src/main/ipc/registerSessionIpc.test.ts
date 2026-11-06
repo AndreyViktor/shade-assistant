@@ -39,7 +39,7 @@ const provider: TranscriptionProvider = {
 const createAppleProvider = vi.fn(() => Promise.resolve(provider));
 const requestMicrophoneAccess = vi.fn(() => Promise.resolve(true));
 const demoStart = {
-  version: 2,
+  version: 3,
   action: 'start',
   options: {
     mode: 'demo',
@@ -47,7 +47,7 @@ const demoStart = {
   },
 } satisfies SessionRequest;
 const appleStart = {
-  version: 2,
+  version: 3,
   action: 'start',
   options: {
     mode: 'apple-local',
@@ -84,7 +84,7 @@ function setup(platform: NodeJS.Platform = 'darwin') {
 }
 
 async function read(call: (request: unknown) => unknown) {
-  return parseSessionResult(await call({ version: 2, action: 'read' }));
+  return parseSessionResult(await call({ version: 3, action: 'read' }));
 }
 
 beforeEach(() => {
@@ -105,16 +105,17 @@ describe('session main boundary and provider selection', () => {
       ok: true,
       demo: { transcript: { sequence: 2, source: 'system' }, suggestions: [] },
     });
-    await call({ version: 2, action: 'pause' });
+    await call({ version: 3, action: 'pause' });
     const paused = await read(call);
     vi.advanceTimersByTime(10000);
     expect(await read(call)).toEqual(paused);
-    await call({ version: 2, action: 'resume' });
-    await call({ version: 2, action: 'stop' });
+    await call({ version: 3, action: 'resume' });
+    await call({ version: 3, action: 'stop' });
     expect(await read(call)).toMatchObject({
       ok: true,
       session: { phase: 'stopped', mode: 'demo' },
       demo: emptyDemo(),
+      local: null,
     });
     expect(createAppleProvider).not.toHaveBeenCalled();
     expect(vi.getTimerCount()).toBe(0);
@@ -136,15 +137,15 @@ describe('session main boundary and provider selection', () => {
     expect(startCall?.[0].sessionId).toMatch(/^[a-f0-9]{32}$/);
     expect(startCall?.[1]).toEqual(expect.any(Function));
     expect(startCall?.[2]).toBeInstanceOf(AbortSignal);
-    await call({ version: 2, action: 'pause' });
+    await call({ version: 3, action: 'pause' });
     expect(pauseMock.mock.calls).toHaveLength(1);
     expect(await read(call)).toMatchObject({
       ok: true,
       session: { phase: 'paused', mode: 'apple-local' },
     });
-    await call({ version: 2, action: 'resume' });
+    await call({ version: 3, action: 'resume' });
     expect(resumeMock.mock.calls).toHaveLength(1);
-    await call({ version: 2, action: 'stop' });
+    await call({ version: 3, action: 'stop' });
     expect(stopMock.mock.calls).toHaveLength(1);
     expect(await read(call)).toMatchObject({
       ok: true,
@@ -186,7 +187,7 @@ describe('session main boundary and provider selection', () => {
     });
     expect(
       await call({
-        version: 2,
+        version: 3,
         action: 'start',
         options: {
           mode: 'openai-stt',
@@ -264,5 +265,100 @@ describe('session main boundary and provider selection', () => {
       ok: true,
       session: { phase: 'stopped', consent: { capture: false } },
     });
+  });
+});
+
+describe('local transcript delivery', () => {
+  it('delivers both sources, ignores paused/late speech and retains only a safe native error on failure', async () => {
+    const { call } = setup();
+    await call(appleStart);
+    const start = startMock.mock.calls.at(-1);
+    if (!start) throw new Error('Missing provider start');
+    const [config, emit] = start;
+    const speech = {
+      version: 1 as const,
+      sessionId: config.sessionId,
+      source: 'mic' as const,
+      locale: config.locale,
+      seq: 1,
+      timestampMs: 100,
+      type: 'final' as const,
+      segmentId: 'segment',
+      startMs: 0,
+      endMs: 100,
+      text: 'Conteúdo sintético',
+    };
+    emit(speech);
+    emit({ ...speech, source: 'system' });
+    expect(await read(call)).toMatchObject({
+      local: { segments: [speech, { ...speech, source: 'system' }] },
+    });
+    await call({ version: 3, action: 'pause' });
+    emit({ ...speech, seq: 2, segmentId: 'paused' });
+    const paused = await read(call);
+    expect(paused.ok && paused.local?.segments).toHaveLength(2);
+    await call({ version: 3, action: 'resume' });
+    emit({
+      version: 1,
+      sessionId: config.sessionId,
+      source: 'mic',
+      locale: config.locale,
+      seq: 3,
+      timestampMs: 200,
+      type: 'error',
+      code: 'capture-failed',
+    });
+    expect(await read(call)).toMatchObject({
+      session: { phase: 'stopped' },
+      local: {
+        segments: [],
+        channels: [{ type: 'error', code: 'capture-failed' }],
+      },
+    });
+    emit({ ...speech, seq: 4 });
+    expect(await read(call)).toMatchObject({ local: { segments: [] } });
+    await call({ version: 3, action: 'stop' });
+    expect(await read(call)).toMatchObject({ local: null });
+    await call(appleStart);
+    emit({ ...speech, seq: 5 });
+    expect(await read(call)).toMatchObject({ local: { segments: [] } });
+  });
+
+  it('shows transport failure after start and clears content on reload', async () => {
+    const { call, window } = setup();
+    await call(appleStart);
+    startMock.mock.calls.at(-1)?.[3]?.();
+    expect(await read(call)).toMatchObject({
+      session: { phase: 'stopped' },
+      local: { failed: true, segments: [] },
+    });
+    window.webContents.on.mock.calls.find(
+      ([name]) => name === 'did-start-loading',
+    )?.[1]();
+    expect(await read(call)).toMatchObject({ local: null });
+  });
+});
+
+it('does not revive a stopped session when provider creation completes late', async () => {
+  let resolveProvider: (value: TranscriptionProvider) => void = () => {};
+  createAppleProvider.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        resolveProvider = resolve;
+      }),
+  );
+  const { call } = setup();
+  const starting = call(appleStart);
+  await vi.waitFor(() => expect(createAppleProvider).toHaveBeenCalledOnce());
+  await call({ version: 3, action: 'stop' });
+  resolveProvider(provider);
+  expect(await starting).toMatchObject({
+    ok: false,
+    code: 'TRANSCRIPTION_START_FAILED',
+  });
+  expect(startMock).not.toHaveBeenCalled();
+  expect(await read(call)).toMatchObject({
+    session: { phase: 'stopped' },
+    local: null,
   });
 });

@@ -4,7 +4,7 @@ import type {
   ChildProcessWithoutNullStreams,
   SpawnOptions,
 } from 'node:child_process';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   AppleNativeTranscriptionError,
   AppleNativeTranscriptionProvider,
@@ -290,4 +290,53 @@ describe('AppleNativeTranscriptionProvider', () => {
       provider.start(config, () => undefined, new AbortController().signal),
     ).rejects.toBeInstanceOf(AppleNativeTranscriptionError);
   });
+});
+
+describe('post-start failure notification', () => {
+  it.each(['crash', 'invalid-json'] as const)(
+    'notifies once without raw payload on %s',
+    async (mode) => {
+      const process = successfulProcess();
+      const provider = providerFor(process);
+      const onFailure = vi.fn();
+      await provider.start(
+        config,
+        () => {},
+        new AbortController().signal,
+        onFailure,
+      );
+      if (mode === 'crash') process.finish(1);
+      else process.writeStdout('private invalid JSON\n');
+      expect(onFailure).toHaveBeenCalledExactlyOnceWith();
+      await provider.stop().catch(() => undefined);
+      expect(onFailure).toHaveBeenCalledTimes(1);
+    },
+  );
+  it('does not report an intentional stop as a process failure', async () => {
+    const process = successfulProcess();
+    const provider = providerFor(process);
+    const onFailure = vi.fn();
+    await provider.start(
+      config,
+      () => {},
+      new AbortController().signal,
+      onFailure,
+    );
+    await provider.stop();
+    expect(onFailure).not.toHaveBeenCalled();
+  });
+});
+
+it('rejects a helper that exits immediately after its startup listening events', async () => {
+  const process = fakeProcess((command, child) => {
+    if (command.type !== 'start') return;
+    for (const source of config.sources)
+      for (const event of validEvents(config.sessionId, source))
+        child.deliver(event);
+    child.finish(1);
+  });
+  const provider = providerFor(process);
+  await expect(
+    provider.start(config, () => {}, new AbortController().signal),
+  ).rejects.toMatchObject({ code: 'transport-failed' });
 });

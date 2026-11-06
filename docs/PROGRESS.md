@@ -1,11 +1,20 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
-**Atualização:** 2026-11-05. **Marco:** M2 — contrato nativo Swift ↔ Electron.
-**Implementação concluída:** **T001–T014**. M1 validado para DEMO offline; T013 entrega o helper Swift próprio e T014 valida a ponte Electron/helper com captura real no Mac.
+**Atualização:** 2026-11-06. **Marco:** M2 — transcrição Swift no overlay.
+**Implementação concluída:** T001–T015. T016 permanece `DEFERRED`.
 
-## Estado atual — 2026-11-05
+## T017 — transcrição viva no overlay — BLOCKED — 2026-11-06
 
-**T014 está `DONE` nesta sessão; T013 continua `DONE` e commitada em `ecf6f35`.** Gates automatizados passaram e o usuário confirmou captura pt-BR no provider Electron→helper Swift, com resultados finais de microfone e áudio do sistema. Próxima elegível: T015. T016 foi adiada por decisão do usuário e marcada `DEFERRED`; nenhuma tarefa posterior foi iniciada.
+- Sessão dedicada à T017, iniciada em `main`, HEAD `fc57d88`, árvore limpa. Dependências T007/T012/T014/T015 conferidas; nenhuma tarefa posterior iniciada.
+- Plano: (1) ligar eventos validados do helper a uma janela limitada no main; (2) versionar IPC e exibir fonte/idioma/parcial/final/estado/erro no React; (3) cobrir contratos, retenção, pausa/stop/eventos atrasados e e2e sintético; (4) executar gates e ensaio Mac real; (5) registrar evidências e commit local.
+- Implementação: snapshot de sessão v3 com até 12 segmentos em memória, atualização a cada 500 ms, sem persistência/rede/OpenAI. Stop/reload/fechamento/reinício limpam texto; falhas conservam diagnóstico seguro. Callback sem payload cobre crash/erro de transporte do provider após start. ADR 0014 explica contrato, limites e timeouts.
+- Validação automatizada: `npm run verify` passou com lint, Prettier, três projetos TypeScript, 477 testes TS (17 skipped), 12 testes Python e build. Inclui regressões para criação tardia do provider após stop e encerramento imediato após listening; revalidação final passou.
+- `npm run test:smoke` passou **10/10 no Electron real**. O novo teste usa subprocesso JSONL sintético → provider/parser reais → main/preload/React, confirma as duas fontes, pausa/retomada/stop/reload, conteúdo limpo e zero tentativas de rede nos guards instrumentados. Não usa captura/TCC real e não comprova reconhecimento Swift. Inspeção visual do artefato sintético confirmou textos e controles legíveis no painel compacto.
+- Primeiro smoke dentro da sandbox não conseguiu abrir Electron; repetido com acesso ao desktop aprovado e passou. Primeiro gate completo detectou rejeição assíncrona no carregamento quando a ponte não existe: corrigida a captura dessa falha e a suíte passou. Nenhuma regra suprimida. Swift, dependências e lockfile não mudaram; gates nativos não foram repetidos.
+- Arquivos: contratos IPC/localTranscript, core LocalTranscript/TranscriptionProvider, provider Apple, handler de sessão, preload, hook/preview/controles/estilo React, testes associados e e2e/fixture sintético; README, ADR 0014, TEST-T017, TASKS e este handoff.
+- **Bloqueio restante:** ensaio humano do overlay pendente conforme [TEST-T017.md](TEST-T017.md); solicitado ao usuário nesta sessão. Evidências antigas T014/T015 não provam esta interface. Para desbloquear, confirmar texto real de mic e sistema em pt-BR, pausa/retomada e limpeza ao parar. Não registrar/transmitir falas privadas como evidência.
+- Limites: ordem de chegada e substituição básica por fonte/segmento; eco, ordenação temporal entre fontes e bilíngue continuam em T018. Não houve OpenAI, áudio gravado, concessão automática de TCC ou push. T017 não está DONE; nenhuma tarefa seguinte deve iniciar até o aceite.
+- Commit local desta entrega automatizada: `feat(T017): display live local transcript in overlay` (hash consultável pelo título; não representa aceite manual concluído).
 
 ## T014 — ponte do helper Swift ao Electron main — DONE — 2026-11-05
 

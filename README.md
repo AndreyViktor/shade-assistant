@@ -4,7 +4,7 @@ Assistente desktop de reuniões em tempo real, feito com Electron, React e TypeS
 
 ## Status
 
-O scaffold desktop, a demonstração offline e a integração do helper Swift ao Electron estão implementados. Apple Local ainda requer validação manual no app e não exibe texto de transcrição (T017). A T016, fallback OpenAI STT, está adiada. O app não está pronto para distribuição. Windows (T036–T039) permanece adiado.
+O scaffold desktop, a demonstração offline e a integração do helper Swift ao Electron estão implementados. Apple Local agora exibe falas recentes no overlay (T017), com fonte, idioma e estado; o aceite manual desta entrega está registrado em `docs/PROGRESS.md`. A T016, fallback OpenAI STT, está adiada. O app não está pronto para distribuição. Windows (T036–T039) permanece adiado.
 
 ## Executar
 
@@ -17,14 +17,14 @@ node node_modules/electron/install.js
 npm run dev
 ```
 
-No macOS, `npm run dev` também compila o helper Swift dentro de um app nativo com descrições de uso do microfone e do áudio do sistema. A aplicação abre em modo `DEMO`, sem chave, rede ou captura real. Apple Local só solicita permissões após seleção do modo, consentimento explícito e início da sessão. A primeira autorização de gravação de tela/áudio pode exigir aprovação em Ajustes do Sistema e reabertura do Meeting Copilot. Para compilar e abrir o build:
+No macOS, `npm run dev` também compila o helper Swift dentro de um app nativo com descrições de uso do microfone e do áudio do sistema. A aplicação abre sem captura ativa, com Apple Local como ação principal e DEMO disponível como simulação. Apple Local só solicita permissões após seleção do modo, consentimento explícito e início da sessão. A primeira autorização de gravação de tela/áudio pode exigir aprovação em Ajustes do Sistema e reabertura do Meeting Copilot. Para compilar e abrir o build:
 
 ```bash
 npm run build
 npm start
 ```
 
-Instruções adicionais de instalação, testes e gates Swift estão em [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). O roteiro de demonstração está em [docs/DEMO.md](docs/DEMO.md).
+Instruções adicionais de instalação, testes e gates Swift estão em [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). O roteiro de demonstração está em [docs/DEMO.md](docs/DEMO.md). O ensaio real da transcrição no overlay está em [docs/TEST-T017.md](docs/TEST-T017.md).
 
 ## Documentação
 

@@ -62,6 +62,9 @@ type ActiveProcess = {
   stderrBytes: number;
   stopPromise?: Promise<void>;
   closedCleanly: boolean;
+  started: boolean;
+  failureNotified: boolean;
+  onFailure?: () => void;
 };
 
 type ProviderOptions = {
@@ -89,6 +92,7 @@ export class AppleNativeTranscriptionProvider implements TranscriptionProvider {
     config: TranscriptionConfig,
     onEvent: (event: TranscriptionEvent) => void,
     signal: AbortSignal,
+    onFailure?: () => void,
   ): Promise<void> {
     if (this.active) throw new AppleNativeTranscriptionError('invalid-command');
     if (signal.aborted) throw new AppleNativeTranscriptionError('aborted');
@@ -131,6 +135,9 @@ export class AppleNativeTranscriptionProvider implements TranscriptionProvider {
       resolveClose: (result) => closeResolver?.(result),
       stderrBytes: 0,
       closedCleanly: false,
+      started: false,
+      failureNotified: false,
+      onFailure,
     };
     this.active = active;
     this.attachProcessHandlers(active);
@@ -147,7 +154,11 @@ export class AppleNativeTranscriptionProvider implements TranscriptionProvider {
       );
       await this.writeCommand(active, startFrame);
       await listening;
+      if (active.failure) throw active.failure;
+      if (active.closeResult)
+        throw new AppleNativeTranscriptionError('transport-failed');
       if (signal.aborted) throw new AppleNativeTranscriptionError('aborted');
+      active.started = true;
     } catch (error) {
       await this.stop().catch(() => undefined);
       if (signal.aborted) throw new AppleNativeTranscriptionError('aborted');
@@ -314,6 +325,7 @@ export class AppleNativeTranscriptionProvider implements TranscriptionProvider {
       active.failure ??= new AppleNativeTranscriptionError('transport-failed');
     }
     active.resolveClose(result);
+    this.notifyFailure(active);
     this.checkWaiters(active);
   }
 
@@ -322,8 +334,21 @@ export class AppleNativeTranscriptionProvider implements TranscriptionProvider {
     failure: AppleNativeTranscriptionError,
   ): void {
     active.failure ??= failure;
+    this.notifyFailure(active);
     this.rejectWaiters(active, active.failure);
     if (!active.closeResult) active.child.kill('SIGTERM');
+  }
+
+  private notifyFailure(active: ActiveProcess): void {
+    if (
+      !active.failure ||
+      !active.started ||
+      active.stopPromise ||
+      active.failureNotified
+    )
+      return;
+    active.failureNotified = true;
+    active.onFailure?.();
   }
 
   private requireActive(state: 'listening' | 'paused'): ActiveProcess {
