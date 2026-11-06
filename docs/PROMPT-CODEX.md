@@ -10,6 +10,8 @@ Antes de editar:
 2. Confira git status/log, TASKS.md, PROGRESS.md e o código relacionado. Preserve mudanças existentes e reconcilie o estado com a implementação real.
 3. Respeite decisões confirmadas em DECISIONS.md. T036–T039 (Windows) permanecem DEFERRED.
 
+Planejamento obrigatório para toda tarefa, inclusive tarefas pequenas: após a inspeção e antes de alterar código ou testes, elabore um plano com objetivo/critério de aceite, etapas de implementação, arquivos ou módulos envolvidos, testes/gates e possíveis bloqueios. Marque a tarefa IN_PROGRESS e registre o plano em docs/PROGRESS.md ANTES de implementar. Atualize o plano se o escopo mudar. Não espere aprovação do plano para trabalho já autorizado; preserve as autorizações humanas exigidas para captura, credenciais, custos e permissões.
+
 Implemente a menor solução testável que satisfaça os critérios de aceite. Siga ENGINEERING-STANDARDS.md; escreva testes relevantes; execute os gates aplicáveis e registre resultados reais, arquivos alterados e limites em TASKS.md e PROGRESS.md. Não declare mocks como validação real.
 
 Para o MVP macOS, STT local deve ser implementado pelo projeto em Swift usando APIs Apple. Não execute nem empacote transcritores de terceiros. OpenAI STT é fallback opt-in; texto/imagens só podem ser enviados com autorização. Preserve os limites de segurança Electron e segredos.

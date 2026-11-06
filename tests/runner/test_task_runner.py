@@ -88,6 +88,17 @@ class RunnerTests(unittest.TestCase):
         self.simulate(self.complete, maximum=2)
         self.assertEqual(len(self.launches), 2)
         self.assertIn("EXCLUSIVAMENTE na tarefa T002", self.launches[1][1]["input"])
+        for number, (_, options) in enumerate(self.launches, start=1):
+            with self.subTest(task=number):
+                prompt = options["input"]
+                self.assertIn("PLANEJAMENTO OBRIGATÓRIO para toda tarefa", prompt)
+                self.assertIn(f"elabore um plano específico para T{number:03}", prompt)
+                self.assertIn("objetivo/critério de aceite, etapas de implementação", prompt)
+                self.assertIn("arquivos ou módulos envolvidos, testes/gates e possíveis bloqueios", prompt)
+                self.assertIn("registre esse plano em docs/PROGRESS.md", prompt)
+                self.assertLess(prompt.index("registre esse plano"),
+                                prompt.index("Somente depois de registrar o plano, implemente"))
+                self.assertIn("Não espere aprovação do plano para trabalho já autorizado", prompt)
 
     def test_unsupported_cli_stops_before_any_task(self):
         self.help_output = "--sandbox"

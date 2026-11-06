@@ -80,7 +80,15 @@ def make_prompt(task: Task) -> str:
     Siga AGENTS.md, docs/WORKFLOW.md e docs/ENGINEERING-STANDARDS.md; leia docs/DECISIONS.md,
     docs/PROGRESS.md e a linha/critério de aceite da tarefa {task.id} em docs/TASKS.md.
     Confira git status/log e apenas arquivos técnicos relacionados. Respeite dependências.
-    Marque {task.id} IN_PROGRESS. Implemente e execute os testes/gates aplicáveis.
+    PLANEJAMENTO OBRIGATÓRIO para toda tarefa, inclusive tarefas pequenas:
+    antes de alterar código ou testes, elabore um plano específico para {task.id}.
+    O plano deve listar objetivo/critério de aceite, etapas de implementação,
+    arquivos ou módulos envolvidos, testes/gates e possíveis bloqueios.
+    Marque {task.id} IN_PROGRESS e registre esse plano em docs/PROGRESS.md
+    ANTES de iniciar a implementação. Mantenha o plano atualizado se o escopo mudar.
+    Não espere aprovação do plano para trabalho já autorizado; respeite as
+    autorizações humanas exigidas para captura, credenciais, custos e permissões.
+    Somente depois de registrar o plano, implemente e execute os testes/gates aplicáveis.
     NÃO marque DONE sem evidências reais. Registre em docs/PROGRESS.md o resumo objetivo,
     comandos/testes e resultados reais, limitações, arquivos, blockers e próximo passo.
     Se os critérios passarem, marque {task.id} DONE em docs/TASKS.md; faça commit local
