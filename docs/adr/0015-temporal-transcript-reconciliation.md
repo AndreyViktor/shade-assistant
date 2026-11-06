@@ -1,6 +1,6 @@
 # ADR 0015 — Reconciliação temporal da janela local
 
-Data: 2026-11-06. Tarefa: T018. Aceite de áudio real pendente.
+Data: 2026-11-06. Tarefa: T018. Aceite da entrega confirmado pelo usuário (D016); medições adicionais pendentes.
 
 ## Contexto
 
@@ -20,4 +20,4 @@ A T017 mantinha a ordem de chegada e substituía hipóteses somente por fonte/se
 
 Manter apenas chegada/ID deixa hipóteses órfãs quando o reconhecimento corrige o início. Deduplicação aproximada de texto ou tradução poderia apagar intervenções distintas; não foi adotada. Supressão acústica de eco exige sinais e validação nativa, fora desta heurística textual. Mesmo a igualdade conservadora pode agrupar duas pessoas dizendo a mesma frase ao mesmo tempo; eco com atraso maior ou reconhecimento divergente permanece visível.
 
-O contrato atual aceita um locale por sessão. Testes sintéticos pt-BR/en-US e texto misto validam a política, não reconhecimento bilíngue Apple. A comparação p95 mede somente CPU de recepção/snapshot. Reconhecimento pt-BR+en-US e p95/sobreposição reais precisam de aceite separado antes de T018 DONE; roteiro em [TEST-T018](../TEST-T018.md). Esta janela não implementa o ContextManager da T020.
+O contrato atual aceita um locale por sessão. Testes sintéticos pt-BR/en-US e texto misto validam a política, não reconhecimento bilíngue Apple. A comparação p95 mede somente CPU de recepção/snapshot. Reconhecimento pt-BR+en-US e p95/sobreposição reais permanecem pendentes em O002/O003; D016 aceita a entrega atual como T018 DONE sem declarar esses itens comprovados; roteiro em [TEST-T018](../TEST-T018.md). Esta janela não implementa o ContextManager da T020.

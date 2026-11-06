@@ -10,6 +10,8 @@ Decisões confirmadas pelo usuário prevalecem sobre propostas e hipóteses anti
 - **D012:** priorizar código organizado, testável e fácil de manter; seguir os padrões de engenharia do projeto.
 - **D013–D015:** Git local simples, ao menos um commit por tarefa concluída e sem push automático; uma sessão Codex nova por tarefa; executor Python opcional e limitado para abrir `codex exec` independente por tarefa.
 
+- **D016 (2026-11-06):** após informar funcionamento no app e conhecer as pendências, o usuário determinou considerar T018 validada. Aceitar a entrega temporal/eco textual atual, os gates e o retorno qualitativo como conclusão da tarefa; medições de p95/sobreposição reais e implementação/validação simultânea pt-BR+en-US permanecem questões abertas O002/O003, sem bloquear T018 ou o avanço T020/T021. Esta decisão não afirma que essas medições ocorreram nem habilita suporte bilíngue.
+
 ## Propostas técnicas reversíveis
 
 Defaults sujeitos a validação de implementação; detalhes do fluxo e fronteiras estão em [ARCHITECTURE.md](ARCHITECTURE.md).

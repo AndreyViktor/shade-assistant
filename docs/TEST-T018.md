@@ -31,7 +31,7 @@ O caso preenchido exercita custo de strings longas; sua mudança de comprimento 
 
 Nas duas sessões de texto normal: 8 inversões de início → 0; 10 itens → 7; 3 parciais → 1 (a única ainda em andamento); 4 pares de finais sobrepostos → 2. Permanecem o par de falas distintas e o par curto “Sim.”; sai um representante de eco e sua sobreposição redundante com a fala distinta. Repetição posterior preservada. Essas contagens verificam o resultado esperado do roteiro, não precisão acústica, WER ou redução de eco real.
 
-## Ensaio humano ainda pendente
+## Ensaios adicionais pendentes (O002/O003)
 
 Não executar captura automaticamente. Operador deve autorizar fontes no app e conceder TCC manualmente quando necessário, com participantes informados. Usar exclusivamente falas sintéticas; não registrar áudio, texto de reunião ou screenshot real por padrão.
 
@@ -39,6 +39,6 @@ Não executar captura automaticamente. Operador deve autorizar fontes no app e c
 2. Reproduzir frase longa pelo sistema, permitindo vazamento controlado no mic. Comparar com o mesmo roteiro na T017 (`0d360cc`, em checkout separado pelo operador). Anotar apenas contagens de duplicatas/supressões indevidas, revisões órfãs e pares sobrepostos. Fazer também falas distintas simultâneas e frases iguais simultâneas; esta última é limitação conhecida da heurística, não diarização.
 3. Pausar durante parcial, confirmar descarte apenas da hipótese e retenção dos finais. Retomar e conferir continuidade dos tempos; parar e confirmar limpeza.
 4. Medir pelo menos 20 amostras de fim da frase → primeiro final visível em cada versão/fonte, usando relógio comum e marcas de tempo sem conteúdo. Reportar mediana e p95 (rank `ceil(0,95 × N)`), N, método e erros de observação; não subtrair relógios sem sincronização. Isso ainda inclui erro humano e não substitui instrumentação para uma meta de produção.
-5. en-US isolado exige assets previamente autorizados/disponíveis. O modo simultâneo pt-BR+en-US **não existe no contrato v1/helper atual**. Para cumprir esse trecho do aceite, é necessário definir/implementar e validar a estratégia nativa e seu contrato, ou obter decisão explícita do usuário revisando o escopo da T018. Texto misto sintético não atende esse requisito.
+5. en-US isolado exige assets previamente autorizados/disponíveis. O modo simultâneo pt-BR+en-US **não existe no contrato v1/helper atual**. A estratégia nativa e seu contrato ainda precisam de implementação e validação; D016 aceita T018 sem declarar esse suporte disponível. Texto misto sintético não atende esse requisito.
 
-Registrar somente ambiente, fontes/locales, contagens, percentis e confirmação humana em PROGRESS. Até essa evidência e a decisão/validação bilíngue, T018 permanece BLOCKED. T020/T021 não fazem parte desta sessão.
+Registrar somente ambiente, fontes/locales, contagens, percentis e confirmação humana em PROGRESS. Por aceite explícito do usuário (D016), T018 está DONE; estes ensaios adicionais permanecem pendentes em O002/O003 e não bloqueiam T020/T021.
