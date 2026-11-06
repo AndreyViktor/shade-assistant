@@ -5,9 +5,12 @@ import type { AudioSource } from '../../contracts/native/protocol';
 // Keep both sources behind the grouped display, with a fixed memory ceiling.
 export const MAX_RETAINED_SEGMENTS = MAX_VISIBLE_SEGMENTS * 2;
 const REVISION_TOLERANCE_MS = 250;
-type Position = Pick<SpeechSegment, 'startMs' | 'endMs' | 'source' | 'seq'>;
+export type SpeechPosition = Pick<
+  SpeechSegment,
+  'startMs' | 'endMs' | 'source' | 'seq'
+>;
 
-function compare(a: Position, b: Position): number {
+export function compareSpeech(a: SpeechPosition, b: SpeechPosition): number {
   return (
     a.startMs - b.startMs ||
     a.endMs - b.endMs ||
@@ -64,43 +67,51 @@ function possibleEcho(a: SpeechSegment, b: SpeechSegment): boolean {
   );
 }
 
+/** Shared revision policy; input is validated, scoped to one session and locale. */
+export function reconcileSpeech(
+  segments: SpeechSegment[],
+  event: SpeechSegment,
+): SpeechSegment[] {
+  const finals = segments.filter(
+    (segment) => segment.source === event.source && segment.type === 'final',
+  );
+  if (
+    finals.some(
+      (segment) =>
+        segment.segmentId === event.segmentId ||
+        (event.type === 'partial' &&
+          revises(segment, event) &&
+          event.endMs <= segment.endMs + REVISION_TOLERANCE_MS) ||
+        (event.type === 'final' &&
+          segment.startMs === event.startMs &&
+          segment.endMs === event.endMs &&
+          normalizedText(segment.text) === normalizedText(event.text)),
+    )
+  )
+    return segments;
+  segments = segments.filter(
+    (segment) =>
+      segment.source !== event.source ||
+      segment.type !== 'partial' ||
+      !(
+        revises(segment, event) ||
+        (event.type === 'final' &&
+          event.startMs <= segment.startMs &&
+          event.endMs >= segment.endMs)
+      ),
+  );
+  return [...segments, { ...event }].sort(compareSpeech);
+}
+
 /** Receives one session/locale's validated speech in transport order. */
 export class TranscriptReconciler {
   private segments: SpeechSegment[] = [];
-  private evictedThrough: Position | null = null;
+  private evictedThrough: SpeechPosition | null = null;
 
   receive(event: SpeechSegment): void {
-    if (this.evictedThrough && compare(event, this.evictedThrough) <= 0) return;
-    const finals = this.segments.filter(
-      (segment) => segment.source === event.source && segment.type === 'final',
-    );
-    if (
-      finals.some(
-        (segment) =>
-          segment.segmentId === event.segmentId ||
-          (event.type === 'partial' &&
-            revises(segment, event) &&
-            event.endMs <= segment.endMs + REVISION_TOLERANCE_MS) ||
-          (event.type === 'final' &&
-            segment.startMs === event.startMs &&
-            segment.endMs === event.endMs &&
-            normalizedText(segment.text) === normalizedText(event.text)),
-      )
-    )
+    if (this.evictedThrough && compareSpeech(event, this.evictedThrough) <= 0)
       return;
-    this.segments = this.segments.filter(
-      (segment) =>
-        segment.source !== event.source ||
-        segment.type !== 'partial' ||
-        !(
-          revises(segment, event) ||
-          (event.type === 'final' &&
-            event.startMs <= segment.startMs &&
-            event.endMs >= segment.endMs)
-        ),
-    );
-    this.segments.push({ ...event });
-    this.segments.sort(compare);
+    this.segments = reconcileSpeech(this.segments, event);
     while (this.segments.length > MAX_RETAINED_SEGMENTS) {
       const removed = this.segments.shift();
       if (removed) {
