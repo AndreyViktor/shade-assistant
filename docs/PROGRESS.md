@@ -15,6 +15,7 @@
 
 ### Entrega validada e handoff da retomada
 
+- **Retorno qualitativo do usuário:** informou que a implementação parece estar funcionando e pediu continuidade. Esse retorno registra percepção de funcionamento no app, sem contagens/percentis ou validação pt-BR+en-US; as pendências específicas da T018 permanecem abertas.
 - Implementados reconciliador puro com ordem temporal, revisão de início/ID, proteção de finais, duplicatas e agrupamento conservador de possível eco; retenção limitada a 24 originais/12 visíveis e descarte de parciais por fonte ao pausar. Preview mostra intervalos relativos e limites da heurística, sem atribuir pessoas. Política em [ADR 0015](adr/0015-temporal-transcript-reconciliation.md).
 - Arquivos: `LocalTranscript*`, novos `TranscriptReconciler*`, `LocalTranscriptPreview*`, teste `registerSessionIpc`, fixture/smoke Electron, replay de integração e comparação em `tests/manual/transcriptComparison.test.ts`; TASKS, este registro, ADR 0015 e [TEST-T018](TEST-T018.md). Swift/provider, contratos, dependências, runner e regras de aprovação não foram alterados.
 - `npm run verify` passou na revisão final: lint, Prettier, três tsconfigs, **504 testes TS passaram / 18 skipped**, **12 testes Python** e build. O novo skip é a comparação opt-in, executada separadamente; os outros 17 são gates nativos/captura previamente condicionados. Node 26.0.0 / npm 11.12.1 existentes. `git diff --check` passou.
