@@ -7,6 +7,7 @@ test('shows two DEMO cards, dismisses by keyboard and expires the remaining card
   const app = await fixture.launch();
   try {
     const page = await app.firstWindow();
+    await page.getByText('Testar a demonstração').click();
     await page.getByRole('button', { name: 'Iniciar DEMO' }).click();
     const cards = page.getByRole('region', { name: 'Sugestões DEMO' });
     await expect(cards.getByRole('article')).toHaveCount(2, { timeout: 15000 });

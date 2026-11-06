@@ -6,6 +6,7 @@ test('plays deterministic demo transcription and suggestions without credentials
   const app = await fixture.launch();
   try {
     const page = await app.firstWindow();
+    await page.getByText('Testar a demonstração').click();
     const start = page.getByRole('button', { name: 'Iniciar DEMO' });
     await expect(start).toBeEnabled();
     expect(

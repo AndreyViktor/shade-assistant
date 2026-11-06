@@ -67,8 +67,7 @@ export function SettingsPanel() {
     <section className="settings" aria-labelledby="settings-title">
       <h2 id="settings-title">Preferências</h2>
       <p>
-        Salvar não inicia captura nem autoriza envio de dados. O modo real e a
-        validação dos idiomas ainda não estão disponíveis.
+        O idioma fica salvo para a próxima sessão. Isso não inicia a captura.
       </p>
       <p role="status">{message}</p>
       {!draft || !snapshot ? (
@@ -82,89 +81,56 @@ export function SettingsPanel() {
             }}
           >
             <fieldset disabled={busy}>
-              <legend>Próxima reunião</legend>
+              <legend>Transcrição local</legend>
               <label>
-                Modo preferido
-                <select
-                  value={draft.mode}
-                  onChange={(event) => change('mode', event.target.value)}
-                >
-                  <option value="demo">DEMO — sem rede e sem chave</option>
-                  <option value="real">Real — ainda indisponível</option>
-                </select>
-              </label>
-              <label>
-                Provedor STT preferido
-                <select
-                  value={draft.sttProvider}
-                  onChange={(event) =>
-                    change('sttProvider', event.target.value)
-                  }
-                >
-                  <option value="apple-local">
-                    APPLE LOCAL (SWIFT) — integração pendente
-                  </option>
-                  <option value="mock">Mock — demonstração</option>
-                  <option value="openai-stt" disabled>
-                    OPENAI STT — exige consentimento futuro
-                  </option>
-                </select>
-              </label>
-              <label>
-                Idiomas preferidos
+                Idioma
                 <select
                   value={draft.language}
                   onChange={(event) => change('language', event.target.value)}
                 >
                   <option value="pt-BR">Português (Brasil)</option>
                   <option value="en-US">Inglês (EUA)</option>
-                  <option value="pt-BR+en-US">
-                    Português + inglês — validação pendente
-                  </option>
                 </select>
               </label>
               <button type="submit">Salvar preferências</button>
             </fieldset>
           </form>
-          <p>
-            Chave OpenAI:{' '}
-            {snapshot.credential === 'stored'
-              ? 'armazenada; validade não verificada'
-              : snapshot.credential === 'development'
-                ? 'fornecida pelo ambiente de desenvolvimento'
-                : 'não configurada'}
-            .
-          </p>
-          <p>
-            Importe um arquivo contendo somente a chave. Ela será protegida pelo
-            cofre do Mac. O arquivo original continuará no local escolhido;
-            remova-o manualmente se não precisar dele. Nenhuma chamada à API
-            será feita.
-          </p>
-          <div className="settings-actions">
-            <button
-              disabled={busy || snapshot.credential === 'development'}
-              onClick={() => {
-                void perform(() => window.meetingCopilot.importSecret());
-              }}
-            >
-              Importar chave pelo Mac
-            </button>
-            <button
-              disabled={busy || snapshot.credential !== 'stored'}
-              onClick={() => {
-                void perform(() => window.meetingCopilot.removeSecret());
-              }}
-            >
-              Remover chave armazenada
-            </button>
-          </div>
-          {snapshot.credential === 'development' && (
+          <details className="advanced-settings">
+            <summary>Chave OpenAI (não usada na transcrição local)</summary>
             <p>
-              Para remover a chave de desenvolvimento, encerre o app e retire
-              OPENAI_API_KEY do ambiente.
+              Estado:{' '}
+              {snapshot.credential === 'stored'
+                ? 'armazenada no cofre do Mac'
+                : snapshot.credential === 'development'
+                  ? 'fornecida pelo ambiente de desenvolvimento'
+                  : 'não configurada'}
             </p>
-          )}
+            <p>O fallback de transcrição OpenAI está desativado.</p>
+            <div className="settings-actions">
+              <button
+                disabled={busy || snapshot.credential === 'development'}
+                onClick={() => {
+                  void perform(() => window.meetingCopilot.importSecret());
+                }}
+              >
+                Importar chave
+              </button>
+              <button
+                disabled={busy || snapshot.credential !== 'stored'}
+                onClick={() => {
+                  void perform(() => window.meetingCopilot.removeSecret());
+                }}
+              >
+                Remover chave
+              </button>
+            </div>
+            {snapshot.credential === 'development' && (
+              <p>
+                Para remover a chave de desenvolvimento, encerre o app e retire
+                OPENAI_API_KEY do ambiente.
+              </p>
+            )}
+          </details>
         </>
       )}
     </section>

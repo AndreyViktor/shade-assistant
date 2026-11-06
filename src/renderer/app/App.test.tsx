@@ -4,12 +4,24 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { APP_STATUS, ipcFailure } from '../../contracts/ipc/appStatus';
 import { App } from './App';
 
-describe('App scaffold', () => {
+describe('App shell', () => {
   const getStatus = vi.fn();
   beforeEach(() => {
     getStatus.mockResolvedValue({ version: 1, ok: true, status: APP_STATUS });
     vi.stubGlobal('meetingCopilot', {
       getStatus,
+      getSettings: vi.fn().mockResolvedValue({
+        version: 1,
+        ok: true,
+        settings: {
+          preferences: {
+            mode: 'real',
+            sttProvider: 'apple-local',
+            language: 'pt-BR',
+          },
+          credential: 'missing',
+        },
+      }),
       session: vi.fn().mockResolvedValue({
         version: 2,
         ok: true,
@@ -24,35 +36,28 @@ describe('App scaffold', () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  it('identifies the fixed demo and the unavailable real meeting flow', async () => {
+  it('opens on the local transcription action with DEMO secondary', async () => {
     render(<App />);
-    await screen.findByText('Inativa');
     expect(
       screen.getByRole('heading', { name: 'Meeting Copilot', level: 1 }),
     ).toBeVisible();
-    expect(screen.getByLabelText('Modo demonstração')).toHaveTextContent(
-      'DEMO',
-    );
     expect(
-      screen.getByText(/a demonstração usa um roteiro fixo/i),
+      await screen.findByRole('button', { name: 'Iniciar transcrição local' }),
     ).toBeVisible();
+    expect(screen.getByText(/O áudio permanece neste Mac/)).toBeVisible();
+    expect(screen.getByText('Testar a demonstração')).toBeInTheDocument();
+    expect(screen.queryByText('Seu painel de reunião')).not.toBeInTheDocument();
   });
 
-  it('shows inactive capture and offers only explicit demo start', async () => {
-    render(<App />);
-    expect(await screen.findByText('Inativa')).toBeVisible();
-    expect(screen.getByText('Desativada')).toBeVisible();
-    expect(screen.getByText('Nenhum')).toBeVisible();
-    expect(
-      screen.getByRole('button', { name: 'Iniciar DEMO' }),
-    ).toBeInTheDocument();
-  });
-
-  it('does not claim a verified status while waiting for main', () => {
+  it('keeps the shell responsive while status is pending', () => {
     getStatus.mockReturnValue(new Promise(() => {}));
     render(<App />);
-    expect(screen.getAllByText('Verificando…')).toHaveLength(3);
-    expect(screen.queryByText('Inativa')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Meeting Copilot', level: 1 }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: 'Iniciar transcrição local' }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows a safe accessible error when the bridge fails', async () => {
@@ -61,12 +66,13 @@ describe('App scaffold', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Não foi possível verificar',
     );
-    expect(screen.getAllByText('Indisponível')).toHaveLength(3);
   });
 
   it('handles an absent bridge without exposing internal errors', async () => {
     vi.stubGlobal('meetingCopilot', undefined);
     render(<App />);
-    expect(await screen.findByRole('alert')).toHaveTextContent('Reabra o app');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Não foi possível verificar',
+    );
   });
 });

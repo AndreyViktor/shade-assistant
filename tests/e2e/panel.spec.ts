@@ -8,7 +8,9 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
   const app = await fixture.launch();
   try {
     const page = await app.firstWindow();
-    await expect(page.getByText('Inativa', { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Iniciar transcrição local' }),
+    ).toBeVisible();
     const nativeWindow = await app.browserWindow(page);
     expect(
       await nativeWindow.evaluate((win: BrowserWindow) => ({
@@ -30,11 +32,13 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
       name: 'Preferências',
       exact: true,
     });
-    await page.getByRole('button', { name: 'Iniciar DEMO' }).focus();
+    await page
+      .getByRole('button', { name: 'Iniciar transcrição local' })
+      .focus();
     await page.keyboard.press('Tab');
-    await expect(page.getByRole('button', { name: 'Parar' })).toBeFocused();
+    await expect(page.locator('.secondary-mode summary')).toBeFocused();
     await page.keyboard.press('Tab');
-    await expect(page.locator('summary')).toBeFocused();
+    await expect(page.locator('.privacy-details summary')).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(toggle).toBeFocused();
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
@@ -45,12 +49,16 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
     ).toBe('solid');
     await page.keyboard.press('Enter');
     await page.keyboard.press('Tab');
-    await expect(page.getByLabel('Modo preferido')).toBeFocused();
+    await expect(
+      page.locator('#panel-settings').getByLabel('Idioma'),
+    ).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(toggle).toBeFocused();
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
     await page.keyboard.press('Space');
-    await expect(page.getByLabel('Modo preferido')).toBeVisible();
+    await expect(
+      page.locator('#panel-settings').getByLabel('Idioma'),
+    ).toBeVisible();
     await page.getByRole('button', { name: 'Voltar ao painel' }).click();
     await expect(toggle).toBeFocused();
     await page.screenshot({ path: 'test-results/panel.png' });
@@ -155,7 +163,7 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
         reopened.getByRole('heading', { name: 'Meeting Copilot', exact: true }),
       ).toBeVisible();
       await expect(
-        reopened.getByText('Inativa', { exact: true }),
+        reopened.getByRole('button', { name: 'Iniciar transcrição local' }),
       ).toBeVisible();
       expect(app.windows()).toHaveLength(1);
     }

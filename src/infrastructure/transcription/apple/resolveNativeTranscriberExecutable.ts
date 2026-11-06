@@ -28,13 +28,22 @@ export async function resolveNativeTranscriberExecutable(
     : environment.appPath;
   if (!isAbsolute(root)) throw new NativeTranscriberUnavailableError();
   const candidate = environment.isPackaged
-    ? join(root, 'native', 'MeetingCopilotTranscriber')
+    ? join(
+        root,
+        'native',
+        'MeetingCopilotTranscriber.app',
+        'Contents',
+        'MacOS',
+        'MeetingCopilotTranscriber',
+      )
     : join(
         root,
         'native',
         'macos',
         '.build',
-        'release',
+        'MeetingCopilotTranscriber.app',
+        'Contents',
+        'MacOS',
         'MeetingCopilotTranscriber',
       );
 
