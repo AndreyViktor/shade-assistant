@@ -3,6 +3,13 @@
 **Atualização:** 2026-11-06. **Marco:** M2 — transcrição Swift no overlay.
 **Tarefas concluídas:** T001–T015 e T017. T016 permanece `DEFERRED`.
 
+## Motor — planejamento obrigatório antes de cada tarefa — 2026-11-06
+
+- Alteração solicitada pelo usuário antes do lote T018/T020/T021. Plano desta manutenção: atualizar o prompt gerado, sincronizar modelo manual/workflow, cobrir a exigência nas duas sessões do teste do runner e executar os gates.
+- Toda tarefa agora deve registrar em `docs/PROGRESS.md`, antes de alterar código/testes, um plano com objetivo/aceite, etapas, arquivos/módulos, testes/gates e bloqueios. O plano deve acompanhar mudanças de escopo, sem exigir aprovação adicional para trabalho já autorizado.
+- Teste do runner confere a instrução e sua ordem nos prompts enviados a duas sessões independentes. Trata-se de exigência no prompt; o motor não audita automaticamente o cumprimento pelo agente. Seleção de tarefas, sandbox, aprovações e gates de conclusão permanecem iguais.
+- Validação: `--dry-run` identificou T018 sem iniciá-la; `git diff --check` passou. `npm run verify` passou: lint, Prettier, tipos, 477 testes TS (17 skipped), 12 testes do runner e build. Sem mudança de runtime Electron/Swift; smokes e gates nativos não foram repetidos. Lote ainda não iniciado neste registro.
+
 ## T017 — transcrição viva no overlay — DONE — 2026-11-06
 
 - Sessão dedicada à T017, iniciada em `main`, HEAD `fc57d88`, árvore limpa. Dependências T007/T012/T014/T015 conferidas; nenhuma tarefa posterior iniciada.
