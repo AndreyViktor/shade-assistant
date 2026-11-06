@@ -1,11 +1,17 @@
-import { nativeHelperFixture } from './nativeHelperFixture';
+import {
+  nativeHelperFixture,
+  reconciliationHelperFixture,
+} from './nativeHelperFixture';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { _electron as electron } from '@playwright/test';
 
 export async function createTestApp(
-  options: { denyNetwork?: boolean; syntheticNative?: boolean } = {},
+  options: {
+    denyNetwork?: boolean;
+    syntheticNative?: boolean | 'reconciliation';
+  } = {},
 ) {
   const directory = await mkdtemp(join(tmpdir(), 'meeting-copilot-smoke-'));
   const profile = join(directory, 'profile');
@@ -17,7 +23,11 @@ export async function createTestApp(
       'native/macos/.build/MeetingCopilotTranscriber.app/Contents/MacOS/MeetingCopilotTranscriber',
     );
     await mkdir(dirname(helper), { recursive: true });
-    await writeFile(helper, `#!${process.execPath}\n${nativeHelperFixture}`, {
+    const fixture =
+      options.syntheticNative === 'reconciliation'
+        ? reconciliationHelperFixture
+        : nativeHelperFixture;
+    await writeFile(helper, `#!${process.execPath}\n${fixture}`, {
       mode: 0o700,
     });
     nativeBootstrap = `app.getAppPath = () => ${JSON.stringify(directory)}; require('electron').systemPreferences.askForMediaAccess = async () => true;`;

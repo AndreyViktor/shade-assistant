@@ -8,6 +8,7 @@ import {
 } from '../../contracts/ipc/session';
 import { emptyDemo } from '../../contracts/meeting/demo';
 import { AppleNativeTranscriptionError } from '../../infrastructure/transcription/apple/AppleNativeTranscriptionProvider';
+import type { SpeechSegment } from '../../contracts/meeting/localTranscript';
 import type { TranscriptionProvider } from '../../core/transcription/TranscriptionProvider';
 import { registerSessionIpc } from './registerSessionIpc';
 
@@ -269,6 +270,63 @@ describe('session main boundary and provider selection', () => {
 });
 
 describe('local transcript delivery', () => {
+  it('delivers time-ordered reconciled speech through the session IPC response', async () => {
+    const { call } = setup();
+    await call(appleStart);
+    const start = startMock.mock.calls.at(-1);
+    if (!start) throw new Error('Missing provider start');
+    const [config, emit] = start;
+    const final: SpeechSegment = {
+      version: 1,
+      sessionId: config.sessionId,
+      source: 'system',
+      locale: config.locale,
+      seq: 1,
+      timestampMs: 5000,
+      type: 'final',
+      segmentId: 'system-final',
+      startMs: 1000,
+      endMs: 2000,
+      text: 'Precisamos revisar o plano de entrega.',
+    };
+    emit({
+      ...final,
+      source: 'mic',
+      type: 'partial',
+      segmentId: 'draft',
+      startMs: 1100,
+    });
+    emit({ ...final, source: 'mic', seq: 2, segmentId: 'mic-final' });
+    emit(final);
+    emit({
+      ...final,
+      source: 'mic',
+      seq: 3,
+      type: 'partial',
+      segmentId: 'pause-draft',
+      startMs: 3000,
+      endMs: 4000,
+    });
+    const result = await read(call);
+    expect(
+      result.ok && result.local?.segments.map((segment) => segment.segmentId),
+    ).toEqual(['system-final', 'pause-draft']);
+    emit({
+      version: 1,
+      sessionId: config.sessionId,
+      source: 'mic',
+      locale: config.locale,
+      seq: 10,
+      timestampMs: 11_000,
+      type: 'status',
+      state: 'paused',
+    });
+    const paused = await read(call);
+    expect(
+      paused.ok && paused.local?.segments.map((segment) => segment.segmentId),
+    ).toEqual(['system-final']);
+  });
+
   it('delivers both sources, ignores paused/late speech and retains only a safe native error on failure', async () => {
     const { call } = setup();
     await call(appleStart);
