@@ -1,9 +1,9 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
 **Atualização:** 2026-11-06. **Marco:** M2 — transcrição Swift no overlay.
-**Implementação concluída:** T001–T015. T016 permanece `DEFERRED`.
+**Tarefas concluídas:** T001–T015 e T017. T016 permanece `DEFERRED`.
 
-## T017 — transcrição viva no overlay — BLOCKED — 2026-11-06
+## T017 — transcrição viva no overlay — DONE — 2026-11-06
 
 - Sessão dedicada à T017, iniciada em `main`, HEAD `fc57d88`, árvore limpa. Dependências T007/T012/T014/T015 conferidas; nenhuma tarefa posterior iniciada.
 - Plano: (1) ligar eventos validados do helper a uma janela limitada no main; (2) versionar IPC e exibir fonte/idioma/parcial/final/estado/erro no React; (3) cobrir contratos, retenção, pausa/stop/eventos atrasados e e2e sintético; (4) executar gates e ensaio Mac real; (5) registrar evidências e commit local.
@@ -13,9 +13,9 @@
 - Primeiro smoke dentro da sandbox não conseguiu abrir Electron; repetido com acesso ao desktop aprovado e passou. Primeiro gate completo detectou rejeição assíncrona no carregamento quando a ponte não existe: corrigida a captura dessa falha e a suíte passou. Nenhuma regra suprimida. Swift, dependências e lockfile não mudaram; gates nativos não foram repetidos.
 - Arquivos: contratos IPC/localTranscript, core LocalTranscript/TranscriptionProvider, provider Apple, handler de sessão, preload, hook/preview/controles/estilo React, testes associados e e2e/fixture sintético; README, ADR 0014, TEST-T017, TASKS e este handoff.
 - **Evidência manual relatada pelo usuário:** texto falado exibido no app, distinguindo microfone de áudio do sistema e resultados parciais de finais. Isso confirma o fluxo real de captura/transcrição até o overlay; nenhum conteúdo transcrito foi registrado.
-- **Bloqueio restante:** confirmar pausa, retomada e limpeza ao parar no ensaio real conforme [TEST-T017.md](TEST-T017.md). Essas etapas passaram no e2e sintético, mas ainda não foram confirmadas pelo usuário no teste de captura real. Solicitação complementar enviada; não registrar/transmitir falas privadas como evidência.
-- Limites: ordem de chegada e substituição básica por fonte/segmento; eco, ordenação temporal entre fontes e bilíngue continuam em T018. Não houve OpenAI, áudio gravado, concessão automática de TCC ou push. T017 não está DONE; nenhuma tarefa seguinte deve iniciar até o aceite.
-- Commit local da implementação: `4108dab` — `feat(T017): display live local transcript in overlay`. Este registro acrescenta o aceite manual parcial, sem mudança de código e sem declarar a tarefa DONE.
+- **Aceite manual concluído:** o usuário também confirmou que Pausar interrompe novas falas, Retomar volta a exibi-las e Parar limpa o texto do painel. Assim, captura real de mic/system → helper Swift → Electron/IPC → overlay e os controles previstos no ensaio estão confirmados. Nenhuma fala privada, gravação ou screenshot real foi solicitada ou registrada.
+- Limites: ordem de chegada e substituição básica por fonte/segmento; eco, ordenação temporal entre fontes e bilíngue continuam em T018. Não houve OpenAI, áudio gravado, concessão automática de TCC ou push. T017 está DONE após gates e aceite manual. Próxima tarefa elegível: T018, somente em nova sessão; nenhuma tarefa posterior foi iniciada.
+- Commits locais: implementação `4108dab` — `feat(T017): display live local transcript in overlay`; evidência manual parcial `d702f47`; aceite final registrado por `docs(T017): complete manual acceptance`. Nesta atualização houve apenas documentação, verificada com Prettier e `git diff --check`; os gates de código acima não foram repetidos sem mudança de implementação.
 
 ## T014 — ponte do helper Swift ao Electron main — DONE — 2026-11-05
 
