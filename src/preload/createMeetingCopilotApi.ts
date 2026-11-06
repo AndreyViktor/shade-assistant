@@ -76,11 +76,18 @@ export function createMeetingCopilotApi(invoke: Invoke): MeetingCopilotApi {
       const request = args.length === 1 ? parseSessionRequest(args[0]) : null;
       if (!request)
         return {
-          version: 2 as const,
+          version: 3 as const,
           ok: false as const,
           code: 'INVALID_REQUEST' as const,
         };
-      return parseSessionResult(await call(SESSION_CHANNEL, request, 5000));
+      // Starting may wait for a human TCC decision. Other commands include helper cleanup.
+      const timeout =
+        request.action === 'start'
+          ? 300000
+          : request.action === 'read' || request.action === 'dismiss-suggestion'
+            ? 5000
+            : 15000;
+      return parseSessionResult(await call(SESSION_CHANNEL, request, timeout));
     },
     async getStatus(...args: unknown[]) {
       if (args.length !== 0) return ipcFailure('INVALID_REQUEST');

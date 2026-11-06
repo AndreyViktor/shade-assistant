@@ -13,6 +13,8 @@ export interface TranscriptionProvider {
     config: TranscriptionConfig,
     onEvent: (event: TranscriptionEvent) => void,
     signal: AbortSignal,
+    /** Payload-free notification for a transport/process failure after start resolves. */
+    onFailure?: () => void,
   ): Promise<void>;
   /** Resolves only after capture stops; no transcript callbacks until resume. */
   pause(): Promise<void>;

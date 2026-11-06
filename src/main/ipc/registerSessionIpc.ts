@@ -1,3 +1,4 @@
+import { LocalTranscript } from '../../core/transcription/LocalTranscript';
 import { randomUUID } from 'node:crypto';
 import { ipcMain } from 'electron';
 import type { BrowserWindow } from 'electron';
@@ -26,17 +27,21 @@ export function registerSessionIpc(
 ): void {
   const session = new MeetingSession();
   const demo = new DemoPlayback(session);
+  const local = new LocalTranscript();
+  let activeSessionId: string | undefined;
   let provider: TranscriptionProvider | undefined;
   let startingCapture = false;
+  let lifecycle = 0;
 
   const success = (): SessionResult => ({
-    version: 2,
+    version: 3,
     ok: true,
     session: session.snapshot(),
     demo: demo.snapshot(),
+    local: local.snapshot(),
   });
   const failure = (code: IpcErrorCode): SessionResult => ({
-    version: 2,
+    version: 3,
     ok: false,
     code,
   });
@@ -48,6 +53,9 @@ export function registerSessionIpc(
   }
 
   async function stopSession(): Promise<void> {
+    lifecycle += 1;
+    activeSessionId = undefined;
+    local.clear();
     session.stop();
     demo.stop();
     await stopProvider();
@@ -56,14 +64,22 @@ export function registerSessionIpc(
   function receiveNativeEvent(
     event: Parameters<Parameters<TranscriptionProvider['start']>[1]>[0],
   ): void {
-    if (
-      event.type !== 'error' &&
-      !(event.type === 'stopped' && event.reason === 'error')
-    )
-      return;
-    // During startup, let provider.start reject with the native allowlisted code.
-    // Stopping here aborts the same promise and masks permission/assets failures.
+    if (event.sessionId !== activeSessionId) return;
+    if (!local.receive(event, session.permits('capture'))) return;
+    const failed =
+      event.type === 'error' ||
+      (event.type === 'stopped' && event.reason === 'error');
+    const snapshot = local.snapshot();
+    const ended =
+      snapshot &&
+      snapshot.channels.length === snapshot.config.sources.length &&
+      snapshot.channels.every((channel) => channel.type === 'stopped');
+    if (!failed && !ended) return;
+    // Preserve the startup failure code returned by provider.start().
     if (startingCapture) return;
+    activeSessionId = undefined;
+    if (failed) local.fail();
+    else local.discardSpeech();
     session.stop();
     demo.stop();
     void stopProvider().catch(() => undefined);
@@ -99,16 +115,24 @@ export function registerSessionIpc(
           }
         }
         if (!session.start(options)) return failure('INVALID_REQUEST');
+        local.clear();
+        activeSessionId = undefined;
 
         if (options.mode === 'demo') {
           demo.start();
           return success();
         }
 
+        const generation = ++lifecycle;
         try {
-          provider = await dependencies.createAppleProvider();
+          const created = await dependencies.createAppleProvider();
+          if (generation !== lifecycle) {
+            await created.stop().catch(() => undefined);
+            return failure('TRANSCRIPTION_START_FAILED');
+          }
+          provider = created;
         } catch {
-          session.stop();
+          if (generation === lifecycle) session.stop();
           return failure('TRANSCRIPTION_UNAVAILABLE');
         }
         if (!isAuthorizedRenderer(window, rendererUrl, event)) {
@@ -116,22 +140,31 @@ export function registerSessionIpc(
           return failure('FORBIDDEN');
         }
 
+        const config = {
+          sessionId: randomUUID().replaceAll('-', ''),
+          sources: options.sources,
+          locale: options.locale,
+        };
+        activeSessionId = config.sessionId;
+        local.start(config);
         startingCapture = true;
         try {
           await session.run(
             'capture',
             (signal) =>
-              provider?.start(
-                {
-                  sessionId: randomUUID().replaceAll('-', ''),
-                  sources: options.sources,
-                  locale: options.locale,
-                },
-                receiveNativeEvent,
-                signal,
-              ) ?? Promise.reject(new AppleNativeTranscriptionError('aborted')),
+              provider?.start(config, receiveNativeEvent, signal, () => {
+                if (activeSessionId !== config.sessionId) return;
+                activeSessionId = undefined;
+                local.fail();
+                session.stop();
+                void stopProvider().catch(() => undefined);
+              }) ??
+              Promise.reject(new AppleNativeTranscriptionError('aborted')),
           );
-          if (session.snapshot().phase !== 'running')
+          if (
+            generation !== lifecycle ||
+            session.snapshot().phase !== 'running'
+          )
             return failure('TRANSCRIPTION_START_FAILED');
           if (!isAuthorizedRenderer(window, rendererUrl, event)) {
             await stopSession().catch(() => undefined);
@@ -139,12 +172,16 @@ export function registerSessionIpc(
           }
           return success();
         } catch (error) {
+          if (generation !== lifecycle)
+            return failure('TRANSCRIPTION_START_FAILED');
+          activeSessionId = undefined;
+          local.clear();
           session.stop();
           demo.stop();
           await stopProvider().catch(() => undefined);
           return failure(mapTranscriptionFailure(error));
         } finally {
-          startingCapture = false;
+          if (generation === lifecycle) startingCapture = false;
         }
       }
 

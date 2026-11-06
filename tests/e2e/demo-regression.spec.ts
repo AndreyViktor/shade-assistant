@@ -15,7 +15,7 @@ test('repeats start → speech → card → pause → stop without late events o
     const cards = page.getByRole('region', { name: 'Sugestões DEMO' });
     const read = () =>
       page.evaluate(() =>
-        window.meetingCopilot.session({ version: 2, action: 'read' }),
+        window.meetingCopilot.session({ version: 3, action: 'read' }),
       );
     await expect(start).toBeEnabled();
     expect(
