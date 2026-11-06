@@ -1,9 +1,9 @@
 # Progresso e handoff — Meeting Copilot V0.7
 
 **Atualização:** 2026-11-06. **Marco:** M2 — transcrição Swift no overlay.
-**Tarefas concluídas:** T001–T015 e T017. T016 permanece `DEFERRED`.
+**Tarefas concluídas:** T001–T015 e T017–T018. T016 permanece `DEFERRED`.
 
-## T018 — reconciliação temporal — BLOCKED (aceite real/bilíngue) — 2026-11-06
+## T018 — reconciliação temporal — DONE (aceite explícito do usuário) — 2026-11-06
 
 - Sessão exclusiva, `main`, HEAD inicial `0d360cc`, árvore limpa. Dependências T012/T017 DONE conferidas no código e Git; T016 continua DEFERRED.
 - **Objetivo/aceite:** ordenar mic/system no relógio comum da sessão; reconciliar revisões parcial/final, duplicações e possível eco sem atribuir pessoas às fontes; testar duas fontes/idiomas e comparar p95/sobreposição, distinguindo replay sintético de captura real.
@@ -22,8 +22,8 @@
 - `npm run test:smoke`: sandbox impediu lançar Electron; execução com acesso ao desktop revisado passou **10/11**, incluindo os dois fluxos de transcrição. Única falha: foco nativo após restaurar o painel (`panel.spec.ts:117`). Repetição isolada `npx playwright test tests/e2e/panel.spec.ts` passou **1/1** sem alteração no código/teste do painel. Registrar a instabilidade de foco, não declarar execução integral 11/11. Inspeção do screenshot sintético confirmou intervalos/fonte legíveis; artefatos ignorados podem ser sobrescritos pela execução seguinte.
 - `MEETING_COPILOT_COMPARE_TRANSCRIPT=1 npm test -- tests/manual/transcriptComparison.test.ts --silent=false --reporter=verbose` passou. Em 10.000 observações por política/cenário, p95 de CPU T017→T018: pt-BR normal **0,000667→0,003000 ms**, en-US **0,000500→0,002000 ms**; strings de 4.096 unidades UTF-16: T018 **0,222333/0,218334 ms**. Replay normal: inversões **8→0**, parciais **3→1**, pares de finais sobrepostos **4→2**, preservando falas distintas, respostas curtas e repetição posterior. Método/valores completos em TEST-T018; não são p95 de reconhecimento ou eco acústico.
 - Falha intermediária de lint por import da fixture externa no teste de main foi corrigida com dados locais ao teste, mantendo a regra de fronteiras. Nenhum erro foi suprimido. Gates Swift não repetidos porque não houve alteração nativa/JSONL; nenhuma captura, OpenAI, download de assets ou concessão de TCC foi executada.
-- **Bloqueio de aceite:** faltam comparação real de p95/sobreposição mic+system e validação bilíngue. Contrato/helper atuais aceitam um locale por sessão; testar pt-BR/en-US isolados e texto misto não implementa nem comprova pt-BR+en-US. T018 não está DONE. Para desbloquear: ensaio humano do roteiro TEST-T018 e definição/implementação/validação da estratégia bilíngue, ou decisão explícita do usuário ajustando esse requisito. O aceite real da T017 não comprova esta nova heurística.
-- **Commit/handoff:** salvar esta fatia validada com título `feat(T018): reconcile local transcript timing and possible echoes`, mantendo BLOCKED. Após o commit local, encerrar. Operador deve conferir estado/gates/commit e triar o bloqueio antes de voltar ao runner. T020/T021 não foram iniciadas; T016 e Windows permanecem DEFERRED. Sem push.
+- **Aceite final — D016:** após o relato qualitativo e a explicação das pendências, o usuário instruiu expressamente “considere a t18 validada”. T018 passa a DONE pelo aceite da entrega atual e dos gates registrados. Medições reais de p95/sobreposição e implementação/validação simultânea pt-BR+en-US continuam abertas em O002/O003, sem serem tratadas como testes realizados ou suporte existente.
+- **Commit/handoff:** implementação `05e9100`, retorno qualitativo `6f3b270`, aceite registrado por `docs(T018): record explicit user acceptance`. Somente documentação alterada neste aceite; Prettier e `git diff --check` conferidos, sem repetir gates de runtime. Próxima elegível T020, seguida de T021; iniciar cada uma em nova sessão pelo motor já autorizado. T016 e Windows permanecem DEFERRED; sem push.
 
 ## Motor — planejamento obrigatório antes de cada tarefa — 2026-11-06
 
