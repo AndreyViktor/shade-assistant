@@ -32,6 +32,18 @@ function channelLabel(event: ChannelEvent | undefined): string {
   }
 }
 
+function sessionTime(ms: number): string {
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60)
+    .toString()
+    .padStart(2, '0');
+  const remainder = (seconds % 60).toString().padStart(2, '0');
+  const milliseconds = Math.floor(ms % 1000)
+    .toString()
+    .padStart(3, '0');
+  return `${minutes}:${remainder}.${milliseconds}`;
+}
+
 export function LocalTranscriptPreview({
   transcript,
 }: {
@@ -99,6 +111,10 @@ export function LocalTranscriptPreview({
               {segment.source === 'mic' ? 'Microfone' : 'Sistema'} ·{' '}
               {segment.locale} ·{' '}
               {segment.type === 'partial' ? 'Parcial' : 'Final'}
+              {' · '}
+              <span aria-label="Intervalo desde o início da sessão">
+                {sessionTime(segment.startMs)}–{sessionTime(segment.endMs)}
+              </span>
             </p>
             <p>{segment.text}</p>
           </div>
@@ -108,7 +124,10 @@ export function LocalTranscriptPreview({
         <p>Nenhuma fala exibida nesta sessão.</p>
       )}
       <p className="transcript-note">
-        Somente falas recentes. A fonte de áudio não identifica a pessoa.
+        Falas recentes em ordem de início, com tempos relativos à sessão. A
+        fonte de áudio não identifica a pessoa. Finais iguais e próximos nas
+        duas fontes podem ser agrupados como possível eco, exibindo Sistema;
+        falas simultâneas iguais também podem ser agrupadas.
       </p>
     </section>
   );

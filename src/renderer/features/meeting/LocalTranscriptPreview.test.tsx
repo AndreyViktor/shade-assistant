@@ -53,7 +53,8 @@ it('updates actual partial/final labels, exposes native errors even while paused
     await Promise.resolve();
   });
   expect(screen.getByText('Hipótese')).toBeVisible();
-  expect(screen.getByText('Microfone · pt-BR · Parcial')).toBeVisible();
+  expect(screen.getByText(/Microfone · pt-BR · Parcial/)).toBeVisible();
+  expect(screen.getByText('00:00.000–00:00.100')).toBeVisible();
   const segment = initial.local.segments[0];
   if (!segment) throw new Error('Missing segment');
   const final = {
@@ -69,7 +70,7 @@ it('updates actual partial/final labels, exposes native errors even while paused
   });
   expect(screen.getByText('<b>Fala final</b>')).toBeVisible();
   expect(screen.queryByText('Hipótese')).not.toBeInTheDocument();
-  expect(screen.getByText('Microfone · pt-BR · Final')).toBeVisible();
+  expect(screen.getByText(/Microfone · pt-BR · Final/)).toBeVisible();
   session.mockResolvedValue({
     ...final,
     session: { ...initial.session, phase: 'paused' },

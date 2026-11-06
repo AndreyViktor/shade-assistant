@@ -1,7 +1,5 @@
-import {
-  isSpeechSegment,
-  MAX_VISIBLE_SEGMENTS,
-} from '../../contracts/meeting/localTranscript';
+import { isSpeechSegment } from '../../contracts/meeting/localTranscript';
+import { TranscriptReconciler } from './TranscriptReconciler';
 import type { LocalTranscriptSnapshot } from '../../contracts/meeting/localTranscript';
 import type {
   AudioSource,
@@ -9,10 +7,11 @@ import type {
   TranscriptionEvent,
 } from '../../contracts/native/protocol';
 
-/** Small display window only. Cross-source ordering/echo reconciliation belongs to T018. */
+/** Session ownership and channel state around a bounded, reconciled display window. */
 export class LocalTranscript {
-  private value: LocalTranscriptSnapshot | null = null;
+  private value: Omit<LocalTranscriptSnapshot, 'segments'> | null = null;
   private sequences = new Map<AudioSource, number>();
+  private readonly speech = new TranscriptReconciler();
 
   start(config: TranscriptionConfig): void {
     this.clear();
@@ -20,7 +19,6 @@ export class LocalTranscript {
       failed: false,
       config: { ...config, sources: [...config.sources] },
       channels: [],
-      segments: [],
     };
   }
 
@@ -37,18 +35,10 @@ export class LocalTranscript {
     this.sequences.set(event.source, event.seq);
     if (isSpeechSegment(event)) {
       if (!acceptSpeech) return false;
-      const index = value.segments.findIndex(
-        (segment) =>
-          segment.source === event.source &&
-          segment.segmentId === event.segmentId,
-      );
-      if (index >= 0) {
-        // A finalized segment must never revert to a provisional hypothesis.
-        if (value.segments[index]?.type === 'final') return false;
-        value.segments[index] = { ...event };
-      } else value.segments.push({ ...event });
-      value.segments = value.segments.slice(-MAX_VISIBLE_SEGMENTS);
+      this.speech.receive(event);
     } else {
+      if (event.type === 'status' && event.state === 'paused')
+        this.speech.discardPartials(event.source);
       value.channels = [
         ...value.channels.filter((channel) => channel.source !== event.source),
         { ...event },
@@ -63,12 +53,13 @@ export class LocalTranscript {
   }
 
   discardSpeech(): void {
-    if (this.value) this.value.segments = [];
+    this.speech.clear();
   }
 
   clear(): void {
     this.value = null;
     this.sequences.clear();
+    this.speech.clear();
   }
 
   snapshot(): LocalTranscriptSnapshot | null {
@@ -80,7 +71,7 @@ export class LocalTranscript {
             sources: [...this.value.config.sources],
           },
           channels: this.value.channels.map((event) => ({ ...event })),
-          segments: this.value.segments.map((event) => ({ ...event })),
+          segments: this.speech.snapshot(),
         }
       : null;
   }

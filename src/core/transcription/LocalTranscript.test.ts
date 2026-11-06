@@ -43,11 +43,14 @@ describe('bounded local display window', () => {
     expect(
       window.snapshot()?.segments.map((s) => [s.source, s.type, s.text]),
     ).toEqual([
-      ['mic', 'final', 'Fala final'],
       ['system', 'final', 'Fala sintética'],
+      ['mic', 'final', 'Fala final'],
     ]);
     window.receive(speech(3, { type: 'partial', segmentId: 'same' }), true);
-    expect(window.snapshot()?.segments[0]?.type).toBe('final');
+    expect(
+      window.snapshot()?.segments.find((segment) => segment.source === 'mic')
+        ?.type,
+    ).toBe('final');
     for (let i = 4; i < 40; i++) window.receive(speech(i), true);
     expect(window.snapshot()?.segments).toHaveLength(MAX_VISIBLE_SEGMENTS);
     expect(window.snapshot()?.segments[0]?.seq).toBe(28);
@@ -87,5 +90,48 @@ describe('bounded local display window', () => {
     expect(window.snapshot()).toMatchObject({ failed: true, segments: [] });
     window.clear();
     expect(window.snapshot()).toBeNull();
+  });
+
+  it('drops only the paused source hypotheses, retains finals and resumes on the same session clock', () => {
+    const window = new LocalTranscript();
+    window.start(config);
+    window.receive(speech(1), true);
+    window.receive(
+      speech(2, { type: 'partial', startMs: 150, endMs: 200 }),
+      true,
+    );
+    window.receive(speech(1, { source: 'system', type: 'partial' }), true);
+    const status: TranscriptionEvent = {
+      version: 1,
+      sessionId: config.sessionId,
+      source: 'mic',
+      locale: config.locale,
+      seq: 3,
+      timestampMs: 400,
+      type: 'status',
+      state: 'paused',
+    };
+    window.receive(status, false);
+    expect(
+      window
+        .snapshot()
+        ?.segments.map((segment) => [segment.source, segment.type]),
+    ).toEqual([
+      ['mic', 'final'],
+      ['system', 'partial'],
+    ]);
+    window.receive(speech(4, { type: 'partial' }), false);
+    window.receive(
+      { ...status, seq: 5, timestampMs: 500, state: 'listening' },
+      false,
+    );
+    window.receive(speech(6, { startMs: 500, endMs: 600 }), true);
+    expect(window.snapshot()?.segments.at(-1)).toMatchObject({
+      seq: 6,
+      startMs: 500,
+      endMs: 600,
+    });
+    expect(window.receive(speech(4), true)).toBe(false);
+    expect(parseLocalTranscript(window.snapshot())).toEqual(window.snapshot());
   });
 });
