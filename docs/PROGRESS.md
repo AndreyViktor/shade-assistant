@@ -5,7 +5,7 @@
 
 ## Estado atual — 2026-11-05
 
-**T014 está `DONE` nesta sessão; T013 continua `DONE` e commitada em `ecf6f35`.** Gates automatizados passaram e o usuário confirmou captura pt-BR no provider Electron→helper Swift, com resultados finais de microfone e áudio do sistema. Nenhuma tarefa posterior foi iniciada.
+**T014 está `DONE` nesta sessão; T013 continua `DONE` e commitada em `ecf6f35`.** Gates automatizados passaram e o usuário confirmou captura pt-BR no provider Electron→helper Swift, com resultados finais de microfone e áudio do sistema. Próxima elegível: T015. T016 foi adiada por decisão do usuário e marcada `DEFERRED`; nenhuma tarefa posterior foi iniciada.
 
 ## T014 — ponte do helper Swift ao Electron main — DONE — 2026-11-05
 
@@ -18,7 +18,7 @@
 - Causa de integração identificada: a POC reserva o locale via `AssetInventory.reserve`, mas o helper consultava assets sem fazer sua reserva de locale por app. O helper agora reserva pt-BR/en-US solicitado antes da checagem; não baixa assets durante captura. `npm run prepare:native-assets` continua sendo a ação explícita que pode acessar a rede/baixar modelos Apple.
 - Após a correção da reserva, `PATH=/opt/homebrew/bin:$PATH npm run verify` passou (448 testes TS, 17 skipped, 12 testes runner e build); `npm run verify:swift` passou (47 testes Swift e builds debug/release) e `npm run test:helper` passou (16 testes). `sh -n` nos scripts e `git diff --check` passaram.
 - Validação final relatada pelo usuário: `npm run prepare:native-assets` terminou com `ASSETS_PREPARED_NO_CAPTURE_pt-BR`; depois `npm run test:native-capture` mostrou `CAPTURE_ACTIVE_SPEAK_SYNTHETIC_PHRASES_NOW` e passou em 48,66 s. As asserções confirmaram pelo menos um resultado final em cada fonte (mic e system); o harness não imprime texto nem contagens, e nenhum texto de transcrição foi compartilhado.
-- Limites/handoff: provider e factory estão no Electron main, mas ainda não conectados ao fluxo IPC/sessão; consentimento e seleção pertencem à T015, overlay à T017. Próxima tarefa elegível T015, em sessão Codex nova. Nenhuma tarefa posterior foi iniciada.
+- Limites/handoff: provider e factory estão no Electron main, mas ainda não conectados ao fluxo IPC/sessão; consentimento e seleção pertencem à T015, overlay à T017. Próxima tarefa elegível T015, em sessão Codex nova. T016 permanece `DEFERRED` por decisão do usuário; tarefas dependentes dela aguardam reativação. Nenhuma tarefa posterior foi iniciada.
 
 ## T013 — helper Swift próprio — DONE — 2026-11-05
 
