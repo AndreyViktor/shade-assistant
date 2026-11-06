@@ -6,6 +6,7 @@ test('offline guards reject and count deliberate transport probes before any con
   const app = await fixture.launch();
   try {
     const page = await app.firstWindow();
+    await page.getByText('Testar a demonstração').click();
     await expect(
       page.getByRole('button', { name: 'Iniciar DEMO' }),
     ).toBeEnabled();

@@ -19,6 +19,8 @@ npm run dev
 
 O comando `npm ci --ignore-scripts` evita lifecycle scripts das dependências; o binário Electron é instalado explicitamente pelo comando seguinte. `npm run dev` inicia o servidor local em `127.0.0.1:5173`. Encerre com Ctrl+C.
 
+No macOS, `npm run dev` primeiro compila o helper em `MeetingCopilotTranscriber.app`. O main pede acesso ao microfone quando o usuário inicia Apple Local com consentimento marcado. **Em desenvolvimento iniciado no Terminal/IDE, o macOS pode atribuir o acesso de áudio do sistema ao Terminal/IDE que iniciou o Electron.** Nesse caso, habilite esse app em Ajustes do Sistema → Privacidade e Segurança → Gravação de Tela e Áudio do Sistema; feche e reabra o Terminal/IDE e o Meeting Copilot. O helper nunca concede nem contorna permissões. Um app empacotado deverá usar bundle ID e descrições TCC próprios antes da distribuição.
+
 Para executar o build:
 
 ```bash

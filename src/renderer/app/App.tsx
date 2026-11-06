@@ -21,52 +21,23 @@ export function App() {
       active = false;
     };
   }, []);
-  const unavailable = result ? 'Indisponível' : 'Verificando…';
-
   return (
     <main className="app-shell">
       <header>
-        <p className="eyebrow">ASSISTENTE DE REUNIÕES</p>
+        <p className="eyebrow">TRANSCRIÇÃO LOCAL</p>
         <h1>Meeting Copilot</h1>
-        <p className="mode" aria-label="Modo demonstração">
-          DEMO
+        <p className="app-intro">
+          Escolha as fontes e inicie quando estiver pronto. O áudio permanece
+          neste Mac.
         </p>
       </header>
       {result?.ok && <SessionControls />}
-      <section aria-labelledby="welcome-title" className="welcome">
-        <h2 id="welcome-title">Seu painel de reunião</h2>
-        <p>
-          A demonstração usa um roteiro fixo. Transcrições e sugestões reais
-          ainda não estão disponíveis.
+      {result && !result.ok && (
+        <p role="alert">
+          Não foi possível verificar o estado do app. Reabra-o.
         </p>
-        {result && !result.ok && (
-          <p role="alert">
-            Não foi possível verificar o estado do aplicativo. Reabra o app.
-          </p>
-        )}
-        <dl className="status-grid">
-          <div>
-            <dt>Captura</dt>
-            <dd>{result?.ok ? 'Inativa' : unavailable}</dd>
-          </div>
-          <div>
-            <dt>Conexão com IA</dt>
-            <dd>{result?.ok ? 'Desativada' : unavailable}</dd>
-          </div>
-          <div>
-            <dt>Dados enviados</dt>
-            <dd>{result?.ok ? 'Nenhum' : unavailable}</dd>
-          </div>
-        </dl>
-      </section>
+      )}
       <SettingsDisclosure />
-      <footer>
-        <p>Nenhum áudio é capturado. Nenhuma chave de API é necessária.</p>
-        <p>
-          Para minimizar ou mostrar o painel, use o menu Janela e seus atalhos.
-          Você também pode reabrir pelo Dock.
-        </p>
-      </footer>
     </main>
   );
 }

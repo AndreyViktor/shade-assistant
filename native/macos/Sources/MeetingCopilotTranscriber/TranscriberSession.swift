@@ -19,7 +19,7 @@ final class TranscriberSession {
   private var generation = 0
   private var origin: Int64 = 0
   private let factory: Factory
-  private let preflight: ([AudioSource]) throws -> Void
+  private let preflight: @MainActor ([AudioSource]) async throws -> Void
   private let cancelled: () -> Bool
   private let now: () -> Int64
   private let write: (NativeEvent) throws -> Void
@@ -27,7 +27,7 @@ final class TranscriberSession {
 
   init(
     factory: @escaping Factory,
-    preflight: @escaping ([AudioSource]) throws -> Void,
+    preflight: @escaping @MainActor ([AudioSource]) async throws -> Void,
     cancelled: @escaping () -> Bool,
     now: @escaping () -> Int64 = { Int64(DispatchTime.now().uptimeNanoseconds / 1_000_000) },
     write: @escaping (NativeEvent) throws -> Void,
@@ -72,7 +72,7 @@ final class TranscriberSession {
     state = .starting
     generation += 1
     let generation = self.generation
-    try preflight(sources)
+    try await preflight(sources)
     for source in sources {
       if cancelled() { return }
       let channel = try factory(source, locale) { [weak self] result in

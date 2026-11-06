@@ -1,11 +1,29 @@
 import { describe, expect, it, vi } from 'vitest';
 import { MeetingSession } from './MeetingSession';
-import type { SessionMode } from '../../contracts/meeting/session';
+import type {
+  SessionMode,
+  SessionStart,
+} from '../../contracts/meeting/session';
+import type { AudioSource } from '../../contracts/native/protocol';
 
-const consent = { capture: true, context: true, remoteAudio: true };
+const appleConsent = { capture: true, context: true, remoteAudio: false };
+const openAiConsent = { capture: true, context: true, remoteAudio: true };
 function started(mode: SessionMode = 'apple-local') {
   const session = new MeetingSession();
-  expect(session.start({ mode, consent })).toBe(true);
+  let options: SessionStart;
+  if (mode === 'apple-local') {
+    options = {
+      mode,
+      consent: appleConsent,
+      locale: 'pt-BR',
+      sources: ['mic', 'system'] as AudioSource[],
+    };
+  } else if (mode === 'demo') {
+    options = { mode, consent: appleConsent };
+  } else {
+    options = { mode, consent: openAiConsent };
+  }
+  expect(session.start(options)).toBe(true);
   return session;
 }
 
@@ -18,20 +36,29 @@ describe('session lifecycle and consent', () => {
     expect(
       session.start({
         mode: 'apple-local',
-        consent: { ...consent, capture: false },
+        consent: { ...appleConsent, capture: false },
+        locale: 'pt-BR',
+        sources: ['mic'],
       }),
     ).toBe(false);
     expect(
       session.start({
         mode: 'openai-stt',
-        consent: { ...consent, remoteAudio: false },
+        consent: { ...openAiConsent, remoteAudio: false },
       }),
     ).toBe(false);
-    expect(session.start({ mode: 'apple-local', consent })).toBe(true);
-    expect(session.start({ mode: 'demo', consent })).toBe(false);
+    expect(
+      session.start({
+        mode: 'apple-local',
+        consent: appleConsent,
+        locale: 'pt-BR',
+        sources: ['mic', 'system'],
+      }),
+    ).toBe(true);
+    expect(session.start({ mode: 'demo', consent: appleConsent })).toBe(false);
     expect(session.pause()).toBe(true);
     expect(session.pause()).toBe(false);
-    expect(session.start({ mode: 'demo', consent })).toBe(false);
+    expect(session.start({ mode: 'demo', consent: appleConsent })).toBe(false);
     expect(session.resume()).toBe(true);
     expect(session.resume()).toBe(false);
     session.stop();
@@ -41,7 +68,7 @@ describe('session lifecycle and consent', () => {
       phase: 'stopped',
       consent: { capture: false, context: false, remoteAudio: false },
     });
-    expect(session.start({ mode: 'demo', consent })).toBe(true);
+    expect(session.start({ mode: 'demo', consent: appleConsent })).toBe(true);
   });
 
   it('separates audio, context and demo permissions without sharing mutable consent', () => {
@@ -62,7 +89,9 @@ describe('session lifecycle and consent', () => {
     const noText = new MeetingSession();
     const options = {
       mode: 'apple-local' as const,
-      consent: { ...consent, context: false },
+      consent: { ...appleConsent, context: false },
+      locale: 'pt-BR' as const,
+      sources: ['mic'] as AudioSource[],
     };
     noText.start(options);
     options.consent.context = true;
@@ -93,7 +122,7 @@ describe('session lifecycle and consent', () => {
         expect(await session.run(kind, send)).toBeUndefined();
       expect(send).not.toHaveBeenCalled();
       if (action === 'pause') session.resume();
-      else session.start({ mode: 'openai-stt', consent });
+      else session.start({ mode: 'openai-stt', consent: openAiConsent });
       finish('stale');
       expect(await result).toBeUndefined();
       expect(await session.run('context', send)).toBe('sent');

@@ -240,17 +240,20 @@ describe('session controls', () => {
       screen.queryByRole('region', { name: 'Roteiro DEMO' }),
     ).not.toBeInTheDocument();
   });
-  it('waits for manual start, confirms state from main and exposes separate data notices', async () => {
+  it('keeps DEMO secondary and waits for its explicit start action', async () => {
     const session = vi.fn().mockResolvedValue(reply('idle'));
     vi.stubGlobal('meetingCopilot', { session });
     render(<SessionControls />);
-    await screen.findByText('Não iniciada');
+    await screen.findByText('Pronta para iniciar');
     expect(session).toHaveBeenCalledExactlyOnceWith({
       version: 2,
       action: 'read',
     });
-    expect(screen.getByRole('button', { name: 'Pausar' })).toBeDisabled();
+    expect(
+      screen.queryByRole('button', { name: 'Pausar' }),
+    ).not.toBeInTheDocument();
     session.mockResolvedValue(reply('running'));
+    fireEvent.click(screen.getByText('Testar a demonstração'));
     fireEvent.click(screen.getByRole('button', { name: 'Iniciar DEMO' }));
     await screen.findByText('Em andamento');
     expect(session).toHaveBeenLastCalledWith({
@@ -268,12 +271,58 @@ describe('session controls', () => {
     session.mockResolvedValue(reply('stopped'));
     fireEvent.click(screen.getByRole('button', { name: 'Parar' }));
     await screen.findByText('Encerrada');
-    expect(screen.getByRole('button', { name: 'Retomar' })).toBeDisabled();
-    expect(screen.getByText(/Texto de contexto só poderá/)).toBeInTheDocument();
-    expect(screen.getByText(/custos de API/)).toBeInTheDocument();
     expect(
-      screen.getByText(/prévia e confirmação de cada imagem/),
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: 'Retomar' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/A DEMO usa falas simuladas/)).toBeVisible();
+  });
+  it('shows consent at start, then sends local source and locale settings', async () => {
+    const session = vi.fn().mockResolvedValue(reply('idle'));
+    vi.stubGlobal('meetingCopilot', { session });
+    render(<SessionControls />);
+    await screen.findByText('Pronta para iniciar');
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Idioma'), {
+      target: { value: 'en-US' },
+    });
+    fireEvent.change(screen.getByLabelText('Fonte de áudio'), {
+      target: { value: 'mic' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Iniciar transcrição local' }),
+    );
+    expect(screen.getByRole('alertdialog')).toHaveTextContent(
+      'capturará microfone',
+    );
+    expect(session).toHaveBeenCalledTimes(1);
+    session.mockResolvedValue({
+      version: 2,
+      ok: true,
+      demo: emptyDemo(),
+      session: {
+        phase: 'running',
+        mode: 'apple-local',
+        consent: { capture: true, context: false, remoteAudio: false },
+      },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Autorizar e iniciar' }),
+    );
+    await screen.findByText('Em andamento');
+    expect(session).toHaveBeenLastCalledWith({
+      version: 2,
+      action: 'start',
+      options: {
+        mode: 'apple-local',
+        consent: { capture: true, context: false, remoteAudio: false },
+        locale: 'en-US',
+        sources: ['mic'],
+      },
+    });
+    expect(screen.getByText(/áudio é processado neste Mac/)).toBeVisible();
+    expect(
+      screen.queryByRole('region', { name: 'Roteiro DEMO' }),
+    ).not.toBeInTheDocument();
   });
   it('does not confirm optimistic state or duplicate pending commands and keeps stop for recovery', async () => {
     const session = vi.fn().mockResolvedValue(reply('running'));
@@ -284,35 +333,15 @@ describe('session controls', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     await screen.findByRole('alert');
-    expect(session).toHaveBeenCalledTimes(2);
-    expect(screen.getByText('Estado não confirmado')).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Iniciar DEMO' })).toBeDisabled();
+    expect(session).toHaveBeenCalledTimes(3);
+    expect(screen.getByText('Em andamento')).toBeVisible();
+    expect(
+      screen.getByRole('button', { name: 'Iniciar transcrição local' }),
+    ).toBeDisabled();
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'Parar' })).toBeEnabled(),
     );
   });
-  it('ignores a read that arrives after an explicit stop', async () => {
-    let finish: (value: ReturnType<typeof reply>) => void = () => {};
-    const session = vi
-      .fn()
-      .mockReturnValueOnce(
-        new Promise((resolve) => {
-          finish = resolve;
-        }),
-      )
-      .mockResolvedValue(reply('stopped'));
-    vi.stubGlobal('meetingCopilot', { session });
-    render(<SessionControls />);
-    fireEvent.click(screen.getByRole('button', { name: 'Parar' }));
-    await screen.findByText('Encerrada');
-    await act(async () => {
-      finish(reply('running'));
-      await Promise.resolve();
-    });
-    expect(screen.getByText('Encerrada')).toBeVisible();
-    expect(screen.queryByText('Em andamento')).not.toBeInTheDocument();
-  });
-
   it('redacts transport failures on read', async () => {
     vi.stubGlobal('meetingCopilot', {
       session: vi.fn().mockRejectedValue(new Error('private')),

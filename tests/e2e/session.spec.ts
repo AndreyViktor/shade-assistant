@@ -10,13 +10,13 @@ test('manual demo session uses real IPC, stops on reload and never enables real 
     page.on('request', (request) => {
       if (/^https?:/.test(request.url())) outgoing.push(request.url());
     });
+    await page.getByText('Testar a demonstração').click();
     const start = page.getByRole('button', { name: 'Iniciar DEMO' });
     await expect(start).toBeEnabled();
-    await expect(page.getByRole('button', { name: 'Pausar' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Pausar' })).toHaveCount(0);
     await start.focus();
     await page.keyboard.press('Enter');
     await expect(page.getByText('Em andamento', { exact: true })).toBeVisible();
-    await expect(page.getByText('Inativa', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Pausar' }).click();
     await expect(page.getByText('Pausada', { exact: true })).toBeVisible();
     await expect(start).toBeDisabled();
@@ -24,32 +24,41 @@ test('manual demo session uses real IPC, stops on reload and never enables real 
     await expect(page.getByText('Em andamento', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Parar' }).click();
     await expect(page.getByText('Encerrada', { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Retomar' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Retomar' })).toHaveCount(0);
     await start.click();
     await expect(page.getByText('Em andamento', { exact: true })).toBeVisible();
     await page.reload();
     await expect(page.getByText('Encerrada', { exact: true })).toBeVisible();
     await expect(start).toBeEnabled();
-    for (const mode of ['apple-local', 'openai-stt'] as const) {
-      expect(
-        await page.evaluate(
-          (mode) =>
-            window.meetingCopilot.session({
-              version: 2,
-              action: 'start',
-              options: {
-                mode,
-                consent: { capture: true, context: true, remoteAudio: true },
-              },
-            }),
-          mode,
-        ),
-      ).toEqual({ version: 2, ok: false, code: 'UNAVAILABLE' });
-    }
-    await page.locator('summary').click();
-    await expect(page.getByText(/Texto de contexto só poderá/)).toBeVisible();
-    await expect(page.getByText(/custos de API/)).toBeVisible();
-    await page.locator('summary').click();
+    expect(
+      await page.evaluate(() =>
+        window.meetingCopilot.session({
+          version: 2,
+          action: 'start',
+          options: {
+            mode: 'apple-local',
+            consent: { capture: false, context: false, remoteAudio: false },
+            locale: 'pt-BR',
+            sources: ['mic', 'system'],
+          },
+        }),
+      ),
+    ).toEqual({ version: 2, ok: false, code: 'CAPTURE_CONSENT_REQUIRED' });
+    expect(
+      await page.evaluate(() =>
+        window.meetingCopilot.session({
+          version: 2,
+          action: 'start',
+          options: {
+            mode: 'openai-stt',
+            consent: { capture: true, context: false, remoteAudio: true },
+          },
+        }),
+      ),
+    ).toEqual({ version: 2, ok: false, code: 'REMOTE_STT_DEFERRED' });
+    await page.locator('.privacy-details summary').click();
+    await expect(page.getByText(/não é enviada à OpenAI/)).toBeVisible();
+    await page.locator('.privacy-details summary').click();
     await page
       .getByRole('heading', { name: 'Meeting Copilot', exact: true })
       .scrollIntoViewIfNeeded();

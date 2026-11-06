@@ -128,6 +128,8 @@ describe('deterministic offline playback', () => {
     session.start({
       mode: 'apple-local',
       consent: { ...options.consent, capture: true },
+      locale: 'pt-BR',
+      sources: ['mic'],
     });
     demo.start();
     expect(vi.getTimerCount()).toBe(0);

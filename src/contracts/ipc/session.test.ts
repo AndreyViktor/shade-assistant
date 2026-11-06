@@ -31,6 +31,33 @@ describe('strict session contract', () => {
       parseSessionResult({ version: 2, ok: false, code: 'TIMEOUT' }),
     ).toEqual({ version: 2, ok: false, code: 'TIMEOUT' });
   });
+  it('validates Apple local source, locale and consent configuration', () => {
+    const appleStart = {
+      version: 2,
+      action: 'start',
+      options: {
+        mode: 'apple-local',
+        consent: { capture: true, context: false, remoteAudio: false },
+        locale: 'pt-BR',
+        sources: ['mic', 'system'],
+      },
+    };
+    expect(parseSessionRequest(appleStart)).toEqual(appleStart);
+    for (const invalid of [
+      { ...appleStart.options, locale: 'pt-BR+en-US' },
+      { ...appleStart.options, sources: [] },
+      { ...appleStart.options, sources: ['mic', 'mic'] },
+      { ...appleStart.options, sources: ['mic', 'system', 'other'] },
+      {
+        ...appleStart.options,
+        consent: { ...appleStart.options.consent, remoteAudio: true },
+      },
+      { ...appleStart.options, unexpected: true },
+    ])
+      expect(
+        parseSessionRequest({ ...appleStart, options: invalid }),
+      ).toBeNull();
+  });
   it.each([
     null,
     [],

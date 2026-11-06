@@ -15,11 +15,10 @@ test('persists preferences across real Electron restarts without network or rend
     page.on('request', (request) => {
       if (/^https?:/.test(request.url())) outgoing.push(request.url());
     });
-    await expect(page.getByLabel('Provedor STT preferido')).toHaveValue(
-      process.platform === 'darwin' ? 'apple-local' : 'mock',
-    );
-    await page.getByLabel('Modo preferido').selectOption('real');
-    await page.getByLabel('Idiomas preferidos').selectOption('pt-BR+en-US');
+    await page
+      .locator('#panel-settings')
+      .getByLabel('Idioma')
+      .selectOption('en-US');
     await page.getByRole('button', { name: 'Salvar preferências' }).click();
     await expect(
       page
@@ -33,11 +32,9 @@ test('persists preferences across real Electron restarts without network or rend
     await page
       .getByRole('button', { name: 'Preferências', exact: true })
       .click();
-    await expect(page.getByLabel('Modo preferido')).toHaveValue('real');
-    await expect(page.getByLabel('Idiomas preferidos')).toHaveValue(
-      'pt-BR+en-US',
-    );
-    await expect(page.getByText('Inativa', { exact: true })).toBeVisible();
+    await expect(
+      page.locator('#panel-settings').getByLabel('Idioma'),
+    ).toHaveValue('en-US');
     const state = await page.evaluate(async () => ({
       settings: await window.meetingCopilot.getSettings(),
       storage: { ...localStorage },
@@ -83,13 +80,16 @@ test('Mac SecretStore uses real OS encryption for a synthetic value; renderer se
     await page
       .getByRole('button', { name: 'Preferências', exact: true })
       .click();
+    await page
+      .getByText('Chave OpenAI (não usada na transcrição local)')
+      .click();
     // Simulate only the file selection; safeStorage and the product's storage/IPC are real.
     await app.evaluate(({ dialog }, path) => {
       dialog.showOpenDialog = () =>
         Promise.resolve({ canceled: false, filePaths: [path] });
     }, input);
-    await page.getByRole('button', { name: 'Importar chave pelo Mac' }).click();
-    await expect(page.getByText(/Chave OpenAI: armazenada/)).toBeVisible();
+    await page.getByRole('button', { name: 'Importar chave' }).click();
+    await expect(page.getByText(/armazenada no cofre do Mac/)).toBeVisible();
     const ciphertext = await readFile(join(fixture.profile, 'openai-key.enc'));
     expect(ciphertext.includes(Buffer.from(synthetic))).toBe(false);
     const roundtrip = await app.evaluate(
@@ -109,10 +109,8 @@ test('Mac SecretStore uses real OS encryption for a synthetic value; renderer se
     }));
     expect(JSON.stringify(publicState)).not.toContain(synthetic);
     expect(publicState.storage).toEqual({});
-    await page
-      .getByRole('button', { name: 'Remover chave armazenada' })
-      .click();
-    await expect(page.getByText(/Chave OpenAI: não configurada/)).toBeVisible();
+    await page.getByRole('button', { name: 'Remover chave' }).click();
+    await expect(page.getByText(/não configurada/)).toBeVisible();
     await expect(
       readFile(join(fixture.profile, 'openai-key.enc')),
     ).rejects.toMatchObject({ code: 'ENOENT' });

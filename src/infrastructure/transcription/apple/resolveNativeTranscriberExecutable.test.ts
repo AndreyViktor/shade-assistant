@@ -36,9 +36,9 @@ describe('resolveNativeTranscriberExecutable', () => {
     const root = await temporaryDirectory();
     const path = join(
       root,
-      'native/macos/.build/release/MeetingCopilotTranscriber',
+      'native/macos/.build/MeetingCopilotTranscriber.app/Contents/MacOS/MeetingCopilotTranscriber',
     );
-    await mkdir(join(root, 'native/macos/.build/release'), { recursive: true });
+    await mkdir(join(path, '..'), { recursive: true });
     await writeFile(path, 'test executable');
     await chmod(path, 0o700);
 
@@ -54,8 +54,11 @@ describe('resolveNativeTranscriberExecutable', () => {
 
   it('resolves the packaged helper from app resources without accepting another path', async () => {
     const resources = await temporaryDirectory();
-    const path = join(resources, 'native/MeetingCopilotTranscriber');
-    await mkdir(join(resources, 'native'), { recursive: true });
+    const path = join(
+      resources,
+      'native/MeetingCopilotTranscriber.app/Contents/MacOS/MeetingCopilotTranscriber',
+    );
+    await mkdir(join(path, '..'), { recursive: true });
     await writeFile(path, 'test executable');
     await chmod(path, 0o700);
 
@@ -71,8 +74,11 @@ describe('resolveNativeTranscriberExecutable', () => {
 
   it('rejects other platforms, missing files and symlinked binaries safely', async () => {
     const root = await temporaryDirectory();
-    const release = join(root, 'native/macos/.build/release');
-    const path = join(release, 'MeetingCopilotTranscriber');
+    const path = join(
+      root,
+      'native/macos/.build/MeetingCopilotTranscriber.app/Contents/MacOS/MeetingCopilotTranscriber',
+    );
+    const release = join(path, '..');
     await mkdir(release, { recursive: true });
     const target = join(root, 'outside-helper');
     await writeFile(target, 'test executable');

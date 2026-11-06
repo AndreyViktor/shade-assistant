@@ -37,13 +37,23 @@ protocol TranscriptionChannel: AnyObject {
 }
 
 enum CapturePermissions {
-  static func check(_ sources: [AudioSource]) throws {
-    // Never trigger TCC prompts from a background helper. The host owns consent/TCC UX.
-    if sources.contains(.mic), AVCaptureDevice.authorizationStatus(for: .audio) != .authorized {
-      throw HelperFailure(.permissionDenied)
+  static func request(_ sources: [AudioSource]) async throws {
+    if sources.contains(.mic) {
+      switch AVCaptureDevice.authorizationStatus(for: .audio) {
+      case .authorized: break
+      case .notDetermined:
+        guard await AVCaptureDevice.requestAccess(for: .audio) else {
+          throw HelperFailure(.permissionDenied)
+        }
+      default: throw HelperFailure(.permissionDenied)
+      }
     }
     if sources.contains(.system), !CGPreflightScreenCaptureAccess() {
-      throw HelperFailure(.permissionDenied)
+      // This opens the macOS privacy flow. System audio capture cannot begin
+      // until the user grants Screen & System Audio Recording in System Settings.
+      guard CGRequestScreenCaptureAccess(), CGPreflightScreenCaptureAccess() else {
+        throw HelperFailure(.permissionDenied)
+      }
     }
   }
 }
@@ -127,7 +137,7 @@ final class AppleTranscriptionChannel: TranscriptionChannel {
   }
 
   func start() async throws {
-    try CapturePermissions.check([source])
+    try await CapturePermissions.request([source])
     guard let capture else { throw HelperFailure(.captureFailed) }
     do { try await capture.start() } catch { throw HelperFailure(HelperFailure.code(for: error)) }
     accepting = true

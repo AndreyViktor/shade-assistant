@@ -9,8 +9,10 @@ test('opens the real Electron build with an isolated offline renderer', async ()
     await expect(
       page.getByRole('heading', { name: 'Meeting Copilot', level: 1 }),
     ).toBeVisible();
-    await expect(page.getByLabel('Modo demonstração')).toHaveText('DEMO');
-    await expect(page.getByText('Inativa')).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Iniciar transcrição local' }),
+    ).toBeVisible();
+    await expect(page.getByText('Testar a demonstração')).toBeVisible();
     expect(page.url()).toMatch(/^file:\/\//);
 
     const isolation = await page.evaluate(() => ({
@@ -68,7 +70,9 @@ test('opens the real Electron build with an isolated offline renderer', async ()
       if (/^https?:/.test(request.url())) outgoing.push(request.url());
     });
     await page.reload();
-    await expect(page.getByText('Nenhum', { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Iniciar transcrição local' }),
+    ).toBeVisible();
     expect(outgoing).toEqual([]);
     await page.screenshot({ path: 'test-results/startup.png' });
 

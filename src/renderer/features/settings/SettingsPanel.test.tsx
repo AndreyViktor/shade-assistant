@@ -26,23 +26,22 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('settings interface', () => {
-  it('shows Mac defaults, unavailable remote opt-in and no secret input', async () => {
+  it('shows only the local language preference and keeps cloud credentials secondary', async () => {
     render(<SettingsPanel />);
-    expect(await screen.findByLabelText('Modo preferido')).toHaveValue('demo');
-    expect(screen.getByLabelText('Provedor STT preferido')).toHaveValue(
-      'apple-local',
-    );
-    expect(screen.getByLabelText('Idiomas preferidos')).toHaveValue('pt-BR');
-    expect(screen.getByRole('option', { name: /OPENAI STT/ })).toBeDisabled();
+    expect(await screen.findByLabelText('Idioma')).toHaveValue('pt-BR');
+    expect(screen.queryByLabelText('Modo preferido')).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText('Provedor STT preferido'),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Chave OpenAI (não usada na transcrição local)'),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    expect(screen.getByText(/Salvar não inicia captura/)).toBeVisible();
+    expect(screen.getByText(/O idioma fica salvo/)).toBeVisible();
   });
   it('saves edited preferences only on explicit submit and renders the canonical response', async () => {
     render(<SettingsPanel />);
-    fireEvent.change(await screen.findByLabelText('Modo preferido'), {
-      target: { value: 'real' },
-    });
-    fireEvent.change(screen.getByLabelText('Idiomas preferidos'), {
+    fireEvent.change(await screen.findByLabelText('Idioma'), {
       target: { value: 'en-US' },
     });
     expect(api.savePreferences).not.toHaveBeenCalled();
@@ -52,14 +51,13 @@ describe('settings interface', () => {
     await waitFor(() =>
       expect(api.savePreferences).toHaveBeenCalledExactlyOnceWith({
         ...initial.settings.preferences,
-        mode: 'real',
         language: 'en-US',
       }),
     );
     expect(
       await screen.findByText(/Nenhum serviço foi iniciado/),
     ).toBeVisible();
-    expect(screen.getByLabelText('Modo preferido')).toHaveValue('demo');
+    expect(screen.getByLabelText('Idioma')).toHaveValue('pt-BR');
   });
   it('imports and removes with no secret or path arguments; disables actions while pending', async () => {
     let finish: (value: unknown) => void = () => {
@@ -73,7 +71,10 @@ describe('settings interface', () => {
     api.removeSecret.mockResolvedValue(initial);
     render(<SettingsPanel />);
     fireEvent.click(
-      await screen.findByRole('button', { name: 'Importar chave pelo Mac' }),
+      await screen.findByText('Chave OpenAI (não usada na transcrição local)'),
+    );
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Importar chave' }),
     );
     expect(api.importSecret).toHaveBeenCalledExactlyOnceWith();
     expect(
@@ -83,14 +84,12 @@ describe('settings interface', () => {
       ...initial,
       settings: { ...initial.settings, credential: 'stored' },
     });
-    await screen.findByText(/armazenada; validade não verificada/);
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Remover chave armazenada' }),
-    );
+    await screen.findByText(/armazenada no cofre do Mac/);
+    fireEvent.click(screen.getByRole('button', { name: 'Remover chave' }));
     await waitFor(() =>
       expect(api.removeSecret).toHaveBeenCalledExactlyOnceWith(),
     );
-    await screen.findByText(/Chave OpenAI: não configurada/);
+    await screen.findByText(/não configurada/);
   });
   it('reports failed saves without claiming persistence or echoing transport errors', async () => {
     api.savePreferences.mockRejectedValue(new Error('synthetic-private-key'));

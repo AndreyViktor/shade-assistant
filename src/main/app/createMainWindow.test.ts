@@ -10,11 +10,13 @@ const mocks = vi.hoisted(() => ({
   handle: vi.fn(),
   permissionRequest: vi.fn(),
   permissionCheck: vi.fn(),
+  requestMicrophoneAccess: vi.fn(),
 }));
 
 vi.mock('electron', () => ({
   app: { isPackaged: true, getPath: () => '/unused' },
   safeStorage: {},
+  systemPreferences: { askForMediaAccess: mocks.requestMicrophoneAccess },
   dialog: {},
   ipcMain: { handle: mocks.handle, removeHandler: vi.fn() },
   session: {

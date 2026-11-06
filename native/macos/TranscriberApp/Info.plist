@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key>
+  <string>local.meetingcopilot.transcriber</string>
+  <key>CFBundleName</key>
+  <string>Meeting Copilot Transcriber</string>
+  <key>CFBundleExecutable</key>
+  <string>MeetingCopilotTranscriber</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleVersion</key>
+  <string>1</string>
+  <key>CFBundleShortVersionString</key>
+  <string>0.1.0</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>26.0</string>
+  <key>LSUIElement</key>
+  <true/>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Transcrever localmente o áudio do microfone durante uma sessão autorizada do Meeting Copilot.</string>
+  <key>NSAudioCaptureUsageDescription</key>
+  <string>Transcrever localmente o áudio do sistema durante uma sessão autorizada do Meeting Copilot, sem capturar imagens.</string>
+  <key>NSScreenCaptureUsageDescription</key>
+  <string>Acessar o áudio do sistema selecionado para transcrição local, sem capturar imagens da tela.</string>
+  <key>NSSpeechRecognitionUsageDescription</key>
+  <string>Transcrever áudio localmente usando o reconhecimento de fala da Apple durante uma sessão autorizada.</string>
+</dict>
+</plist>

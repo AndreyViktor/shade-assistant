@@ -3,9 +3,10 @@ import { createSettingsService } from '../settings/createSettingsService';
 import { registerSettingsIpc } from '../ipc/registerSettingsIpc';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { app, BrowserWindow, session } from 'electron';
+import { app, BrowserWindow, session, systemPreferences } from 'electron';
 import { getDevelopmentUrl } from './getDevelopmentUrl';
 import { registerAppIpc } from '../ipc/registerAppIpc';
+import { createAppleNativeTranscriptionProvider } from '../transcription/createAppleNativeTranscriptionProvider';
 
 export async function createMainWindow(): Promise<BrowserWindow> {
   const developmentUrl = getDevelopmentUrl(
@@ -48,6 +49,12 @@ export async function createMainWindow(): Promise<BrowserWindow> {
   registerSessionIpc(
     window,
     developmentUrl ?? pathToFileURL(rendererFile).href,
+    {
+      platform: process.platform,
+      requestMicrophoneAccess: () =>
+        systemPreferences.askForMediaAccess('microphone'),
+      createAppleProvider: createAppleNativeTranscriptionProvider,
+    },
   );
   registerAppIpc(window, developmentUrl ?? pathToFileURL(rendererFile).href);
 

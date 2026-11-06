@@ -9,6 +9,7 @@ test('repeats start → speech → card → pause → stop without late events o
     const page = await app.firstWindow();
     const pageErrors: string[] = [];
     page.on('pageerror', (error) => pageErrors.push(error.name));
+    await page.getByText('Testar a demonstração').click();
     const start = page.getByRole('button', { name: 'Iniciar DEMO' });
     const preview = page.getByRole('region', { name: 'Roteiro DEMO' });
     const cards = page.getByRole('region', { name: 'Sugestões DEMO' });
@@ -30,7 +31,6 @@ test('repeats start → speech → card → pause → stop without late events o
       await expect(
         page.getByText('Em andamento', { exact: true }),
       ).toBeVisible();
-      await expect(page.getByText('Inativa', { exact: true })).toBeVisible();
       expect(await read()).toMatchObject({
         demo: { transcript: null, suggestions: [], completed: false },
       });
@@ -78,9 +78,9 @@ test('repeats start → speech → card → pause → stop without late events o
       await expect(page.getByText('Encerrada', { exact: true })).toBeVisible();
       await expect(preview).toHaveCount(0);
       await expect(start).toBeEnabled();
-      await expect(
-        page.getByRole('button', { name: 'Retomar' }),
-      ).toBeDisabled();
+      await expect(page.getByRole('button', { name: 'Retomar' })).toHaveCount(
+        0,
+      );
       const stopped = await read();
       expect(stopped).toMatchObject({
         ok: true,

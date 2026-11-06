@@ -21,7 +21,7 @@ struct TranscriberCLI {
       },
       preflight: { sources in
         guard #available(macOS 26.0, *) else { throw HelperFailure(.unavailable) }
-        try CapturePermissions.check(sources)
+        try await CapturePermissions.request(sources)
       },
       cancelled: { input.cancelled }, write: { try output.write($0) },
       reportFailure: { input.fail($0) })
