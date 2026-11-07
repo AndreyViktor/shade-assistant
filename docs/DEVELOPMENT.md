@@ -68,6 +68,6 @@ O diagnóstico acessa capacidades reais do sistema; não é necessário para tes
 
 - [WORKFLOW.md](WORKFLOW.md): Git, sessões independentes por tarefa e handoff.
 - [ENGINEERING-STANDARDS.md](ENGINEERING-STANDARDS.md): arquitetura modular, padrões e critérios de conclusão.
-- [TASKS.md](TASKS.md) e [PROGRESS.md](PROGRESS.md): status e evidências; confira ambos antes de retomar trabalho.
+- [TASKS.md](TASKS.md): status e aceite. [PROGRESS.md](PROGRESS.md): snapshot e próximo passo. Consulte evidências especializadas ligadas pela tarefa; o histórico antigo está em [PROGRESS-HISTORY.md](PROGRESS-HISTORY.md).
 - [DECISIONS.md](DECISIONS.md): decisões confirmadas, propostas e questões abertas.
 - [ARCHITECTURE.md](ARCHITECTURE.md): desenho técnico proposto, não uma lista de recursos já integrados.

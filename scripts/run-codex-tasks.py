@@ -77,7 +77,8 @@ def check_clean_git(root: Path) -> None:
 def make_prompt(task: Task) -> str:
     return f"""Você está em uma NOVA sessão independente do Codex.
     Trabalhe EXCLUSIVAMENTE na tarefa {task.id}. Não inicie outra tarefa nesta sessão.
-    Siga AGENTS.md, docs/WORKFLOW.md e docs/ENGINEERING-STANDARDS.md; leia docs/DECISIONS.md,
+    Siga AGENTS.md; consulte somente as regras relevantes de docs/WORKFLOW.md,
+    docs/ENGINEERING-STANDARDS.md e docs/DECISIONS.md. Leia o handoff curto em
     docs/PROGRESS.md e a linha/critério de aceite da tarefa {task.id} em docs/TASKS.md.
     Confira git status/log e apenas arquivos técnicos relacionados. Respeite dependências.
     PLANEJAMENTO OBRIGATÓRIO para toda tarefa, inclusive tarefas pequenas:
@@ -85,12 +86,14 @@ def make_prompt(task: Task) -> str:
     O plano deve listar objetivo/critério de aceite, etapas de implementação,
     arquivos ou módulos envolvidos, testes/gates e possíveis bloqueios.
     Marque {task.id} IN_PROGRESS e registre esse plano em docs/PROGRESS.md
-    ANTES de iniciar a implementação. Mantenha o plano atualizado se o escopo mudar.
+    ANTES de iniciar a implementação, em resumo conciso suficiente para o handoff.
+    Mantenha o plano atualizado se o escopo mudar.
     Não espere aprovação do plano para trabalho já autorizado; respeite as
     autorizações humanas exigidas para captura, credenciais, custos e permissões.
     Somente depois de registrar o plano, implemente e execute os testes/gates aplicáveis.
-    NÃO marque DONE sem evidências reais. Registre em docs/PROGRESS.md o resumo objetivo,
-    comandos/testes e resultados reais, limitações, arquivos, blockers e próximo passo.
+    NÃO marque DONE sem evidências reais. Registre estado e aceite em docs/TASKS.md;
+    mantenha em docs/PROGRESS.md somente resultados/limites essenciais e próximo passo.
+    Ponha evidências detalhadas em arquivos especializados e ligue-os pela tarefa.
     Se os critérios passarem, marque {task.id} DONE em docs/TASKS.md; faça commit local
     contendo as mudanças de código, testes e documentos, com {task.id} no título.
     Esta execução usa workspace-write com --approve-for-me. O diretório .git

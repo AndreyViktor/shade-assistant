@@ -1,14 +1,14 @@
 # T006 — POC Swift própria: preparação e teste manual
 
-**Estado: DONE para a POC pt-BR.** O usuário relatou transcrição real de mic/system, uso simultâneo, atalhos funcionais e parada manual `q`; também confirmou que o indicador do microfone apagou após parada automática. En-US isolado e PT+EN simultâneo não foram testados; a mistura é rejeitada pela POC. Qualidade e latência não foram medidas formalmente. Evidências em [PROGRESS.md](PROGRESS.md). A POC é um programa independente no Terminal, ainda sem integração com Electron.
+**Estado: DONE para a POC pt-BR.** O usuário relatou transcrição real de mic/system, uso simultâneo, atalhos funcionais e parada manual `q`; também confirmou que o indicador do microfone apagou após parada automática. En-US isolado e PT+EN simultâneo não foram testados; a mistura é rejeitada pela POC. Qualidade e latência não foram medidas formalmente. O registro histórico da execução está em [PROGRESS-HISTORY.md](PROGRESS-HISTORY.md). A POC é um programa independente no Terminal, ainda sem integração com Electron.
 
 ## Resultado independente — 2026-11-04
 
 - Mac arm64, macOS 26.6.2; Xcode 26.6 / SDK 26.5 / Swift 6.3.3. Mesmo ambiente de T005; target da POC/bundle: macOS 26+, diagnóstico anterior preservado.
 - Bundle: `native/macos/.build/MeetingCopilotAudioPOC.app`, assinatura ad hoc local verificada com `codesign --verify --strict`; plist validado. Isso não comprova distribuição, notarização ou atribuição de TCC.
 - `--prepare-assets --locale pt-BR`, por escalada aprovada e autorização prévia do usuário: `supported` → `installed` → `ASSETS_PREPARED_NO_CAPTURE_pt-BR`. A segunda execução começou/terminou `installed` e preparou novamente. A Apple retornou request de instalação nas duas execuções; não foi medido tráfego/volume, portanto não afirmamos se houve download ou reaproveitamento local. [Evidência](evidence/T006-assets-2026-11-04.json).
-- Na implementação inicial, nenhum comando de captura real ou pedido TCC foi executado pelo agente. Posteriormente, o usuário realizou o teste local relatado em `docs/PROGRESS.md`. En-US não preparado/testado; PT+EN simultâneo rejeitado. Sem OpenAI, conteúdo de reunião ou arquivos de áudio.
-- Gates e contagens finais estão no [handoff](PROGRESS.md). Testes sintéticos e fakes não são evidência de captura Apple.
+- Na implementação inicial, nenhum comando de captura real ou pedido TCC foi executado pelo agente. Posteriormente, o usuário realizou o teste local registrado em [PROGRESS-HISTORY.md](PROGRESS-HISTORY.md). En-US não preparado/testado; PT+EN simultâneo rejeitado. Sem OpenAI, conteúdo de reunião ou arquivos de áudio.
+- Gates e contagens finais estão no histórico de execução. Testes sintéticos e fakes não são evidência de captura Apple.
 
 ## 1. Preparar o Terminal
 

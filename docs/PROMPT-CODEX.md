@@ -5,18 +5,11 @@ Use este modelo em uma sessão nova por tarefa. Substitua `{Txxx}` pelo ID infor
 ```text
 Trabalhe no repositório Meeting Copilot e execute somente {Txxx ou primeira elegível}.
 
-Antes de editar:
-1. Leia AGENTS.md e os documentos obrigatórios indicados nele.
-2. Confira git status/log, TASKS.md, PROGRESS.md e o código relacionado. Preserve mudanças existentes e reconcilie o estado com a implementação real.
-3. Respeite decisões confirmadas em DECISIONS.md. T036–T039 (Windows) permanecem DEFERRED.
+Siga o roteiro seletivo de `AGENTS.md`; não leia toda a documentação por padrão. Confira `git status/log`, a tarefa e dependências em `TASKS.md`, o snapshot em `PROGRESS.md` e o código relacionado. Preserve mudanças existentes e consulte fontes especializadas somente quando relevantes.
 
-Planejamento obrigatório para toda tarefa, inclusive tarefas pequenas: após a inspeção e antes de alterar código ou testes, elabore um plano com objetivo/critério de aceite, etapas de implementação, arquivos ou módulos envolvidos, testes/gates e possíveis bloqueios. Marque a tarefa IN_PROGRESS e registre o plano em docs/PROGRESS.md ANTES de implementar. Atualize o plano se o escopo mudar. Não espere aprovação do plano para trabalho já autorizado; preserve as autorizações humanas exigidas para captura, credenciais, custos e permissões.
+Antes de editar, elabore o plano exigido por `WORKFLOW.md`, marque a tarefa `IN_PROGRESS` e registre no `PROGRESS.md` um resumo curto. Implemente a menor solução que satisfaça o aceite, siga os padrões relevantes, execute gates aplicáveis e registre status/evidências duráveis na tarefa ou em documentos especializados linkados. Mocks não comprovam validação real.
 
-Implemente a menor solução testável que satisfaça os critérios de aceite. Siga ENGINEERING-STANDARDS.md; escreva testes relevantes; execute os gates aplicáveis e registre resultados reais, arquivos alterados e limites em TASKS.md e PROGRESS.md. Não declare mocks como validação real.
-
-Para o MVP macOS, STT local deve ser implementado pelo projeto em Swift usando APIs Apple. Não execute nem empacote transcritores de terceiros. OpenAI STT é fallback opt-in; texto/imagens só podem ser enviados com autorização. Preserve os limites de segurança Electron e segredos.
-
-Se hardware, permissão, custo ou ambiente impedir um gate, registre o impedimento e marque BLOCKED; não esconda falhas nem inicie outra tarefa. Faça ao menos um commit local com Txxx no título somente quando a tarefa estiver realmente DONE. Não faça push. Encerre após esta tarefa.
+Siga os invariantes de segurança/produto em `AGENTS.md`; T036–T039 (Windows) permanecem `DEFERRED`. Se um requisito ou gate estiver bloqueado, registre motivo e pare. Faça commit local com `Txxx` no título somente ao concluir a tarefa; sem push. Encerre após uma tarefa.
 ```
 
 O executor opcional [`scripts/run-codex-tasks.py`](../scripts/run-codex-tasks.py) inicia uma sessão `codex exec` nova por tarefa. Consulte [WORKFLOW.md](WORKFLOW.md); não use `codex resume` para simular uma fronteira entre tarefas.
