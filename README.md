@@ -4,7 +4,7 @@ Assistente desktop de reuniões em tempo real, feito com Electron, React e TypeS
 
 ## Status
 
-O scaffold desktop, a demonstração offline e a integração do helper Swift ao Electron estão implementados. Apple Local agora exibe falas recentes no overlay (T017), com fonte, idioma e estado; o aceite manual desta entrega está registrado em `docs/PROGRESS.md`. A T016, fallback OpenAI STT, está adiada. O app não está pronto para distribuição. Windows (T036–T039) permanece adiado.
+O scaffold desktop, a demonstração offline e a integração do helper Swift ao Electron estão implementados. Apple Local agora exibe falas recentes no overlay (T017), com fonte, idioma e estado; o ensaio manual está em [docs/TEST-T017.md](docs/TEST-T017.md). A T016, fallback OpenAI STT, está adiada. O app não está pronto para distribuição. Windows (T036–T039) permanece adiado.
 
 ## Executar
 
@@ -30,9 +30,9 @@ Instruções adicionais de instalação, testes e gates Swift estão em [docs/DE
 
 - [PRD](docs/PRD.md) — escopo e comportamento esperado.
 - [Roadmap](docs/ROADMAP.md) e [tarefas](docs/TASKS.md) — marcos, dependências e aceite.
-- [Progresso](docs/PROGRESS.md) — status atual, handoff e evidências verificadas.
+- [Progresso](docs/PROGRESS.md) — snapshot atual e próximo passo; histórico detalhado em [PROGRESS-HISTORY](docs/PROGRESS-HISTORY.md).
 - [Decisões](docs/DECISIONS.md) — decisões confirmadas e questões abertas.
 - [Arquitetura](docs/ARCHITECTURE.md) — proposta técnica e fronteiras do sistema.
 - [Padrões de engenharia](docs/ENGINEERING-STANDARDS.md) e [fluxo de trabalho](docs/WORKFLOW.md) — contribuições e validação.
 
-O estado e as evidências em `docs/PROGRESS.md` prevalecem sobre qualquer descrição de arquitetura futura.
+`docs/TASKS.md` é a fonte de estado e aceite; `docs/PROGRESS.md` é o handoff atual. Evidências detalhadas ficam nos documentos especializados ligados por tarefa. `docs/ARCHITECTURE.md` descreve uma proposta, não o status implementado.

@@ -129,7 +129,7 @@ Uma tarefa só pode ir para `DONE` quando, conforme o escopo dela:
 2. Rodaram com resultado registrado `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm run test` e `npm run build` (ou `npm run verify` que os englobe) **quando os scripts já existirem**. Em tarefa inicial de scaffolding, registrar precisamente o que não foi possível executar e por quê.
 3. Há testes automatizados da lógica/contrato alterado e, quando exigido, teste manual de hardware com evidência. Teste manual não executado **não** vira teste concluído.
 4. Logs não vazam chaves nem transcrição; modos offline não enviam rede; resultados de mock são explicitamente identificados como mocks.
-5. `docs/TASKS.md` e `docs/PROGRESS.md` refletem testes, arquivos afetados, limites, decisão e próximo passo. Mudança arquitetural relevante possui ADR.
+5. `docs/TASKS.md` registra status, aceite e resumo verificável; `docs/PROGRESS.md` mantém somente o snapshot/handoff atual. Evidências detalhadas ficam em arquivos especializados ligados pela tarefa, sem cópia no histórico. Mudança arquitetural relevante possui ADR.
 
 **Não contornar um gate apagando o teste ou desabilitando a regra.** Se não houver macOS/permissões/API, marcar a parte dependente de ambiente como `BLOCKED` com instrução, continuar tarefa independente elegível. Se erro for preexistente, documentá-lo e corrigir de forma focada; não declarar aprovação falsa.
 

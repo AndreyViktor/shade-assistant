@@ -31,8 +31,6 @@ export class MeetingSession {
       return false;
     if (options.mode === 'apple-local' && options.consent.remoteAudio)
       return false;
-    if (options.mode === 'apple-local' && options.consent.remoteAudio)
-      return false;
     // Demo never grants cloud/capture permission, even to a crafted caller.
     this.state = {
       phase: 'running',
