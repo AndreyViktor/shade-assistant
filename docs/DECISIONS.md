@@ -12,6 +12,8 @@ Decisões confirmadas pelo usuário prevalecem sobre propostas e hipóteses anti
 
 - **D016 (2026-11-06):** após informar funcionamento no app e conhecer as pendências, o usuário determinou considerar T018 validada. Aceitar a entrega temporal/eco textual atual, os gates e o retorno qualitativo como conclusão da tarefa; medições de p95/sobreposição reais e implementação/validação simultânea pt-BR+en-US permanecem questões abertas O002/O003, sem bloquear T018 ou o avanço T020/T021. Esta decisão não afirma que essas medições ocorreram nem habilita suporte bilíngue.
 
+- **D017 (2026-11-06):** o usuário esclareceu que T016 não é dependência real de T019. Remover essa dependência; T019 trata exclusivamente da robustez/validação do ciclo Apple Local já implementado, reaproveitando os testes e aceites anteriores. Iniciar/pausar/retomar/parar já existem; a tarefa deve verificar lacunas de concorrência, falhas e encerramento do app/helper, corrigindo somente o necessário. Fallback remoto continua DEFERRED.
+
 ## Propostas técnicas reversíveis
 
 Defaults sujeitos a validação de implementação; detalhes do fluxo e fronteiras estão em [ARCHITECTURE.md](ARCHITECTURE.md).

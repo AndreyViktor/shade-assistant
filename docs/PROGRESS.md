@@ -3,6 +3,13 @@
 **Atualização:** 2026-11-06. **Marco:** M3 — contexto e provider de sugestões.
 **Tarefas concluídas:** T001–T015, T017–T018 e T020–T021. T016 permanece `DEFERRED`.
 
+## Revisão do escopo/dependências da T019 — 2026-11-06
+
+- Correção solicitada pelo usuário: T016 não é dependência real da T019. Plano desta revisão documental: conferir implementação/testes existentes, remover a dependência indevida, esclarecer o trabalho restante e verificar seleção do runner; sem iniciar implementação T019.
+- Iniciar/pausar/retomar/parar e exibição/limpeza já foram implementados e aceitos na T017. Provider, IPC e e2e também cobrem parte dos erros, reload, eventos tardios e cancelamento durante início; essas evidências devem ser reaproveitadas, sem reimplementar os controles.
+- T019 passa a explicitar revisão de robustez e cobertura das lacunas do Apple Local: comandos concorrentes, falhas/reinícios, quit/fechamento e encerramento real do subprocesso/captura. Observação de código: `closed` chama `void stopSession().catch(...)`, enquanto `src/main/index.ts` não coordena `before-quit` aguardando essa limpeza. Isso é ponto a verificar, não prova de processo órfão observado.
+- TASKS e D017 sincronizados; dependências T015/T017/T018 estão DONE. T019 fica elegível e T024 mantém sua dependência da robustez local; T016 continua DEFERRED. Mudança somente documental, sem executar a T019 nem novos testes de captura. Validação: Prettier, `git diff --check` e dry-run do motor.
+
 ## T021 — SuggestionProvider — DONE — 2026-11-06
 
 - **Estado inicial/dependências:** sessão exclusiva em `main`, HEAD `19aa042`, árvore limpa. T004 (SecretStore/configuração) e T020 (ContextManager) DONE conferidas no código. Não iniciar T022/T024 nem reabrir T018, aceita por D016.
