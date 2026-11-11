@@ -1,24 +1,25 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-06. **Marco:** M3 — contexto e provider de sugestões.
+**Atualizado:** 2026-11-11. **Marco:** M3 — contexto e provider de sugestões.
 
 ## Snapshot
 
-- T001–T015, T017–T018 e T020–T021 estão concluídas; T016 e T036–T039 estão `DEFERRED`. Estados e critérios completos ficam somente em [TASKS.md](TASKS.md).
-- Apple Local usa helper Swift próprio integrado ao Electron e já exibe transcrição real no overlay, conforme aceites registrados nas tarefas e [TEST-T017.md](TEST-T017.md).
-- O provider OpenAI de sugestões e o contexto limitado existem, mas a integração real ao ciclo de sessão ainda é futura (T024). DEMO permanece offline; STT remoto segue adiado.
+- T001–T015 e T017–T021 estão concluídas; T016 e T036–T039 estão `DEFERRED`. Estados e critérios completos ficam em [TASKS.md](TASKS.md).
+- Apple Local usa helper Swift próprio integrado ao Electron e já exibe transcrição real no overlay.
+- T019 encerrada com confirmação de validação pelo usuário (D018), gates automatizados e limites registrados em [TEST-T019.md](TEST-T019.md). Nenhuma alteração de implementação nesta sessão.
+- Provider OpenAI e contexto limitado existem; integração real ao ciclo de sessão fica em T024. DEMO permanece offline; STT remoto segue adiado.
 
 ## Próximo trabalho
 
-T019 é a próxima tarefa elegível. Revisar robustez do lifecycle Apple Local reaproveitando evidências existentes; não reimplementar controles já entregues.
+T022 é a próxima tarefa elegível: TriggerEngine para pergunta/objeção/compromisso/manual/none, com testes sintéticos incluindo silêncio deliberado. T021, seu pré-requisito, está concluída. Iniciar em nova sessão conforme o fluxo de uma tarefa por sessão.
 
-Risco de lifecycle identificado por inspeção estática, ainda sem reprodução: reload/fechamento chama `stopSession()` sem aguardar, e o quit não coordena a saída do app com a limpeza. Verificar se novo início pode coincidir com o encerramento do helper e se a captura/processo realmente param. Isso não comprova helper órfão nem sobreposição. Escopo e aceite estão em [TASKS.md](TASKS.md).
+O risco estático de lifecycle quit/reload continua aberto em O008 para T024/T032. O aceite T019 não demonstra correção nem ensaio específico de processos residuais; não há reprodução confirmada de helper órfão.
 
-## Onde buscar detalhes
+## Ambiente e referências
 
-- Decisões vigentes: [DECISIONS.md](DECISIONS.md) e ADRs vinculados pela tarefa.
-- Estado e evidências por tarefa: [TASKS.md](TASKS.md).
-- Ensaios de produto: [TEST-T017.md](TEST-T017.md), [TEST-T018.md](TEST-T018.md), [T005-SWIFT-CAPABILITIES.md](T005-SWIFT-CAPABILITIES.md) e [T006-SWIFT-AUDIO-POC.md](T006-SWIFT-AUDIO-POC.md).
-- Histórico de execução: [PROGRESS-HISTORY.md](PROGRESS-HISTORY.md), somente quando necessário.
+- Usar Node >=26; nesta sessão, `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run verify` passou. O Node 20 padrão do shell falha nos workers de testes.
+- Gates Swift requerem acesso aos caches do compilador; repetição com escalada autorizada passou.
+- Decisões vigentes e questões abertas: [DECISIONS.md](DECISIONS.md).
+- Evidências T019: [TEST-T019.md](TEST-T019.md). Aceites anteriores: tarefas e documentos vinculados em [TASKS.md](TASKS.md).
 
-Este arquivo é um handoff curto, não um log de sessão. Registre aqui apenas o snapshot atual, o próximo passo e bloqueios relevantes; mantenha resultados duráveis na tarefa ou evidência correspondente.
+Este arquivo mantém somente snapshot, próximo passo e limites relevantes; resultados detalhados ficam na evidência correspondente.

@@ -14,6 +14,8 @@ Decisões confirmadas pelo usuário prevalecem sobre propostas e hipóteses anti
 
 - **D017 (2026-11-06):** o usuário esclareceu que T016 não é dependência real de T019. Remover essa dependência; T019 trata exclusivamente da robustez/validação do ciclo Apple Local já implementado, reaproveitando os testes e aceites anteriores. Iniciar/pausar/retomar/parar já existem; a tarefa deve verificar lacunas de concorrência, falhas e encerramento do app/helper, corrigindo somente o necessário. Fallback remoto continua DEFERRED.
 
+- **D018 (2026-11-11):** o usuário informou que T019 está validada e autorizou avançar se concluída. Registrar a confirmação como aceite manual da entrega Apple Local existente, junto dos gates automatizados e evidências anteriores. A confirmação não detalha cenários de quit/reload, medições ou inspeção de processos; não afirmar que esses ensaios específicos ocorreram nem que o risco estático foi corrigido. Manter esse risco em O008 para revisão na integração/auditoria.
+
 ## Propostas técnicas reversíveis
 
 Defaults sujeitos a validação de implementação; detalhes do fluxo e fronteiras estão em [ARCHITECTURE.md](ARCHITECTURE.md).
@@ -39,6 +41,8 @@ Não bloqueiam tarefas independentes; atualize esta lista quando houver decisão
 - **O005:** macOS/hardware mínimos, disponibilidade de idiomas/assets, permissões TCC, assinatura/notarização e experiência em máquinas novas.
 - **O006:** política para retenção opcional de histórico e perfis de reunião; o padrão atual é temporário/em memória.
 - **O007:** necessidade de consultar documentos ou materiais do usuário durante a reunião; fora do escopo atual.
+
+- **O008:** verificar o risco estático de lifecycle Apple Local em T024/T032: reload/fechamento chama `stopSession()` sem aguardar e quit não coordena cleanup; investigar sobreposição de reinício e término real do helper. Não há reprodução confirmada de helper órfão. Aceite T019 registrado em D018 não comprova correção nem ensaio específico desses caminhos.
 
 ## Como aplicar
 
