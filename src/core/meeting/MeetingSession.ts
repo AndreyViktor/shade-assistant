@@ -54,6 +54,10 @@ export class MeetingSession {
     return true;
   }
 
+  revokeContext(): void {
+    this.state.consent.context = false;
+  }
+
   stop(): void {
     this.state = { ...this.state, phase: 'stopped', consent: noConsent() };
     this.invalidate();

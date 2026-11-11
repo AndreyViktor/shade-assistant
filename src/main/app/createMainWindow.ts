@@ -1,3 +1,4 @@
+import { OpenAISuggestionProvider } from '../../infrastructure/ai/OpenAISuggestionProvider';
 import { registerSessionIpc } from '../ipc/registerSessionIpc';
 import { createSettingsService } from '../settings/createSettingsService';
 import { registerSettingsIpc } from '../ipc/registerSettingsIpc';
@@ -46,10 +47,17 @@ export async function createMainWindow(): Promise<BrowserWindow> {
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', (event) => event.preventDefault());
   window.once('ready-to-show', () => window.show());
+  const settings = createSettingsService(window);
   registerSessionIpc(
     window,
     developmentUrl ?? pathToFileURL(rendererFile).href,
     {
+      createSuggestionProvider: (authorization, isAuthorized) =>
+        new OpenAISuggestionProvider({
+          model: authorization.model,
+          getApiKey: () => settings.getApiKey(),
+          isAuthorized,
+        }),
       platform: process.platform,
       requestMicrophoneAccess: () =>
         systemPreferences.askForMediaAccess('microphone'),
@@ -61,7 +69,7 @@ export async function createMainWindow(): Promise<BrowserWindow> {
   registerSettingsIpc(
     window,
     developmentUrl ?? pathToFileURL(rendererFile).href,
-    createSettingsService(window),
+    settings,
   );
 
   if (developmentUrl) await window.loadURL(developmentUrl);

@@ -76,7 +76,7 @@ export function createMeetingCopilotApi(invoke: Invoke): MeetingCopilotApi {
       const request = args.length === 1 ? parseSessionRequest(args[0]) : null;
       if (!request)
         return {
-          version: 3 as const,
+          version: 4 as const,
           ok: false as const,
           code: 'INVALID_REQUEST' as const,
         };

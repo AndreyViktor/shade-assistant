@@ -14,16 +14,23 @@ export function SuggestionCards({
   suggestions,
   busy,
   onDismiss,
+  demo = true,
 }: {
   suggestions: readonly Suggestion[];
   busy: boolean;
+  demo?: boolean;
   onDismiss: (id: string) => void;
 }) {
   return (
-    <section aria-label="Sugestões DEMO" className="suggestion-cards">
-      <h3>Sugestões simuladas · DEMO</h3>
+    <section
+      aria-label={demo ? 'Sugestões DEMO' : 'Sugestões da reunião'}
+      className="suggestion-cards"
+    >
+      <h3>{demo ? 'Sugestões simuladas · DEMO' : 'Sugestões · OpenAI'}</h3>
       <p>
-        Até dois cartões. Expiram após 30 segundos, inclusive durante a pausa.
+        {demo
+          ? 'Até dois cartões. Expiram após 30 segundos, inclusive durante a pausa.'
+          : 'Até dois cartões. Expiram após 30 segundos e são removidos ao pausar.'}
       </p>
       {suggestions.length === 0 && (
         <p role="status">Nenhuma sugestão neste momento.</p>
@@ -34,12 +41,17 @@ export function SuggestionCards({
           className="suggestion-card"
           aria-label={card.title}
         >
-          <p className="suggestion-category">{labels[card.category]} · DEMO</p>
+          <p className="suggestion-category">
+            {labels[card.category]}
+            {demo ? ' · DEMO' : ''}
+          </p>
           <h4>{card.title}</h4>
           <p>{card.body}</p>
           <p className="suggestion-grounding">
             {card.groundedIn === 'meeting'
-              ? 'Base: fala da reunião simulada'
+              ? demo
+                ? 'Base: fala da reunião simulada'
+                : 'Base: fala da reunião'
               : 'Hipótese / sugestão a confirmar'}
           </p>
           <button

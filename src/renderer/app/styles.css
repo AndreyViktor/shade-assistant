@@ -259,6 +259,8 @@ summary {
 }
 
 .consent-dialog {
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
   width: min(100%, 420px);
   padding: 20px;
   border: 1px solid #607b9f;

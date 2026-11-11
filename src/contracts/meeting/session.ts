@@ -1,3 +1,5 @@
+import { parseSuggestionAuthorization } from './suggestionSession';
+import type { SuggestionAuthorization } from './suggestionSession';
 import { hasExactKeys } from '../validation';
 import type { AudioSource, TranscriptionLocale } from '../native/protocol';
 
@@ -15,6 +17,7 @@ export type SessionStart =
       consent: SessionConsent;
       locale: TranscriptionLocale;
       sources: AudioSource[];
+      suggestions?: SuggestionAuthorization;
     }
   | { mode: 'openai-stt'; consent: SessionConsent };
 export type SessionSnapshot = {
@@ -32,9 +35,20 @@ export function parseSessionStart(value: unknown): SessionStart | null {
   )
     return { mode: value.mode, consent };
   if (
-    hasExactKeys(value, ['mode', 'consent', 'locale', 'sources']) &&
+    (hasExactKeys(value, ['mode', 'consent', 'locale', 'sources']) ||
+      hasExactKeys(value, [
+        'mode',
+        'consent',
+        'locale',
+        'sources',
+        'suggestions',
+      ])) &&
     value.mode === 'apple-local' &&
     !consent.remoteAudio &&
+    (consent.context
+      ? 'suggestions' in value &&
+        parseSuggestionAuthorization(value.suggestions) !== null
+      : !('suggestions' in value)) &&
     (value.locale === 'pt-BR' || value.locale === 'en-US') &&
     Array.isArray(value.sources) &&
     value.sources.length >= 1 &&
@@ -47,6 +61,12 @@ export function parseSessionStart(value: unknown): SessionStart | null {
       consent,
       locale: value.locale,
       sources: [...value.sources],
+      ...(consent.context && 'suggestions' in value
+        ? {
+            suggestions:
+              parseSuggestionAuthorization(value.suggestions) ?? undefined,
+          }
+        : {}),
     };
   return null;
 }
@@ -78,7 +98,14 @@ function parseSessionConsent(value: unknown): SessionConsent | null {
   if (
     !hasExactKeys(value, ['mode', 'consent']) &&
     !hasExactKeys(value, ['phase', 'mode', 'consent']) &&
-    !hasExactKeys(value, ['mode', 'consent', 'locale', 'sources'])
+    !hasExactKeys(value, ['mode', 'consent', 'locale', 'sources']) &&
+    !hasExactKeys(value, [
+      'mode',
+      'consent',
+      'locale',
+      'sources',
+      'suggestions',
+    ])
   )
     return null;
   if (

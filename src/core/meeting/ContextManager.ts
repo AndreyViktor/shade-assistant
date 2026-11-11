@@ -38,7 +38,7 @@ export type ContextSnapshot = MeetingContext & { estimatedTokens: number };
 
 /** In-memory context only. The caller owns capture, authorization and transport.
  * Supply the session's elapsed clock via advanceTo during silence; no wall clock/timers.
- * Wire to real session lifecycle in T024, not through the renderer's display window.
+ * MeetingSuggestions owns session lifecycle, independently of the display window.
  */
 export class ContextManager {
   private readonly limits: ContextLimits;

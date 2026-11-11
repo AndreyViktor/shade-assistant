@@ -143,3 +143,14 @@ describe('settings composition', () => {
     ).toBe('missing');
   });
 });
+
+it('resolves a synthetic development credential only through the main-only method', async () => {
+  mocks.isPackaged = false;
+  const { service } = setup();
+  expect(await service.getApiKey()).toBe('synthetic-env-key');
+  expect(
+    JSON.stringify(await service.execute({ version: 1, action: 'read' })),
+  ).not.toContain('synthetic-env-key');
+  mocks.isPackaged = true;
+  expect(await setup().service.getApiKey()).toBeNull();
+});

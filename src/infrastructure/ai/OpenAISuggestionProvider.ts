@@ -57,7 +57,7 @@ async function readResponse(
   }
 }
 
-/** Main-only adapter. No auto-wiring, credential persistence, retries or logs. */
+/** Main-only adapter. Host owns wiring; no credential persistence, retries or logs. */
 export class OpenAISuggestionProvider implements SuggestionProvider {
   private readonly options: Options;
   constructor(options: Options) {

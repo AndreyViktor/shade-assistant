@@ -51,3 +51,5 @@ readline.createInterface({input:process.stdin}).on('line', line => {
 `;
 
 export const reconciliationHelperFixture = `const replay = ${JSON.stringify(transcriptReplay())};\n${nativeHelperFixture}`;
+
+export const suggestionHelperFixture = `const replay = [{ source: 'mic', type: 'final', segmentId: 'synthetic-question', startMs: 0, endMs: 1000, timestampMs: 1000, text: 'Qual é o prazo do projeto fictício Aurora?' }];\n${nativeHelperFixture}`;

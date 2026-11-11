@@ -1,0 +1,110 @@
+import { expect, test } from '@playwright/test';
+import { createTestApp } from './testApp';
+
+for (const consent of [false, true]) {
+  test(`synthetic JSONL → context → mock Responses → overlay; text consent ${consent}`, async () => {
+    test.skip(
+      process.platform !== 'darwin',
+      'Apple Local selection requires macOS',
+    );
+    const fixture = await createTestApp({
+      denyNetwork: true,
+      syntheticNative: 'suggestions',
+      syntheticSuggestions: true,
+    });
+    const app = await fixture.launch();
+    try {
+      const page = await app.firstWindow();
+      await page
+        .getByRole('button', { name: 'Iniciar transcrição local' })
+        .click();
+      const checkbox = page.getByRole('checkbox', {
+        name: 'Autorizar envio de texto e custos de sugestões OpenAI nesta sessão',
+      });
+      await expect(checkbox).not.toBeChecked();
+      if (consent) {
+        await checkbox.check();
+        await expect(
+          page.getByRole('button', { name: 'Autorizar e iniciar' }),
+        ).toBeDisabled();
+        await page
+          .getByRole('textbox', { name: 'Modelo OpenAI confirmado' })
+          .fill('synthetic-model');
+      }
+      await page.getByRole('button', { name: 'Autorizar e iniciar' }).click();
+      await expect(
+        page
+          .getByRole('log')
+          .getByText('Qual é o prazo do projeto fictício Aurora?'),
+      ).toBeVisible();
+      const cards = page.getByRole('region', { name: 'Sugestões da reunião' });
+      if (consent) {
+        await expect(cards.getByRole('article')).toHaveCount(1);
+        await expect(cards).toContainText('Prazo sintético Aurora');
+        await expect(cards).not.toContainText('DEMO');
+        await expect(page.getByText(/Limite atingido/)).toBeVisible();
+        await cards
+          .getByRole('button', { name: 'Descartar: Prazo sintético Aurora' })
+          .click();
+        await expect(cards.getByRole('article')).toHaveCount(0);
+        await page.getByRole('button', { name: 'Pausar' }).click();
+        await page.getByRole('button', { name: 'Retomar' }).click();
+        await page.getByRole('button', { name: 'Desativar sugestões' }).click();
+        await expect(cards).toHaveCount(0);
+        const snapshot = await page.evaluate(() =>
+          window.meetingCopilot.session({ version: 4, action: 'read' }),
+        );
+        expect(snapshot).toMatchObject({
+          session: {
+            phase: 'running',
+            consent: { context: false, capture: true },
+          },
+          suggestions: { status: 'disabled' },
+        });
+      } else {
+        await page.waitForTimeout(1200);
+        await expect(cards).toHaveCount(0);
+      }
+      const requests = await app.evaluate(
+        () =>
+          (
+            globalThis as typeof globalThis & {
+              syntheticSuggestionRequests: unknown[];
+            }
+          ).syntheticSuggestionRequests,
+      );
+      expect(requests).toHaveLength(consent ? 1 : 0);
+      if (consent) {
+        expect(requests[0]).toMatchObject({
+          model: 'synthetic-model',
+          store: false,
+          max_output_tokens: 2048,
+        });
+        const body = JSON.stringify(requests[0]);
+        expect(body).toContain('Qual é o prazo do projeto fictício Aurora?');
+        expect(body).not.toMatch(
+          /input_audio|input_image|sessionId|segmentId|Bearer/,
+        );
+      }
+      await page.getByRole('button', { name: 'Parar' }).click();
+      expect(
+        await page.evaluate(() =>
+          window.meetingCopilot.session({ version: 4, action: 'read' }),
+        ),
+      ).toMatchObject({
+        local: null,
+        suggestions: { items: [], status: 'disabled' },
+      });
+      expect(
+        await app.evaluate(
+          () =>
+            (globalThis as typeof globalThis & { demoNetworkAttempts: number })
+              .demoNetworkAttempts,
+        ),
+      ).toBe(0);
+    } finally {
+      await app.close();
+      await fixture.cleanup();
+    }
+  });
+}

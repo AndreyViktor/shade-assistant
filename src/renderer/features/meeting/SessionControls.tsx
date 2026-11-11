@@ -1,3 +1,5 @@
+import { SuggestionCards } from '../suggestions/SuggestionCards';
+import { parseSuggestionAuthorization } from '../../../contracts/meeting/suggestionSession';
 import { LocalTranscriptPreview } from './LocalTranscriptPreview';
 import { useState } from 'react';
 import type {
@@ -27,30 +29,51 @@ function selectedSources(choice: SourceChoice): AudioSource[] {
 }
 
 export function SessionControls() {
-  const { session, demo, local, busy, error, preferences, command } =
-    useMeetingSession();
+  const {
+    session,
+    demo,
+    local,
+    suggestions,
+    busy,
+    error,
+    preferences,
+    command,
+  } = useMeetingSession();
   const [localeOverride, setLocaleOverride] =
     useState<TranscriptionLocale | null>(null);
   const locale: TranscriptionLocale =
     localeOverride ?? (preferences?.language === 'en-US' ? 'en-US' : 'pt-BR');
   const [source, setSource] = useState<SourceChoice>('both');
   const [confirming, setConfirming] = useState(false);
+  const [allowSuggestions, setAllowSuggestions] = useState(false);
+  const [model, setModel] = useState('');
+  const [maxRequests, setMaxRequests] = useState(1);
+  const authorization = parseSuggestionAuthorization({ model, maxRequests });
   const canStart = session?.phase === 'idle' || session?.phase === 'stopped';
   const localActive = session?.mode === 'apple-local' && !canStart;
 
   function startLocal(): void {
     if (!canStart || busy) return;
+    setAllowSuggestions(false);
     setConfirming(true);
   }
 
   function confirmLocalConsent(): void {
+    if (allowSuggestions && !authorization) return;
     setConfirming(false);
     void command({
-      version: 3,
+      version: 4,
       action: 'start',
       options: {
         mode: 'apple-local',
-        consent: { capture: true, context: false, remoteAudio: false },
+        consent: {
+          capture: true,
+          context: allowSuggestions,
+          remoteAudio: false,
+        },
+        ...(allowSuggestions && authorization
+          ? { suggestions: authorization }
+          : {}),
         locale,
         sources: selectedSources(source),
       },
@@ -59,7 +82,7 @@ export function SessionControls() {
 
   function startDemo(): void {
     void command({
-      version: 3,
+      version: 4,
       action: 'start',
       options: {
         mode: 'demo',
@@ -136,7 +159,7 @@ export function SessionControls() {
           <button
             disabled={busy}
             onClick={() => {
-              void command({ version: 3, action: 'pause' });
+              void command({ version: 4, action: 'pause' });
             }}
           >
             Pausar
@@ -146,7 +169,7 @@ export function SessionControls() {
           <button
             disabled={busy}
             onClick={() => {
-              void command({ version: 3, action: 'resume' });
+              void command({ version: 4, action: 'resume' });
             }}
           >
             Retomar
@@ -158,7 +181,7 @@ export function SessionControls() {
           <button
             disabled={busy}
             onClick={() => {
-              void command({ version: 3, action: 'stop' });
+              void command({ version: 4, action: 'stop' });
             }}
           >
             Parar
@@ -168,6 +191,35 @@ export function SessionControls() {
 
       {session?.mode === 'apple-local' && (
         <LocalTranscriptPreview transcript={local} />
+      )}
+
+      {localActive && suggestions.status !== 'disabled' && (
+        <>
+          <p role="status">
+            Sugestões OpenAI: {suggestions.remainingRequests} chamadas restantes
+            nesta sessão.
+            {suggestions.status === 'exhausted' &&
+              ' Limite atingido. A transcrição local continua.'}
+            {suggestions.status === 'unavailable' &&
+              ' Não foi possível obter sugestões. Confira a chave e o modelo antes de uma nova sessão.'}
+          </p>
+          <button
+            disabled={busy}
+            onClick={() => {
+              void command({ version: 4, action: 'revoke-suggestions' });
+            }}
+          >
+            Desativar sugestões
+          </button>
+          <SuggestionCards
+            demo={false}
+            suggestions={suggestions.items}
+            busy={busy}
+            onDismiss={(id) => {
+              void command({ version: 4, action: 'dismiss-suggestion', id });
+            }}
+          />
+        </>
       )}
 
       <details
@@ -188,7 +240,7 @@ export function SessionControls() {
             phase={session.phase}
             busy={busy}
             onDismiss={(id) => {
-              void command({ version: 3, action: 'dismiss-suggestion', id });
+              void command({ version: 4, action: 'dismiss-suggestion', id });
             }}
           />
         )}
@@ -203,8 +255,9 @@ export function SessionControls() {
           participantes autorizaram a transcrição.
         </p>
         <p>
-          A transcrição não é enviada à OpenAI. As falas recentes ficam apenas
-          em memória e são limpas ao parar. A DEMO é apenas uma simulação.
+          O envio de texto à OpenAI exige autorização separada a cada sessão. As
+          falas recentes ficam em memória e são limpas ao parar. Áudio nunca é
+          enviado no modo local. A DEMO é apenas uma simulação.
         </p>
       </details>
 
@@ -227,11 +280,59 @@ export function SessionControls() {
               solicitadas separadamente e ainda precisam ser concedidas por
               você.
             </p>
+            <label>
+              <input
+                type="checkbox"
+                checked={allowSuggestions}
+                onChange={(event) => setAllowSuggestions(event.target.checked)}
+              />
+              Autorizar envio de texto e custos de sugestões OpenAI nesta sessão
+            </label>
+            {allowSuggestions && (
+              <fieldset>
+                <p>
+                  Falas finais e resumo limitado serão enviados a api.openai.com
+                  para sugestões. Nenhum áudio ou imagem será enviado. A API é
+                  cobrada separadamente. Confirme preço, acesso ao modelo e
+                  saldo antes de autorizar. O limite abaixo conta tentativas,
+                  inclusive falhas; não é um teto em reais.
+                </p>
+                <label>
+                  Modelo OpenAI confirmado
+                  <input
+                    value={model}
+                    maxLength={200}
+                    onChange={(event) => setModel(event.target.value)}
+                  />
+                </label>
+                <label>
+                  Máximo de chamadas nesta sessão
+                  <input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={maxRequests}
+                    onChange={(event) =>
+                      setMaxRequests(Number(event.target.value))
+                    }
+                  />
+                </label>
+                <p>
+                  Até 2.048 tokens de saída por chamada. Pause, pare ou desative
+                  sugestões para cancelar novos envios. Isso não desfaz envios
+                  já realizados. Gatilhos automáticos disponíveis em pt-BR.
+                </p>
+              </fieldset>
+            )}
             <div className="session-actions">
               <button autoFocus onClick={() => setConfirming(false)}>
                 Cancelar
               </button>
-              <button className="primary-action" onClick={confirmLocalConsent}>
+              <button
+                className="primary-action"
+                disabled={allowSuggestions && !authorization}
+                onClick={confirmLocalConsent}
+              >
                 Autorizar e iniciar
               </button>
             </div>

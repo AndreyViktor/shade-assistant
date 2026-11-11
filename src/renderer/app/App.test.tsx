@@ -23,10 +23,11 @@ describe('App shell', () => {
         },
       }),
       session: vi.fn().mockResolvedValue({
-        version: 3,
+        version: 4,
         ok: true,
         demo: emptyDemo(),
         local: null,
+        suggestions: { items: [], remainingRequests: 0, status: 'disabled' },
         session: {
           phase: 'idle',
           mode: 'demo',

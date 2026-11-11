@@ -27,7 +27,7 @@ type Pending = {
 /** Host supplies validated, bounded context and a monotonically increasing
  * revision for each new final/context change (not partials or silence).
  * Authorization must include active session, consent and budget; manual is no
- * exemption. Real lifecycle/overlay wiring belongs to T024.
+ * exemption. MeetingSuggestions owns session lifecycle and budget.
  */
 export class SuggestionScheduler {
   private readonly policy: SuggestionPolicy;

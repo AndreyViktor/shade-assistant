@@ -5,36 +5,37 @@ const options = {
   mode: 'demo',
   consent: { capture: false, context: false, remoteAudio: false },
 };
-const start = { version: 3, action: 'start', options };
+const start = { version: 4, action: 'start', options };
 describe('strict session contract', () => {
   it('accepts the versioned allowlist and snapshots', () => {
     expect(parseSessionRequest(start)).toEqual(start);
     const dismiss = {
-      version: 3,
+      version: 4,
       action: 'dismiss-suggestion',
       id: 'demo-1-2',
     };
     expect(parseSessionRequest(dismiss)).toEqual(dismiss);
     for (const action of ['read', 'pause', 'resume', 'stop'])
-      expect(parseSessionRequest({ version: 3, action })).toEqual({
-        version: 3,
+      expect(parseSessionRequest({ version: 4, action })).toEqual({
+        version: 4,
         action,
       });
     const result = {
-      version: 3,
+      version: 4,
       ok: true,
       demo: emptyDemo(),
       local: null,
+      suggestions: { items: [], remainingRequests: 0, status: 'disabled' },
       session: { phase: 'running', ...options },
     };
     expect(parseSessionResult(result)).toEqual(result);
     expect(
-      parseSessionResult({ version: 3, ok: false, code: 'TIMEOUT' }),
-    ).toEqual({ version: 3, ok: false, code: 'TIMEOUT' });
+      parseSessionResult({ version: 4, ok: false, code: 'TIMEOUT' }),
+    ).toEqual({ version: 4, ok: false, code: 'TIMEOUT' });
   });
   it('validates Apple local source, locale and consent configuration', () => {
     const appleStart = {
-      version: 3,
+      version: 4,
       action: 'start',
       options: {
         mode: 'apple-local',
@@ -65,11 +66,11 @@ describe('strict session contract', () => {
     {},
     { ...start, version: 99 },
     { ...start, version: 1 },
-    { version: 3, action: 'dismiss-suggestion' },
-    { version: 3, action: 'dismiss-suggestion', id: '' },
-    { version: 3, action: 'dismiss-suggestion', id: 'x'.repeat(81) },
-    { version: 3, action: 'dismiss-suggestion', id: 1 },
-    { version: 3, action: 'dismiss-suggestion', id: 'ok', extra: true },
+    { version: 4, action: 'dismiss-suggestion' },
+    { version: 4, action: 'dismiss-suggestion', id: '' },
+    { version: 4, action: 'dismiss-suggestion', id: 'x'.repeat(81) },
+    { version: 4, action: 'dismiss-suggestion', id: 1 },
+    { version: 4, action: 'dismiss-suggestion', id: 'ok', extra: true },
     { ...start, action: 'send' },
     { ...start, options: { ...options, mode: 'unknown' } },
     { ...start, options: { ...options, consent: { capture: true } } },
@@ -85,7 +86,7 @@ describe('strict session contract', () => {
         consent: { ...options.consent, screenshot: true },
       },
     },
-    { version: 3, action: 'stop', extra: true },
+    { version: 4, action: 'stop', extra: true },
   ])('rejects malformed requests %#', (request) => {
     expect(parseSessionRequest(request)).toBeNull();
   });
@@ -97,26 +98,63 @@ describe('strict session contract', () => {
       session: { phase: 'idle', ...options },
       demo: emptyDemo(),
       local: null,
+      suggestions: { items: [], remainingRequests: 0, status: 'disabled' },
     },
     { version: 1, ok: false, code: 'TIMEOUT' },
     { version: 99, ok: true, session: { phase: 'idle', ...options } },
-    { version: 3, ok: true, session: { phase: 'unknown', ...options } },
+    { version: 4, ok: true, session: { phase: 'unknown', ...options } },
     {
-      version: 3,
+      version: 4,
       ok: true,
       session: { phase: 'idle', ...options, secret: 'synthetic' },
     },
     {
-      version: 3,
+      version: 4,
       ok: true,
       session: { phase: 'idle', ...options },
       extra: true,
     },
   ])('rejects malformed replies %#', (reply) => {
     expect(parseSessionResult(reply)).toEqual({
-      version: 3,
+      version: 4,
       ok: false,
       code: 'INVALID_RESPONSE',
     });
   });
+});
+
+it('requires explicit model and request budget with context consent; rejects old IPC', () => {
+  const options = {
+    mode: 'apple-local',
+    locale: 'pt-BR',
+    sources: ['mic'],
+    consent: { capture: true, context: true, remoteAudio: false },
+    suggestions: { model: 'synthetic-model', maxRequests: 1 },
+  };
+  const request = { version: 4, action: 'start', options };
+  expect(parseSessionRequest(request)).toEqual(request);
+  expect(parseSessionRequest({ ...request, version: 3 })).toBeNull();
+  for (const suggestions of [
+    undefined,
+    null,
+    {},
+    { model: '', maxRequests: 1 },
+    { model: 'synthetic', maxRequests: 0 },
+    { model: 'synthetic', maxRequests: 101 },
+    { model: 'synthetic', maxRequests: 1.5 },
+    { model: 'synthetic', maxRequests: 1, key: 'forbidden' },
+  ]) {
+    expect(
+      parseSessionRequest({ ...request, options: { ...options, suggestions } }),
+    ).toBeNull();
+  }
+  expect(
+    parseSessionRequest({
+      ...request,
+      options: { ...options, consent: { ...options.consent, context: false } },
+    }),
+  ).toBeNull();
+  expect(
+    parseSessionRequest({ version: 4, action: 'revoke-suggestions' }),
+  ).toEqual({ version: 4, action: 'revoke-suggestions' });
 });

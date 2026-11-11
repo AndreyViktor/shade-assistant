@@ -10,10 +10,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SessionControls } from './SessionControls';
 const consent = { capture: false, context: false, remoteAudio: false };
 const reply = (phase: string) => ({
-  version: 3,
+  version: 4,
   ok: true,
   demo: emptyDemo(),
   local: null,
+  suggestions: { items: [], remainingRequests: 0, status: 'disabled' },
   session: { mode: 'demo', phase, consent },
 });
 afterEach(() => {
@@ -96,7 +97,7 @@ describe('session controls', () => {
       await Promise.resolve();
     });
     expect(session).toHaveBeenLastCalledWith({
-      version: 3,
+      version: 4,
       action: 'dismiss-suggestion',
       id: card.id,
     });
@@ -247,7 +248,7 @@ describe('session controls', () => {
     render(<SessionControls />);
     await screen.findByText('Pronta para iniciar');
     expect(session).toHaveBeenCalledExactlyOnceWith({
-      version: 3,
+      version: 4,
       action: 'read',
     });
     expect(
@@ -258,7 +259,7 @@ describe('session controls', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Iniciar DEMO' }));
     await screen.findByText('Em andamento');
     expect(session).toHaveBeenLastCalledWith({
-      version: 3,
+      version: 4,
       action: 'start',
       options: { mode: 'demo', consent },
     });
@@ -297,10 +298,11 @@ describe('session controls', () => {
     );
     expect(session).toHaveBeenCalledTimes(1);
     session.mockResolvedValue({
-      version: 3,
+      version: 4,
       ok: true,
       demo: emptyDemo(),
       local: null,
+      suggestions: { items: [], remainingRequests: 0, status: 'disabled' },
       session: {
         phase: 'running',
         mode: 'apple-local',
@@ -312,7 +314,7 @@ describe('session controls', () => {
     );
     await screen.findByText('Em andamento');
     expect(session).toHaveBeenLastCalledWith({
-      version: 3,
+      version: 4,
       action: 'start',
       options: {
         mode: 'apple-local',
@@ -331,7 +333,7 @@ describe('session controls', () => {
     vi.stubGlobal('meetingCopilot', { session });
     render(<SessionControls />);
     await screen.findByText('Em andamento');
-    session.mockResolvedValue({ version: 3, ok: false, code: 'TIMEOUT' });
+    session.mockResolvedValue({ version: 4, ok: false, code: 'TIMEOUT' });
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     await screen.findByRole('alert');
@@ -352,4 +354,84 @@ describe('session controls', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Reabra o app');
     expect(screen.queryByText('private')).not.toBeInTheDocument();
   });
+});
+
+it('requires an explicit text/cost opt-in and valid model/budget before sending authorization', async () => {
+  const session = vi.fn().mockResolvedValue(reply('idle'));
+  vi.stubGlobal('meetingCopilot', { session });
+  render(<SessionControls />);
+  await waitFor(() =>
+    expect(
+      screen.getByRole('button', { name: 'Iniciar transcrição local' }),
+    ).toBeEnabled(),
+  );
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Iniciar transcrição local' }),
+  );
+  const checkbox = screen.getByRole('checkbox');
+  expect(checkbox).not.toBeChecked();
+  fireEvent.click(checkbox);
+  const confirm = screen.getByRole('button', { name: 'Autorizar e iniciar' });
+  expect(confirm).toBeDisabled();
+  fireEvent.change(
+    screen.getByRole('textbox', { name: 'Modelo OpenAI confirmado' }),
+    { target: { value: 'synthetic-model' } },
+  );
+  fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '0' } });
+  expect(confirm).toBeDisabled();
+  fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '1' } });
+  fireEvent.click(confirm);
+  await waitFor(() =>
+    expect(session).toHaveBeenLastCalledWith({
+      version: 4,
+      action: 'start',
+      options: {
+        mode: 'apple-local',
+        locale: 'pt-BR',
+        sources: ['mic', 'system'],
+        consent: { capture: true, context: true, remoteAudio: false },
+        suggestions: { model: 'synthetic-model', maxRequests: 1 },
+      },
+    }),
+  );
+});
+
+it('renders real-session cards separately from DEMO and exposes revocation', async () => {
+  const session = vi.fn().mockResolvedValue({
+    ...reply('running'),
+    session: {
+      phase: 'running',
+      mode: 'apple-local',
+      consent: { capture: true, context: true, remoteAudio: false },
+    },
+    suggestions: {
+      status: 'exhausted',
+      remainingRequests: 0,
+      items: [
+        {
+          id: 'suggestion-1',
+          category: 'question',
+          title: 'Prazo sintético',
+          body: 'Confirme o prazo fictício.',
+          groundedIn: 'inference',
+          expiresAt: Date.now() + 30000,
+        },
+      ],
+    },
+  });
+  vi.stubGlobal('meetingCopilot', { session });
+  render(<SessionControls />);
+  const cards = await screen.findByRole('region', {
+    name: 'Sugestões da reunião',
+  });
+  expect(cards).toHaveTextContent('Prazo sintético');
+  expect(cards).not.toHaveTextContent('DEMO');
+  expect(screen.getByText(/Limite atingido/)).toBeVisible();
+  fireEvent.click(screen.getByRole('button', { name: 'Desativar sugestões' }));
+  await waitFor(() =>
+    expect(session).toHaveBeenLastCalledWith({
+      version: 4,
+      action: 'revoke-suggestions',
+    }),
+  );
 });

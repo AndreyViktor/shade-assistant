@@ -1,9 +1,22 @@
+import { cleanupSessions } from './app/sessionCleanup';
 import { app } from 'electron';
 import { createMainWindow } from './app/createMainWindow';
 import { createPanelController } from './app/createPanelController';
 import { installApplicationMenu } from './app/installApplicationMenu';
 
 app.setName('Meeting Copilot');
+let quitting = false;
+let cleanedUp = false;
+app.on('before-quit', (event) => {
+  if (cleanedUp) return;
+  event.preventDefault();
+  if (quitting) return;
+  quitting = true;
+  void cleanupSessions().finally(() => {
+    cleanedUp = true;
+    app.quit();
+  });
+});
 const showPanel = createPanelController(createMainWindow);
 
 function reportStartupFailure(): void {

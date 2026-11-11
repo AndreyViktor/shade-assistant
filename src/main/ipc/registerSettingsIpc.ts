@@ -12,7 +12,7 @@ import { isAuthorizedRenderer } from './isAuthorizedRenderer';
 export function registerSettingsIpc(
   window: BrowserWindow,
   rendererUrl: string,
-  service: SettingsService,
+  service: Pick<SettingsService, 'execute'>,
 ): void {
   ipcMain.handle(
     SETTINGS_CHANNEL,

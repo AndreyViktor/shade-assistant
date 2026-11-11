@@ -13,6 +13,7 @@ import {
 import { readBoundedFile } from '../../infrastructure/settings/privateFile';
 
 export interface SettingsService {
+  getApiKey(): Promise<string | null>;
   execute(request: SettingsRequest): Promise<SettingsSnapshot>;
 }
 
@@ -43,6 +44,11 @@ export function createSettingsService(window: BrowserWindow): SettingsService {
   }
 
   return {
+    async getApiKey() {
+      return developmentSecret
+        ? (process.env.OPENAI_API_KEY ?? null)
+        : secrets.get();
+    },
     async execute(request) {
       // A pending native dialog must not allow overlapping mutations or imports.
       if (busy) throw new Error('SETTINGS_BUSY');

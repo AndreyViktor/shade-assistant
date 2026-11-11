@@ -1,3 +1,6 @@
+import { OpenAISuggestionProvider } from '../../infrastructure/ai/OpenAISuggestionProvider';
+import type { SuggestionProviderFactory } from '../../core/meeting/MeetingSuggestions';
+import { cleanupSessions } from '../app/sessionCleanup';
 // @vitest-environment node
 import type { BrowserWindow } from 'electron';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -40,7 +43,7 @@ const provider: TranscriptionProvider = {
 const createAppleProvider = vi.fn(() => Promise.resolve(provider));
 const requestMicrophoneAccess = vi.fn(() => Promise.resolve(true));
 const demoStart = {
-  version: 3,
+  version: 4,
   action: 'start',
   options: {
     mode: 'demo',
@@ -48,7 +51,7 @@ const demoStart = {
   },
 } satisfies SessionRequest;
 const appleStart = {
-  version: 3,
+  version: 4,
   action: 'start',
   options: {
     mode: 'apple-local',
@@ -58,7 +61,10 @@ const appleStart = {
   },
 } satisfies SessionRequest;
 
-function setup(platform: NodeJS.Platform = 'darwin') {
+function setup(
+  platform: NodeJS.Platform = 'darwin',
+  createSuggestionProvider?: SuggestionProviderFactory,
+) {
   const frame = { url: 'file:///renderer.html' };
   const window = {
     isDestroyed: () => false,
@@ -70,6 +76,7 @@ function setup(platform: NodeJS.Platform = 'darwin') {
   };
   registerSessionIpc(window as unknown as BrowserWindow, frame.url, {
     platform,
+    createSuggestionProvider,
     createAppleProvider,
     requestMicrophoneAccess,
   });
@@ -85,7 +92,7 @@ function setup(platform: NodeJS.Platform = 'darwin') {
 }
 
 async function read(call: (request: unknown) => unknown) {
-  return parseSessionResult(await call({ version: 3, action: 'read' }));
+  return parseSessionResult(await call({ version: 4, action: 'read' }));
 }
 
 beforeEach(() => {
@@ -106,12 +113,12 @@ describe('session main boundary and provider selection', () => {
       ok: true,
       demo: { transcript: { sequence: 2, source: 'system' }, suggestions: [] },
     });
-    await call({ version: 3, action: 'pause' });
+    await call({ version: 4, action: 'pause' });
     const paused = await read(call);
     vi.advanceTimersByTime(10000);
     expect(await read(call)).toEqual(paused);
-    await call({ version: 3, action: 'resume' });
-    await call({ version: 3, action: 'stop' });
+    await call({ version: 4, action: 'resume' });
+    await call({ version: 4, action: 'stop' });
     expect(await read(call)).toMatchObject({
       ok: true,
       session: { phase: 'stopped', mode: 'demo' },
@@ -138,15 +145,15 @@ describe('session main boundary and provider selection', () => {
     expect(startCall?.[0].sessionId).toMatch(/^[a-f0-9]{32}$/);
     expect(startCall?.[1]).toEqual(expect.any(Function));
     expect(startCall?.[2]).toBeInstanceOf(AbortSignal);
-    await call({ version: 3, action: 'pause' });
+    await call({ version: 4, action: 'pause' });
     expect(pauseMock.mock.calls).toHaveLength(1);
     expect(await read(call)).toMatchObject({
       ok: true,
       session: { phase: 'paused', mode: 'apple-local' },
     });
-    await call({ version: 3, action: 'resume' });
+    await call({ version: 4, action: 'resume' });
     expect(resumeMock.mock.calls).toHaveLength(1);
-    await call({ version: 3, action: 'stop' });
+    await call({ version: 4, action: 'stop' });
     expect(stopMock.mock.calls).toHaveLength(1);
     expect(await read(call)).toMatchObject({
       ok: true,
@@ -188,7 +195,7 @@ describe('session main boundary and provider selection', () => {
     });
     expect(
       await call({
-        version: 3,
+        version: 4,
         action: 'start',
         options: {
           mode: 'openai-stt',
@@ -351,11 +358,11 @@ describe('local transcript delivery', () => {
     expect(await read(call)).toMatchObject({
       local: { segments: [speech, { ...speech, source: 'system' }] },
     });
-    await call({ version: 3, action: 'pause' });
+    await call({ version: 4, action: 'pause' });
     emit({ ...speech, seq: 2, segmentId: 'paused' });
     const paused = await read(call);
     expect(paused.ok && paused.local?.segments).toHaveLength(2);
-    await call({ version: 3, action: 'resume' });
+    await call({ version: 4, action: 'resume' });
     emit({
       version: 1,
       sessionId: config.sessionId,
@@ -375,7 +382,7 @@ describe('local transcript delivery', () => {
     });
     emit({ ...speech, seq: 4 });
     expect(await read(call)).toMatchObject({ local: { segments: [] } });
-    await call({ version: 3, action: 'stop' });
+    await call({ version: 4, action: 'stop' });
     expect(await read(call)).toMatchObject({ local: null });
     await call(appleStart);
     emit({ ...speech, seq: 5 });
@@ -408,7 +415,7 @@ it('does not revive a stopped session when provider creation completes late', as
   const { call } = setup();
   const starting = call(appleStart);
   await vi.waitFor(() => expect(createAppleProvider).toHaveBeenCalledOnce());
-  await call({ version: 3, action: 'stop' });
+  await call({ version: 4, action: 'stop' });
   resolveProvider(provider);
   expect(await starting).toMatchObject({
     ok: false,
@@ -419,4 +426,214 @@ it('does not revive a stopped session when provider creation completes late', as
     session: { phase: 'stopped' },
     local: null,
   });
+});
+
+const withSuggestions = {
+  ...appleStart,
+  options: {
+    ...appleStart.options,
+    consent: { capture: true, context: true, remoteAudio: false },
+    suggestions: { model: 'synthetic-model', maxRequests: 1 },
+  },
+};
+function emitQuestion() {
+  const start = startMock.mock.calls.at(-1);
+  if (!start) throw new Error('Missing synthetic provider');
+  start[1]({
+    version: 1,
+    sessionId: start[0].sessionId,
+    source: 'mic',
+    locale: 'pt-BR',
+    seq: 1,
+    timestampMs: 1000,
+    type: 'final',
+    segmentId: 'synthetic-question',
+    startMs: 0,
+    endMs: 1000,
+    text: 'Qual é o prazo do projeto fictício Aurora?',
+  });
+}
+
+it('connects native events to real Responses serialization with synthetic credentials/transport only', async () => {
+  const getApiKey = vi.fn(() => Promise.resolve('synthetic-key'));
+  const transport = vi.fn<typeof fetch>().mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        status: 'completed',
+        output: [
+          {
+            type: 'message',
+            role: 'assistant',
+            status: 'completed',
+            content: [
+              {
+                type: 'output_text',
+                text: JSON.stringify({
+                  suggestions: [
+                    {
+                      category: 'question',
+                      title: 'Prazo',
+                      body: 'Confirme o prazo fictício.',
+                      groundedIn: 'inference',
+                    },
+                  ],
+                }),
+              },
+            ],
+          },
+        ],
+      }),
+    ),
+  );
+  const { call } = setup(
+    'darwin',
+    (authorization, isAuthorized) =>
+      new OpenAISuggestionProvider({
+        model: authorization.model,
+        isAuthorized,
+        getApiKey,
+        fetch: transport,
+      }),
+  );
+  await call(appleStart);
+  emitQuestion();
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(getApiKey).not.toHaveBeenCalled();
+  await call({ version: 4, action: 'stop' });
+  await call(withSuggestions);
+  emitQuestion();
+  await vi.advanceTimersByTimeAsync(500);
+  expect(transport).toHaveBeenCalledOnce();
+  expect(transport.mock.calls[0]?.[0]).toBe(
+    'https://api.openai.com/v1/responses',
+  );
+  const body = transport.mock.calls[0]?.[1]?.body;
+  expect(typeof body).toBe('string');
+  expect(body).toContain('Qual é o prazo do projeto fictício Aurora?');
+  expect(body).not.toMatch(/sessionId|segmentId|input_audio|input_image/);
+  expect(await read(call)).toMatchObject({
+    suggestions: { status: 'exhausted', items: [{ title: 'Prazo' }] },
+  });
+  expect(JSON.stringify(await read(call))).not.toContain('synthetic-key');
+  await call({ version: 4, action: 'revoke-suggestions' });
+  expect(await read(call)).toMatchObject({
+    session: { phase: 'running', consent: { context: false, capture: true } },
+    suggestions: { status: 'disabled', items: [] },
+  });
+  expect(stopMock).toHaveBeenCalledTimes(1);
+});
+
+it.each(['pause', 'stop', 'revoke-suggestions', 'reload', 'failure'] as const)(
+  'cancels suggestions on %s while a credential mock is pending',
+  async (action) => {
+    let resolve: (key: string) => void = () => {};
+    const getApiKey = vi.fn(
+      () =>
+        new Promise<string>((done) => {
+          resolve = done;
+        }),
+    );
+    const transport = vi.fn<typeof fetch>();
+    const { call, window } = setup(
+      'darwin',
+      (authorization, isAuthorized) =>
+        new OpenAISuggestionProvider({
+          model: authorization.model,
+          isAuthorized,
+          getApiKey,
+          fetch: transport,
+        }),
+    );
+    await call(withSuggestions);
+    emitQuestion();
+    await vi.advanceTimersByTimeAsync(500);
+    expect(getApiKey).toHaveBeenCalledOnce();
+    if (action === 'reload')
+      window.webContents.on.mock.calls.find(
+        ([name]) => name === 'did-start-loading',
+      )?.[1]();
+    else if (action === 'failure') startMock.mock.calls.at(-1)?.[3]?.();
+    else await call({ version: 4, action });
+    resolve('synthetic-key');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(transport).not.toHaveBeenCalled();
+    expect(await read(call)).toMatchObject({ suggestions: { items: [] } });
+  },
+);
+
+it('blocks restart while native cleanup from reload is pending', async () => {
+  let finish: () => void = () => {};
+  stopMock.mockImplementationOnce(
+    () =>
+      new Promise<void>((resolve) => {
+        finish = resolve;
+      }),
+  );
+  const { call, window } = setup();
+  await call(appleStart);
+  window.webContents.on.mock.calls.find(
+    ([name]) => name === 'did-start-loading',
+  )?.[1]();
+  expect(await call(appleStart)).toMatchObject({
+    ok: false,
+    code: 'INVALID_REQUEST',
+  });
+  expect(startMock).toHaveBeenCalledOnce();
+  finish();
+  await vi.advanceTimersByTimeAsync(0);
+  expect(await call(appleStart)).toMatchObject({ ok: true });
+});
+
+it('does not start capture if stop arrives during the mocked OS permission prompt', async () => {
+  let finish: (allowed: boolean) => void = () => {};
+  requestMicrophoneAccess.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+  );
+  const { call } = setup();
+  const starting = call(appleStart);
+  await call({ version: 4, action: 'stop' });
+  finish(true);
+  expect(await starting).toMatchObject({ ok: false });
+  expect(createAppleProvider).not.toHaveBeenCalled();
+});
+
+it('shutdown waits for late provider creation and its stop before completing', async () => {
+  let finishCreation: (value: TranscriptionProvider) => void = () => {};
+  let finishStop: () => void = () => {};
+  const lateProvider = {
+    ...provider,
+    stop: vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finishStop = resolve;
+        }),
+    ),
+  };
+  createAppleProvider.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finishCreation = resolve;
+      }),
+  );
+  const { call } = setup();
+  const starting = call(appleStart);
+  await vi.waitFor(() => expect(createAppleProvider).toHaveBeenCalledOnce());
+  let completed = false;
+  const shutdown = cleanupSessions().then(() => {
+    completed = true;
+  });
+  await vi.advanceTimersByTimeAsync(0);
+  expect(completed).toBe(false);
+  finishCreation(lateProvider);
+  await vi.advanceTimersByTimeAsync(0);
+  expect(lateProvider.stop).toHaveBeenCalledOnce();
+  expect(completed).toBe(false);
+  finishStop();
+  await starting;
+  await shutdown;
+  expect(completed).toBe(true);
+  expect(startMock).not.toHaveBeenCalled();
 });

@@ -42,7 +42,7 @@ Não bloqueiam tarefas independentes; atualize esta lista quando houver decisão
 - **O006:** política para retenção opcional de histórico e perfis de reunião; o padrão atual é temporário/em memória.
 - **O007:** necessidade de consultar documentos ou materiais do usuário durante a reunião; fora do escopo atual.
 
-- **O008:** verificar o risco estático de lifecycle Apple Local em T024/T032: reload/fechamento chama `stopSession()` sem aguardar e quit não coordena cleanup; investigar sobreposição de reinício e término real do helper. Não há reprodução confirmada de helper órfão. Aceite T019 registrado em D018 não comprova correção nem ensaio específico desses caminhos.
+- **O008:** T024 acrescentou bloqueio de start durante inicialização/parada e coordenação de cleanup no quit, com regressões automatizadas para reload/restart e criação tardia do provider (ADR 0019). Falta ensaio Mac real de encerramento de captura/helper e falhas de SO, registrado no roteiro T024/T032. Não há reprodução confirmada de helper órfão; mocks e aceite T019 (D018) não comprovam ausência de processos residuais no hardware.
 
 ## Como aplicar
 

@@ -33,7 +33,7 @@ test('manual demo session uses real IPC, stops on reload and never enables real 
     expect(
       await page.evaluate(() =>
         window.meetingCopilot.session({
-          version: 3,
+          version: 4,
           action: 'start',
           options: {
             mode: 'apple-local',
@@ -43,11 +43,11 @@ test('manual demo session uses real IPC, stops on reload and never enables real 
           },
         }),
       ),
-    ).toEqual({ version: 3, ok: false, code: 'CAPTURE_CONSENT_REQUIRED' });
+    ).toEqual({ version: 4, ok: false, code: 'CAPTURE_CONSENT_REQUIRED' });
     expect(
       await page.evaluate(() =>
         window.meetingCopilot.session({
-          version: 3,
+          version: 4,
           action: 'start',
           options: {
             mode: 'openai-stt',
@@ -55,9 +55,11 @@ test('manual demo session uses real IPC, stops on reload and never enables real 
           },
         }),
       ),
-    ).toEqual({ version: 3, ok: false, code: 'REMOTE_STT_DEFERRED' });
+    ).toEqual({ version: 4, ok: false, code: 'REMOTE_STT_DEFERRED' });
     await page.locator('.privacy-details summary').click();
-    await expect(page.getByText(/não é enviada à OpenAI/)).toBeVisible();
+    await expect(
+      page.getByText(/O envio de texto à OpenAI exige autorização separada/),
+    ).toBeVisible();
     await page.locator('.privacy-details summary').click();
     await page
       .getByRole('heading', { name: 'Meeting Copilot', exact: true })
@@ -65,7 +67,7 @@ test('manual demo session uses real IPC, stops on reload and never enables real 
     await page.screenshot({ path: 'test-results/session.png' });
     expect(outgoing).toEqual([]);
     const result = await page.evaluate(() =>
-      window.meetingCopilot.session({ version: 3, action: 'read' }),
+      window.meetingCopilot.session({ version: 4, action: 'read' }),
     );
     expect(result).toMatchObject({
       ok: true,
