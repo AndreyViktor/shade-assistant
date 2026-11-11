@@ -1,0 +1,37 @@
+# T023 — Evidências de agendamento e invalidação
+
+Data: 2026-11-11. Base: `1f4fa53`. Dependência T022 concluída; árvore inicial limpa em `main`. Plano registrado em `PROGRESS.md` e status `IN_PROGRESS` antes da implementação.
+
+## Entrega e critério
+
+Critério: **cartões repetidos e respostas atrasadas descartados**. Implementação em `src/core/suggestions/SuggestionScheduler.ts` e extensão de `SuggestionStore.ts`; política e responsabilidades do host documentadas no [ADR 0018](adr/0018-suggestion-scheduling.md).
+
+| Comportamento                                                                           | Evidência automatizada                                                                                                                                                                 |
+| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rajada usa somente contexto mais recente; revisão repetida/antiga não posterga trabalho | Testes unitários de debounce de 500 ms e revisão; replay com pergunta seguida de objeção                                                                                               |
+| Cooldown automático de 10 s, manual imediato sem dispensar autorização                  | Fronteiras de tempo, manual substituindo pendência e autorização em submissão/dispatch/conclusão                                                                                       |
+| Nenhuma chamada simultânea, mesmo com cancelamento ignorado                             | Provider com promise controlada retém chamada antiga; somente após concluir inicia a última pendência, descartando conteúdo antigo                                                     |
+| Respostas antigas não voltam após mudança de contexto ou sessão                         | Nova revisão, `none`, invalidação, abort, stop e reinício com revisão igual; resposta da sessão anterior descartada                                                                    |
+| Resposta expirada não publica cartão                                                    | Retorno em 999/1.000/1.001 ms com limite configurado de 1.000 ms; avanço de relógio antes do callback de timeout                                                                       |
+| Dedup e expiração                                                                       | Lotes com corpo repetido/normalizado; repetição após descarte/invalidação; TTL original não renovado; expiração sem nova fala                                                          |
+| Limpeza e recuperação                                                                   | Timers removidos, stop limpa supressão/cooldown, IDs não se repetem entre starts da instância; falha/exceção/silêncio não disparam retries                                             |
+| Composição sem alterar contratos                                                        | Replay sintético ContextManager → TriggerEngine → Scheduler → MockSuggestionProvider → store → parser de DTOs; parciais, conversa trivial, replay de seq, compromisso e comando manual |
+
+## Execução
+
+Comando direcionado:
+
+```sh
+env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm test -- src/core/suggestions/SuggestionScheduler.test.ts src/core/suggestions/SuggestionStore.test.ts tests/integration/suggestionScheduling.test.ts
+```
+
+Resultado: **3 arquivos, 34 testes aprovados**, incluindo 28 novos testes nesta tarefa (26 scheduler, um store, um replay). Relógios e conteúdo são sintéticos; providers reais não recebem credenciais nem são chamados.
+
+Gate completo: `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run verify`, saída **0**. ESLint sem warnings, Prettier, três tsconfigs e build Electron (main/preload/renderer) aprovados. Vitest: **719 aprovados, 18 skipped**, 40 arquivos aprovados e três pulados; os testes pulados não representam validação de hardware. Runner Python: **12 aprovados**. Nenhum gate falhou. Após as atualizações finais apenas documentais, formato e whitespace foram conferidos novamente.
+
+## Limites e handoff
+
+- A política invalida todos os cartões em uma nova revisão aceita; não distingue semanticamente mudança de tópico de complemento útil. Dedup é textual normalizada, não similaridade de significado, e herda o limite de 100 entradas do store.
+- Uma promise de provider que nunca termina impede novas chamadas nessa instância, mesmo após abort; não se abre concorrência para contornar um adapter defeituoso. Timeout/cancelamento dos adapters T021 continuam necessários.
+- O host deve submeter somente contexto validado/limitado e revisões novas, conectar sinais de lifecycle e autorização de sessão/texto/orçamento. Expiração visual depende de ler snapshots. Manual não concede autorização. T024 fará a conexão real; T025 trata medição/orçamento.
+- Não houve captura, envio de texto/áudio/imagem, acesso a chave, custo, instalação, push ou deploy. Não se mediram relevância humana, latência real nem qualidade pt-BR/en-US. Nenhum arquivo Swift/main/renderer/IPC foi alterado; gates nativos e ensaio de hardware não são necessários para esta lógica TS offline e não foram executados.

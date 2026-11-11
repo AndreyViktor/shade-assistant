@@ -49,6 +49,12 @@ export class SuggestionStore {
     return this.cards.map((card) => ({ ...card }));
   }
 
+  /** New information hides stale cards without allowing them to reappear. */
+  invalidate(): void {
+    this.prune();
+    this.cards = [];
+  }
+
   clear(): void {
     this.cards = [];
     this.recent = [];

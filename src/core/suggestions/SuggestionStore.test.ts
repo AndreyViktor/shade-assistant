@@ -102,4 +102,16 @@ describe('session suggestion policy', () => {
         'Invalid suggestion lifetime',
       );
   });
+  it('invalidates visible cards while preserving suppression until the original deadline', () => {
+    const { store, advance } = setup();
+    store.add('one', content);
+    advance(10000);
+    store.invalidate();
+    expect(store.snapshot()).toEqual([]);
+    expect(store.add('two', content)).toBe(false);
+    advance(19999);
+    expect(store.add('two', content)).toBe(false);
+    advance(1);
+    expect(store.add('two', content)).toBe(true);
+  });
 });
