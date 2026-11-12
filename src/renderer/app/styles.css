@@ -406,7 +406,8 @@ button {
   font-weight: 400;
 }
 
-.suggestion-setup-fields > input {
+.suggestion-setup-fields > input,
+.suggestion-setup-fields > select {
   display: block;
   width: 100%;
   min-height: 42px;

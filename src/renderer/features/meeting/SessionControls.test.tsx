@@ -377,8 +377,8 @@ it('requires an explicit text/cost opt-in and valid model/budget before sending 
   const confirm = screen.getByRole('button', { name: 'Iniciar com sugestões' });
   expect(confirm).toBeDisabled();
   fireEvent.change(
-    screen.getByRole('textbox', { name: 'Modelo para as sugestões' }),
-    { target: { value: 'synthetic-model' } },
+    screen.getByRole('combobox', { name: 'Modelo para as sugestões' }),
+    { target: { value: 'gpt-5.4' } },
   );
   fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '0' } });
   expect(confirm).toBeDisabled();
@@ -394,7 +394,7 @@ it('requires an explicit text/cost opt-in and valid model/budget before sending 
         locale: 'pt-BR',
         sources: ['mic', 'system'],
         consent: { capture: true, context: true, remoteAudio: false },
-        suggestions: { model: 'synthetic-model', maxRequests: 1 },
+        suggestions: { model: 'gpt-5.4', maxRequests: 1 },
       },
     }),
   );

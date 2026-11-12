@@ -4,16 +4,22 @@
 
 ## Snapshot
 
-- T001–T015 e T017–T023 concluídas. T024 está `BLOCKED` apenas pelo ensaio real; correção de UX solicitada em 12/11 implementada. T016 e T036–T039 continuam `DEFERRED`; estados completos em [TASKS.md](TASKS.md).
+- T001–T015 e T017–T023 concluídas. T024 está `BLOCKED` apenas pelo ensaio real; seletor de modelos e correções de UX implementados em 12/11. T016 e T036–T039 continuam `DEFERRED`; estados completos em [TASKS.md](TASKS.md).
 - T023 concluída no commit `59527e7`: agendamento, dedup e invalidação de sugestões.
 - T024 conecta eventos Apple Local → contexto → gatilhos/scheduler → provider OpenAI → cartões IPC v4/overlay. Envio de texto desmarcado por padrão, modelo explícito e limite inicial de uma tentativa; revogação preserva a transcrição local. DEMO offline.
-- Gates T024 após correção UX: 749 TS, 12 runner e 13/13 E2E passaram; 18 TS skipped. Evidências em [TEST-T024.md](TEST-T024.md), decisão técnica no [ADR 0019](adr/0019-live-suggestion-session.md). Sem captura real, chave real ou chamada paga nesta execução.
+- Gates T024 atuais: 750 TS, 12 runner e 3/3 E2E afetados passaram; suíte completa anterior 13/13; 18 TS skipped. Evidências em [TEST-T024.md](TEST-T024.md), decisão técnica no [ADR 0019](adr/0019-live-suggestion-session.md). Sem captura real, chave real ou chamada paga nesta execução.
 
 ## Correção de UX — 2026-11-12
 
 Início local simples, sem campos OpenAI obrigatórios. Sugestões opcionais abrem configuração com estado/importação segura da chave, explicação de modelo e limite; há ação para seguir só com a transcrição. Layout/rolagem/foco do diálogo revisados; Preferências atualiza metadados sem perder rascunho. Evidências em [TEST-T024.md](TEST-T024.md).
 
 `verify`: 749 TS aprovados, 18 skipped, 12 runner e gates/build. Smoke Electron: 13/13 aprovados. A correção não autoriza captura/API nem conclui o aceite real.
+
+## Seletor de modelos — 2026-11-12
+
+Campo livre substituído por lista local: GPT-5.4 mini (inicial, menor custo) e GPT-5.4 (tarefas complexas). Descrição muda com a seleção; fontes oficiais e compatibilidade documentadas em TEST-T024.md. Lista não consulta conta/chave/API nem concede consentimento. Transcrição local não depende da escolha.
+
+`verify`: 750 TS, 18 skipped, 12 runner e gates/build. E2E focalizado: 3/3 (sem consentimento, mini, GPT-5.4), transporte sintético e rede bloqueada. Não houve ensaio pago; manter BLOCKED por esse aceite.
 
 ## Bloqueio e próximo passo
 

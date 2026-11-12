@@ -1,3 +1,7 @@
+import {
+  DEFAULT_SUGGESTION_MODEL,
+  SUGGESTION_MODELS,
+} from './suggestionModels';
 import { useEffect, useRef, useState } from 'react';
 import { parseSuggestionAuthorization } from '../../../contracts/meeting/suggestionSession';
 import type { SuggestionAuthorization } from '../../../contracts/meeting/suggestionSession';
@@ -17,7 +21,7 @@ export function StartSessionDialog({
   onStart,
 }: Props) {
   const [withSuggestions, setWithSuggestions] = useState(false);
-  const [model, setModel] = useState('');
+  const [model, setModel] = useState<string>(DEFAULT_SUGGESTION_MODEL);
   const [maxRequests, setMaxRequests] = useState(1);
   const [credential, setCredential] = useState<
     SettingsSnapshot['credential'] | null
@@ -26,9 +30,10 @@ export function StartSessionDialog({
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState('');
   const mounted = useRef(false);
-  const authorization = model.startsWith('sk-')
-    ? null
-    : parseSuggestionAuthorization({ model, maxRequests });
+  const selectedModel = SUGGESTION_MODELS.find((option) => option.id === model);
+  const authorization = selectedModel
+    ? parseSuggestionAuthorization({ model: selectedModel.id, maxRequests })
+    : null;
   const hasKey = credential === 'stored' || credential === 'development';
   const ready = hasKey && authorization !== null && !checking && !importing;
 
@@ -93,7 +98,7 @@ export function StartSessionDialog({
           if (event.key !== 'Tab') return;
           const focusable = Array.from(
             event.currentTarget.querySelectorAll<HTMLElement>(
-              'button:not(:disabled), input:not(:disabled), summary, [tabindex="0"]',
+              'button:not(:disabled), input:not(:disabled), select:not(:disabled), summary, [tabindex="0"]',
             ),
           );
           const first = focusable[0];
@@ -192,26 +197,25 @@ export function StartSessionDialog({
                 <label htmlFor="suggestion-model">
                   Modelo para as sugestões
                 </label>
-                <input
+                <select
                   id="suggestion-model"
                   value={model}
-                  maxLength={200}
-                  autoComplete="off"
-                  spellCheck={false}
-                  placeholder="Nome do modelo na sua conta da API"
-                  aria-describedby="suggestion-model-help"
-                  onChange={(event) => setModel(event.target.value.trim())}
-                />
+                  aria-describedby="suggestion-model-help suggestion-model-access"
+                  onChange={(event) => setModel(event.target.value)}
+                >
+                  {SUGGESTION_MODELS.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
                 <p id="suggestion-model-help" className="field-help">
-                  É o nome do modelo de IA disponível na sua conta OpenAI. Este
-                  campo não é a chave da API.
+                  {selectedModel?.description}
                 </p>
-                {model.startsWith('sk-') && (
-                  <p role="alert">
-                    Isso parece uma chave. Use a importação acima; aqui deve
-                    entrar apenas o nome do modelo.
-                  </p>
-                )}
+                <p id="suggestion-model-access" className="field-help">
+                  O acesso ao modelo depende da sua conta da API OpenAI.
+                  Escolher uma opção não inicia envios nem cobranças.
+                </p>
                 <label htmlFor="suggestion-limit">
                   Limite de pedidos de sugestão
                 </label>
@@ -247,9 +251,9 @@ export function StartSessionDialog({
           {withSuggestions && !ready && (
             <p className="field-help" role="status">
               {!hasKey
-                ? 'Configure a chave e o modelo para usar sugestões.'
+                ? 'Configure a chave para usar sugestões.'
                 : !authorization
-                  ? 'Preencha o nome do modelo e um limite de 1 a 100.'
+                  ? 'Escolha um modelo e um limite de 1 a 100.'
                   : 'Aguarde a configuração da chave.'}{' '}
               A transcrição local já pode começar.
             </p>

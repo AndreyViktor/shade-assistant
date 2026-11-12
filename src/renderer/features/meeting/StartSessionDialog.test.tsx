@@ -38,7 +38,7 @@ it('allows local transcription even while key metadata is unavailable', async ()
   expect(screen.queryByText('private details')).not.toBeInTheDocument();
 });
 
-it('imports via the existing secret IPC without key arguments and requires model plus explicit start', async () => {
+it('imports via the existing secret IPC without key arguments and uses the default model but still requires explicit start', async () => {
   const { onStart, importSecret } = setup();
   fireEvent.click(screen.getByRole('checkbox'));
   await waitFor(() =>
@@ -54,18 +54,16 @@ it('imports via the existing secret IPC without key arguments and requires model
   expect(await screen.findByText('Chave configurada')).toBeVisible();
   expect(importSecret).toHaveBeenCalledExactlyOnceWith();
   expect(onStart).not.toHaveBeenCalled();
-  expect(start).toBeDisabled();
-  const model = screen.getByRole('textbox', {
+  expect(start).toBeEnabled();
+  const model = screen.getByRole('combobox', {
     name: 'Modelo para as sugestões',
   });
-  expect(model).toHaveAccessibleDescription(/Este campo não é a chave/);
-  fireEvent.change(model, { target: { value: 'sk-synthetic-not-a-real-key' } });
-  expect(start).toBeDisabled();
-  expect(screen.getByRole('alert')).toHaveTextContent('Isso parece uma chave');
-  fireEvent.change(model, { target: { value: 'synthetic-model' } });
+  expect(model).toHaveValue('gpt-5.4-mini');
+  expect(model).toHaveAccessibleDescription(/custo menor/);
+  expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   fireEvent.click(start);
   expect(onStart).toHaveBeenCalledExactlyOnceWith({
-    model: 'synthetic-model',
+    model: 'gpt-5.4-mini',
     maxRequests: 1,
   });
 });
@@ -96,4 +94,26 @@ it('keeps keyboard focus inside the confirmation and cancels on Escape', async (
   fireEvent.keyDown(dialog, { key: 'Escape' });
   expect(onCancel).toHaveBeenCalledOnce();
   expect(onStart).not.toHaveBeenCalled();
+});
+
+it('offers compatible model choices and sends the selected ID only on confirmation', async () => {
+  const { onStart } = setup('stored');
+  fireEvent.click(screen.getByRole('checkbox'));
+  await screen.findByText('Chave configurada');
+  const model = screen.getByRole('combobox', {
+    name: 'Modelo para as sugestões',
+  });
+  expect(
+    screen.getAllByRole('option').map((option) => option.getAttribute('value')),
+  ).toEqual(['gpt-5.4-mini', 'gpt-5.4']);
+  fireEvent.change(model, { target: { value: 'gpt-5.4' } });
+  expect(model).toHaveAccessibleDescription(/Custa mais que o mini/);
+  expect(onStart).not.toHaveBeenCalled();
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Iniciar com sugestões' }),
+  );
+  expect(onStart).toHaveBeenCalledExactlyOnceWith({
+    model: 'gpt-5.4',
+    maxRequests: 1,
+  });
 });

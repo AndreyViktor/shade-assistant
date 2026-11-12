@@ -1,8 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { createTestApp } from './testApp';
 
-for (const consent of [false, true]) {
-  test(`synthetic JSONL → context → mock Responses → overlay; text consent ${consent}`, async () => {
+for (const { consent, model } of [
+  { consent: false, model: 'gpt-5.4-mini' },
+  { consent: true, model: 'gpt-5.4-mini' },
+  { consent: true, model: 'gpt-5.4' },
+]) {
+  test(`synthetic JSONL → context → mock Responses → overlay; text consent ${consent}; ${model}`, async () => {
     test.skip(
       process.platform !== 'darwin',
       'Apple Local selection requires macOS',
@@ -27,12 +31,13 @@ for (const consent of [false, true]) {
           path: test.info().outputPath('start-local.png'),
         });
         await checkbox.check();
-        await expect(
-          page.getByRole('button', { name: 'Iniciar com sugestões' }),
-        ).toBeDisabled();
-        await page
-          .getByRole('textbox', { name: 'Modelo para as sugestões' })
-          .fill('synthetic-model');
+        const modelSelect = page.getByRole('combobox', {
+          name: 'Modelo para as sugestões',
+        });
+        await expect(modelSelect).toHaveValue('gpt-5.4-mini');
+        await expect(page.getByRole('textbox')).toHaveCount(0);
+        await modelSelect.selectOption(model);
+        await modelSelect.scrollIntoViewIfNeeded();
         await page.screenshot({
           path: test.info().outputPath('start-suggestions.png'),
         });
@@ -87,7 +92,7 @@ for (const consent of [false, true]) {
       expect(requests).toHaveLength(consent ? 1 : 0);
       if (consent) {
         expect(requests[0]).toMatchObject({
-          model: 'synthetic-model',
+          model,
           store: false,
           max_output_tokens: 2048,
         });

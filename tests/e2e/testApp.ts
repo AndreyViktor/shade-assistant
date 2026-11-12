@@ -64,7 +64,7 @@ app.on('session-created', (session) => {
     globalThis.fetch = async (url, options) => {
       if (url !== 'https://api.openai.com/v1/responses') return blockedFetch(url, options);
       const body = JSON.parse(options.body);
-      if (options.headers.Authorization !== 'Bearer t024-synthetic-not-a-key' || body.model !== 'synthetic-model') throw new Error('Unexpected synthetic configuration');
+      if (options.headers.Authorization !== 'Bearer t024-synthetic-not-a-key' || !['gpt-5.4-mini', 'gpt-5.4'].includes(body.model)) throw new Error('Unexpected synthetic configuration');
       globalThis.syntheticSuggestionRequests.push(body);
       return new Response(JSON.stringify({status:'completed', output:[{
         type:'message', role:'assistant', status:'completed', content:[{

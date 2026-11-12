@@ -36,10 +36,26 @@ Após relato do usuário de confusão entre modelo/chave e autorização sem con
 
 O aceite real T024 permanece pendente. Esta correção foi validada somente com dados sintéticos, sem captura nem envio à OpenAI.
 
+## Seleção de modelos — 2026-11-12
+
+O usuário pediu uma lista para escolher o modelo, eliminando a necessidade de digitar seu identificador. O diálogo usa catálogo local em `suggestionModels.ts`, com dois modelos e descrição por opção. `gpt-5.4-mini` é a opção inicial de menor custo; `gpt-5.4` é alternativa para tarefas complexas. A indicação inicial é decisão de produto, não resultado de comparação real de qualidade/latência no app.
+
+Fontes oficiais consultadas em 12/11/2026:
+
+- [GPT-5.4 mini](https://developers.openai.com/api/docs/models/gpt-5.4-mini): Responses e Structured Outputs; preço padrão publicado de US$ 0,75/1M tokens de entrada e US$ 4,50/1M de saída; reasoning `none` por padrão.
+- [GPT-5.4](https://developers.openai.com/api/docs/models/gpt-5.4): mesmas capacidades necessárias, US$ 2,50/1M de entrada e US$ 15/1M de saída; reasoning `none` por padrão.
+- [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs): saída estruturada com JSON schema estrito usada pelo provider.
+
+A UI mostra custo relativo, sem promessa de latência/qualidade ou estimativa de preço por reunião. O catálogo não é uma consulta de modelos habilitados na conta. Acesso individual depende da conta e é informado junto ao seletor. Revalidar estas fontes ao atualizar opções; modelos de áudio, embeddings, fine-tunes e modelos deprecated não entram na lista. Os preços acima registram a consulta desta data e não constituem autorização de custo.
+
+Não há campo livre, consulta `/models`, uso de chave real ou chamada paga. Seleção só compõe a autorização enviada no clique final; opt-in continua desmarcado e o caminho local segue independente. O contrato/provider aceitam IDs como antes: a lista é orientação da interface, não nova fronteira de segurança.
+
+Gates: `npm run verify` passou com 750 TS (18 skipped), 12 runner, lint/formato/tipos/build. Testes UI verificam opção inicial, mudança de modelo, envio do ID selecionado e ausência de textbox. E2E offline focalizado: 3/3 aprovados (consentimento ausente, mini e GPT-5.4); transporte falso valida os IDs, zero rede real. Captura do seletor inspecionada no Electron. A suíte completa de 13 E2E havia passado na correção de layout anterior; nesta mudança foram repetidos os três cenários afetados.
+
 ## Roteiro proposto para aceite real — ainda não autorizado/executado
 
 1. Confirmar modelo OpenAI compatível, disponibilidade na conta, preço vigente e autorização de custo para **uma tentativa**, sem retry automático, com até 2.048 tokens de saída. Modelo e estimativa monetária ainda precisam ser definidos; limite de chamadas não é teto em moeda.
-2. Usar ambiente silencioso e sem reunião real. Selecionar somente microfone, pt-BR, Apple Local. Autorizar captura e texto separadamente no diálogo, modelo confirmado e limite 1. Chave fica no cofre/main; não colar chave em chat/logs.
+2. Usar ambiente silencioso e sem reunião real. Selecionar somente microfone, pt-BR, Apple Local. Autorizar captura e texto separadamente no diálogo, modelo escolhido no seletor e limite 1. Chave fica no cofre/main; não colar chave em chat/logs.
 3. Falar somente: **“Qual é o prazo do projeto fictício Aurora?”**. O payload esperado contém a transcrição final dessa frase (com possíveis variações do STT), fonte `mic`, idioma e timestamps; resumo inicialmente vazio. Também contém instruções fixas do provider e schema de sugestões. Não contém áudio, imagem, IDs de sessão/segmento ou conteúdo de reunião real. Captura pode incluir som ambiente: manter silêncio fora da frase e parar se surgir conteúdo inesperado.
 4. Destino da única tentativa: **POST https://api.openai.com/v1/responses**, `store: false`. Confirmar cartão válido ou silêncio deliberado sem forçar retries. Falha de autenticação/modelo consome a tentativa e exige nova decisão para repetir.
 5. Desativar sugestões/parar; confirmar remoção de cartões e transcrição, indicador de captura apagado e helper encerrado. Verificar também quit/reload/restart com captura local e sugestões desativadas, sem chamadas extras, para O008. Registrar observações reais separadas das evidências sintéticas.
