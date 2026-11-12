@@ -64,7 +64,7 @@ it('imports via the existing secret IPC without key arguments and uses the defau
   fireEvent.click(start);
   expect(onStart).toHaveBeenCalledExactlyOnceWith({
     model: 'gpt-5.4-mini',
-    maxRequests: 1,
+    maxRequests: 10,
   });
 });
 
@@ -114,6 +114,6 @@ it('offers compatible model choices and sends the selected ID only on confirmati
   );
   expect(onStart).toHaveBeenCalledExactlyOnceWith({
     model: 'gpt-5.4',
-    maxRequests: 1,
+    maxRequests: 10,
   });
 });

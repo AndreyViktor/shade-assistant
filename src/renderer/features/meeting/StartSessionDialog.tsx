@@ -22,7 +22,7 @@ export function StartSessionDialog({
 }: Props) {
   const [withSuggestions, setWithSuggestions] = useState(false);
   const [model, setModel] = useState<string>(DEFAULT_SUGGESTION_MODEL);
-  const [maxRequests, setMaxRequests] = useState(1);
+  const [maxRequests, setMaxRequests] = useState(10);
   const [credential, setCredential] = useState<
     SettingsSnapshot['credential'] | null
   >(null);
@@ -156,8 +156,9 @@ export function StartSessionDialog({
               >
                 <p>
                   Receba perguntas e próximos passos a partir da conversa. Para
-                  isso, o texto transcrito e um resumo são enviados à OpenAI. O
-                  áudio fica no Mac.
+                  isso, trechos finais e um resumo são enviados periodicamente à
+                  OpenAI, com intervalo mínimo de 10 segundos. O áudio fica no
+                  Mac.
                 </p>
                 <div className="credential-setup">
                   <strong>Chave da API OpenAI</strong>
@@ -241,8 +242,7 @@ export function StartSessionDialog({
                   dinheiro. Confira o preço do modelo na sua conta.
                 </p>
                 <p className="field-help">
-                  Você pode desativar as sugestões durante a sessão. Disponíveis
-                  em português (Brasil).
+                  Você pode desativar as sugestões durante a sessão.
                 </p>
               </div>
             )}

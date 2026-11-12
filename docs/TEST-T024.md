@@ -70,6 +70,12 @@ Gates: `verify` com Node 26 passou — 784 TS aprovados (27 novos), 18 skipped, 
 
 Para testar manualmente: reiniciar o app com a nova versão, iniciar sessão em pt-BR com sugestões autorizadas, abrir diagnóstico e falar a frase fictícia abaixo. Conferir final no transcript, gatilho, envio, HTTP e resultado. O padrão continua uma tentativa (falhas contam). Com limite consumido, parar e iniciar nova sessão autorizada antes de repetir. Diagnóstico ainda não substitui o aceite real.
 
+## Avaliação contínua — 2026-11-12
+
+Usuário relatou uma reunião de aproximadamente 20 minutos sem gatilho. Implementada avaliação automática de toda atualização final autorizada, independente das regras locais; essas regras permanecem apenas informativas no diagnóstico. O scheduler agrupa falas, preserva data inicial da janela de 500 ms, aplica intervalo mínimo de 10 s e mantém uma única chamada ativa. Falas novas atualizam uma avaliação pendente sem cancelar a chamada anterior. O provider recebe contexto limitado e pode retornar zero a duas sugestões. Pausa, stop, revogação, prazo, dedup e TTL continuam aplicáveis. Limite inicial no diálogo: 10 tentativas, configurável de 1 a 100 e com consentimento explícito. Sem envio ou cobrança pelo agente.
+
+`verify`: 784 TS aprovados, 18 skipped, 12 runner e lint/formato/tipos/build. Teste sintético cobre falas sem gatilho, agrupamento, preservação de chamada ativa e enfileiramento do contexto mais recente; testes existentes cobrem revogação, pausa, orçamento e limpeza. Smoke Electron offline: 17/17 aprovados com helper e transporte sintéticos e rede bloqueada. Política e compromissos em [ADR 0021](adr/0021-continuous-suggestion-evaluation.md).
+
 ## Roteiro proposto para aceite real — ainda não autorizado/executado
 
 1. Confirmar modelo OpenAI compatível, disponibilidade na conta, preço vigente e autorização de custo para **uma tentativa**, sem retry automático, com até 2.048 tokens de saída. Modelo e estimativa monetária ainda precisam ser definidos; limite de chamadas não é teto em moeda.

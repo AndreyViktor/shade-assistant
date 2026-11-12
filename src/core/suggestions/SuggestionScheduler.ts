@@ -45,6 +45,7 @@ export class SuggestionScheduler {
     private readonly isAuthorized: () => boolean,
     private readonly language: 'pt-BR' | 'en-US' = 'pt-BR',
     policy: Partial<SuggestionPolicy> = {},
+    private readonly continuous = false,
   ) {
     this.policy = { ...DEFAULT_SUGGESTION_POLICY, ...policy };
     for (const [key, value] of Object.entries(this.policy)) {
@@ -65,11 +66,15 @@ export class SuggestionScheduler {
     signal.addEventListener('abort', this.stop, { once: true });
   }
 
-  /** Repeated automatic revisions are ignored, including during debounce.
-   * A newer revision invalidates old work even when its trigger is `none`.
+  /** In continuous mode, retain active work and coalesce newer final contexts.
+   * In the original mode, a newer revision invalidates older work.
    * Manual may reuse the current revision but never an older one.
    */
-  submit(context: MeetingContext, revision: number, trigger: Trigger): void {
+  submit(
+    context: MeetingContext,
+    revision: number,
+    trigger: Trigger | 'automatic',
+  ): void {
     if (!Number.isSafeInteger(revision) || revision < 0)
       throw new Error('Invalid context revision');
     if (!this.permitted()) {
@@ -79,7 +84,8 @@ export class SuggestionScheduler {
     if (revision < this.revision) return;
     if (revision === this.revision && trigger !== 'manual') return;
     this.revision = revision;
-    this.invalidate();
+    const previousDueAt = this.pending?.dueAt;
+    if (!this.continuous) this.invalidate();
     if (trigger === 'none') return;
     this.pending = {
       context: {
@@ -87,7 +93,10 @@ export class SuggestionScheduler {
         summary: context.summary.map((excerpt) => ({ ...excerpt })),
       },
       manual: trigger === 'manual',
-      dueAt: Date.now() + (trigger === 'manual' ? 0 : this.policy.debounceMs),
+      dueAt:
+        this.continuous && previousDueAt !== undefined
+          ? previousDueAt
+          : Date.now() + (trigger === 'manual' ? 0 : this.policy.debounceMs),
     };
     this.arm();
   }

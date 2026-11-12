@@ -31,6 +31,7 @@ for (const { consent, model } of [
           path: test.info().outputPath('start-local.png'),
         });
         await checkbox.check();
+        await page.getByLabel('Limite de pedidos de sugestão').fill('1');
         const modelSelect = page.getByRole('combobox', {
           name: 'Modelo para as sugestões',
         });

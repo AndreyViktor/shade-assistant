@@ -117,6 +117,9 @@ export class MeetingSuggestions {
         },
       },
       this.authorized,
+      'pt-BR',
+      {},
+      true,
     );
   }
 
@@ -191,7 +194,7 @@ export class MeetingSuggestions {
     this.scheduler.submit(
       finalContext,
       ++this.revision,
-      this.remaining > 0 && event?.type === 'final' ? this.lastTrigger : 'none',
+      this.remaining > 0 && event?.type === 'final' ? 'automatic' : 'none',
     );
   }
 

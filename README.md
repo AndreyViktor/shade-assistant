@@ -40,9 +40,9 @@ Em desenvolvimento, uma variável `OPENAI_API_KEY` válida exportada no terminal
 
 ## Diagnosticar sugestões
 
-Durante a transcrição local, **Estado da OpenAI → Diagnóstico OpenAI** mostra o modelo, gatilho, tentativas, HTTP e duração da última chamada. **Ver corpo da última requisição** mostra o texto/resumo, instruções e formato enviados; a chave fica oculta. Abrir o painel não faz chamadas.
+Durante a transcrição local, **Estado da OpenAI → Diagnóstico OpenAI** mostra o modelo, classificação local informativa, tentativas, HTTP e duração da última chamada. **Ver corpo da última requisição** mostra o texto/resumo, instruções e formato enviados; a chave fica oculta. Abrir o painel não faz chamadas.
 
-Para testar o fluxo, inicie uma sessão com **Adicionar sugestões de IA**, autorize o envio e diga em Português (Brasil): “Qual é o prazo do projeto fictício Aurora?”. Aguarde a fala final. O painel diferencia espera por gatilho, chamada em andamento, resposta vazia e falhas. O limite inicial é uma tentativa, inclusive se falhar; para tentar novamente, pare e inicie outra sessão autorizada. A API tem cobrança separada do ChatGPT Plus.
+Para testar o fluxo, inicie uma sessão com **Adicionar sugestões de IA**, autorize o envio e diga em Português (Brasil): “Qual é o prazo do projeto fictício Aurora?”. Aguarde a fala final. O painel diferencia espera por fala final, chamada em andamento, resposta vazia e falhas. Trechos finais são agrupados para avaliação, com intervalo mínimo de 10 segundos. O limite inicial é de 10 tentativas, inclusive falhas; após esgotá-lo, pare e inicie outra sessão autorizada. A API tem cobrança separada do ChatGPT Plus.
 
 O diagnóstico fica em memória e só guarda a última tentativa. Pausar limpa o corpo; parar ou desativar sugestões limpa tudo. Uma chamada cancelada pode já ter sido enviada. Dados sintéticos dos testes automatizados não comprovam a conexão real da sua conta.
 

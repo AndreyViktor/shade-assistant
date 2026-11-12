@@ -6,8 +6,7 @@ import type {
 
 const activities: Record<SuggestionDiagnostics['activity'], string> = {
   'waiting-final': 'Aguardando uma fala final da transcrição.',
-  'waiting-trigger':
-    'Aguardando uma pergunta, objeção ou compromisso reconhecido em português.',
+  'waiting-trigger': 'Aguardando novos trechos finais da transcrição.',
   debounce: 'Aguardando a fala estabilizar por 0,5 segundo.',
   cooldown:
     'Aguardando o intervalo entre chamadas (10 segundos) ou a chamada anterior encerrar.',
@@ -108,7 +107,7 @@ export function SuggestionDiagnosticsPanel({
                 {diagnostic.maxRequests - snapshot.remainingRequests} de{' '}
                 {diagnostic.maxRequests}; {snapshot.remainingRequests} restantes
               </dd>
-              <dt>Último gatilho</dt>
+              <dt>Classificação local informativa</dt>
               <dd>{triggers[diagnostic.lastTrigger]}</dd>
               <dt>Destino</dt>
               <dd>POST https://api.openai.com/v1/responses</dd>
@@ -167,8 +166,8 @@ export function SuggestionDiagnosticsPanel({
         <p>
           Teste sugerido: em uma sessão autorizada, com idioma Português
           (Brasil), diga “Qual é o prazo do projeto fictício Aurora?” e aguarde
-          a fala final e a resposta. Falas parciais e conversa sem gatilho não
-          disparam sugestões.
+          a fala final e a resposta. Falas finais são agrupadas para avaliação;
+          o modelo pode responder sem sugestões.
         </p>
         <p>
           O diagnóstico guarda apenas a última tentativa em memória. Pausar
