@@ -34,7 +34,7 @@ export async function createTestApp(
     await writeFile(helper, `#!${process.execPath}\n${fixture}`, {
       mode: 0o700,
     });
-    nativeBootstrap = `app.getAppPath = () => ${JSON.stringify(directory)}; require('electron').systemPreferences.askForMediaAccess = async () => true;`;
+    nativeBootstrap = `require('electron').systemPreferences.askForMediaAccess = async () => true;`;
   }
 
   // Test-only guards installed before product modules. Counts only, no URLs/data.
@@ -79,7 +79,7 @@ app.on('session-created', (session) => {
   // Test-only bootstrap keeps preferences and ciphertext out of the user's profile.
   await writeFile(
     entry,
-    `const { app } = require('electron');\n${offlineBootstrap}\n${suggestionBootstrap}\n${nativeBootstrap}\napp.setPath('userData', ${JSON.stringify(profile)});\nrequire(${JSON.stringify(resolve('dist/main/index.js'))});\n`,
+    `const { app } = require('electron');\napp.getAppPath = () => ${JSON.stringify(directory)};\n${offlineBootstrap}\n${suggestionBootstrap}\n${nativeBootstrap}\napp.setPath('userData', ${JSON.stringify(profile)});\nrequire(${JSON.stringify(resolve('dist/main/index.js'))});\n`,
   );
   const env: Record<string, string> = {};
   for (const [key, value] of Object.entries(process.env)) {

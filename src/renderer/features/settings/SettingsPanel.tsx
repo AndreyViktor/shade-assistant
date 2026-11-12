@@ -105,18 +105,20 @@ export function SettingsPanel({ active = true }: { active?: boolean }) {
               {snapshot.credential === 'stored'
                 ? 'armazenada no cofre do Mac'
                 : snapshot.credential === 'development'
-                  ? 'fornecida pelo ambiente de desenvolvimento'
+                  ? 'carregada de .env ou OPENAI_API_KEY no desenvolvimento'
                   : 'não configurada'}
             </p>
             <p>
               Esta chave permite gerar sugestões de IA quando você ativar essa
               opção ao iniciar uma sessão. A transcrição local funciona sem ela.
             </p>
-            <p>
-              Importe um arquivo de texto contendo somente sua chave da API
-              OpenAI. O app a guarda protegida no Mac e nunca a exibe. Importar
-              a chave não inicia envios nem cobranças.
-            </p>
+            {snapshot.credential !== 'development' && (
+              <p>
+                Importe um arquivo de texto contendo somente sua chave da API
+                OpenAI. O app a guarda protegida no Mac e nunca a exibe.
+                Importar a chave não inicia envios nem cobranças.
+              </p>
+            )}
             <div className="settings-actions">
               <button
                 disabled={busy || snapshot.credential === 'development'}
@@ -138,7 +140,8 @@ export function SettingsPanel({ active = true }: { active?: boolean }) {
             {snapshot.credential === 'development' && (
               <p>
                 Para remover a chave de desenvolvimento, encerre o app e retire
-                OPENAI_API_KEY do ambiente.
+                OPENAI_API_KEY do arquivo .env e do ambiente. Reinicie o app
+                após alterar a chave.
               </p>
             )}
           </details>

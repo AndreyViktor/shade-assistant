@@ -6,11 +6,9 @@ import type {
   SettingsSnapshot,
 } from '../../contracts/ipc/settings';
 import { PreferencesStore } from '../../infrastructure/settings/PreferencesStore';
-import {
-  SecretStore,
-  isValidSecret,
-} from '../../infrastructure/settings/SecretStore';
+import { SecretStore } from '../../infrastructure/settings/SecretStore';
 import { readBoundedFile } from '../../infrastructure/settings/privateFile';
+import { readDevelopmentApiKey } from './readDevelopmentApiKey';
 
 export interface SettingsService {
   getApiKey(): Promise<string | null>;
@@ -28,14 +26,18 @@ export function createSettingsService(window: BrowserWindow): SettingsService {
     safeStorage,
     process.platform,
   );
-  const developmentSecret =
-    !app.isPackaged && isValidSecret(process.env.OPENAI_API_KEY);
+  const developmentSecret = app.isPackaged
+    ? Promise.resolve(null)
+    : readDevelopmentApiKey(
+        join(app.getAppPath(), '.env'),
+        process.env.OPENAI_API_KEY,
+      );
   let busy = false;
 
   async function snapshot(): Promise<SettingsSnapshot> {
     return {
       preferences: await preferences.read(),
-      credential: developmentSecret
+      credential: (await developmentSecret)
         ? 'development'
         : (await secrets.has())
           ? 'stored'
@@ -45,9 +47,7 @@ export function createSettingsService(window: BrowserWindow): SettingsService {
 
   return {
     async getApiKey() {
-      return developmentSecret
-        ? (process.env.OPENAI_API_KEY ?? null)
-        : secrets.get();
+      return (await developmentSecret) ?? secrets.get();
     },
     async execute(request) {
       // A pending native dialog must not allow overlapping mutations or imports.

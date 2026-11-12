@@ -3,6 +3,58 @@ import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { createTestApp } from './testApp';
 
+test('loads a development .env without passing its secrets to renderer or process environment', async () => {
+  const fixture = await createTestApp();
+  const synthetic = 'synthetic-env-file-not-an-api-credential';
+  await writeFile(
+    join(fixture.directory, '.env'),
+    `OPENAI_API_KEY="${synthetic}"\nCOPILOT_ENV_TEST=must-not-be-exported\n`,
+    { mode: 0o600 },
+  );
+  const app = await fixture.launch();
+  try {
+    const page = await app.firstWindow();
+    await page
+      .getByRole('button', { name: 'Preferências', exact: true })
+      .click();
+    await page
+      .getByText('Chave OpenAI (não usada na transcrição local)')
+      .click();
+    await expect(
+      page.getByText('carregada de .env ou OPENAI_API_KEY no desenvolvimento', {
+        exact: false,
+      }),
+    ).toBeVisible();
+    const state = await page.evaluate(async () => ({
+      settings: await window.meetingCopilot.getSettings(),
+      storage: { ...localStorage },
+      html: document.body.innerHTML,
+    }));
+    expect(state.settings).toMatchObject({
+      ok: true,
+      settings: { credential: 'development' },
+    });
+    expect(JSON.stringify(state)).not.toContain(synthetic);
+    expect(state.storage).toEqual({});
+    expect(
+      await app.evaluate(() =>
+        Boolean(process.env.OPENAI_API_KEY || process.env.COPILOT_ENV_TEST),
+      ),
+    ).toBe(false);
+    expect(
+      await app.evaluate((): unknown =>
+        Reflect.get(globalThis, 'demoNetworkAttempts'),
+      ),
+    ).toBe(0);
+    await expect(
+      readFile(join(fixture.profile, 'openai-key.enc')),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  } finally {
+    await app.close();
+    await fixture.cleanup();
+  }
+});
+
 test('persists preferences across real Electron restarts without network or renderer secrets', async () => {
   const fixture = await createTestApp();
   let app = await fixture.launch();

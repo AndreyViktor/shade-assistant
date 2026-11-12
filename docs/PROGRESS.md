@@ -4,10 +4,10 @@
 
 ## Snapshot
 
-- T001–T015 e T017–T023 concluídas. T024 está `BLOCKED` apenas pelo ensaio real; seletor de modelos e correções de UX implementados em 12/11. T016 e T036–T039 continuam `DEFERRED`; estados completos em [TASKS.md](TASKS.md).
+- T001–T015 e T017–T023 concluídas. T024 está `BLOCKED` apenas pelo ensaio real; chave via `.env`, seletor de modelos e correções de UX implementados em 12/11. T016 e T036–T039 continuam `DEFERRED`; estados completos em [TASKS.md](TASKS.md).
 - T023 concluída no commit `59527e7`: agendamento, dedup e invalidação de sugestões.
 - T024 conecta eventos Apple Local → contexto → gatilhos/scheduler → provider OpenAI → cartões IPC v4/overlay. Envio de texto desmarcado por padrão, modelo explícito e limite inicial de uma tentativa; revogação preserva a transcrição local. DEMO offline.
-- Gates T024 atuais: 750 TS, 12 runner e 3/3 E2E afetados passaram; suíte completa anterior 13/13; 18 TS skipped. Evidências em [TEST-T024.md](TEST-T024.md), decisão técnica no [ADR 0019](adr/0019-live-suggestion-session.md). Sem captura real, chave real ou chamada paga nesta execução.
+- Gates T024 atuais: 757 TS, 12 runner e 15/15 E2E passaram; 18 TS skipped. Evidências em [TEST-T024.md](TEST-T024.md), decisão técnica no [ADR 0019](adr/0019-live-suggestion-session.md). Sem captura real, chave real ou chamada paga nesta execução.
 
 ## Correção de UX — 2026-11-12
 
@@ -20,6 +20,12 @@ Início local simples, sem campos OpenAI obrigatórios. Sugestões opcionais abr
 Campo livre substituído por lista local: GPT-5.4 mini (inicial, menor custo) e GPT-5.4 (tarefas complexas). Descrição muda com a seleção; fontes oficiais e compatibilidade documentadas em TEST-T024.md. Lista não consulta conta/chave/API nem concede consentimento. Transcrição local não depende da escolha.
 
 `verify`: 750 TS, 18 skipped, 12 runner e gates/build. E2E focalizado: 3/3 (sem consentimento, mini, GPT-5.4), transporte sintético e rede bloqueada. Não houve ensaio pago; manter BLOCKED por esse aceite.
+
+## Chave via `.env` — 2026-11-12
+
+Plano executado: carregar somente `OPENAI_API_KEY` em desenvolvimento no main, com prioridade da variável exportada, seguido de `.env` na raiz e depois cofre. Sem exportar variáveis do arquivo; build empacotado ignora essas fontes de desenvolvimento. Exemplo e instruções no README; `.env` vazio local preparado, ignorado pelo Git. Interface identifica a origem e pede reinício após alterações.
+
+Testes cobrem prioridade, aspas/comentário, arquivo ausente/vazio/inválido/grande, isolamento do processo e metadados. Fixtures Electron sempre usam raiz temporária, evitando ler o `.env` do usuário. `verify`: 757 TS, 18 skipped, 12 runner e gates/build. Smoke offline: 15/15 aprovados. Sem captura ou API real; T024 continua BLOCKED somente pelo ensaio real.
 
 ## Bloqueio e próximo passo
 

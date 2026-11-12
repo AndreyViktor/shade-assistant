@@ -26,6 +26,18 @@ npm start
 
 Instruções adicionais de instalação, testes e gates Swift estão em [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). O roteiro de demonstração está em [docs/DEMO.md](docs/DEMO.md). O ensaio real da transcrição no overlay está em [docs/TEST-T017.md](docs/TEST-T017.md).
 
+## Chave OpenAI no desenvolvimento
+
+Para sugestões de IA, copie `.env.example` para `.env` na raiz do projeto e preencha:
+
+```dotenv
+OPENAI_API_KEY=sua_chave_da_api
+```
+
+Reinicie com `npm run dev`. A chave é lida somente pelo processo principal; a interface mostra apenas se está configurada. O `.env` fica fora do Git, mas contém texto simples: não o compartilhe nem use prefixos `VITE_` para segredos. A transcrição local não precisa de chave. As sugestões continuam dependendo de autorização na sessão e usam a API paga separadamente do ChatGPT Plus.
+
+Em desenvolvimento, uma variável `OPENAI_API_KEY` válida exportada no terminal tem prioridade sobre `.env`; em seguida vem a chave importada no cofre. O arquivo aceita comentários e valores entre aspas, sem executar comandos ou expandir variáveis. Arquivo ausente, ilegível, acima de 16 KiB ou chave vazia/inválida é ignorado, preservando o cofre e a transcrição local. Builds empacotados usam somente o cofre, sem ler `.env` ou a variável do terminal.
+
 ## Documentação
 
 - [PRD](docs/PRD.md) — escopo e comportamento esperado.

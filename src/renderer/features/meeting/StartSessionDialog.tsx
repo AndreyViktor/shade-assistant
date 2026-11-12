@@ -188,8 +188,9 @@ export function StartSessionDialog({
                   )}
                   {hasKey && (
                     <p className="field-help">
-                      Você pode gerenciar a chave em Preferências → Chave
-                      OpenAI.
+                      {credential === 'development'
+                        ? 'Chave carregada de .env ou OPENAI_API_KEY. Reinicie o app após alterá-la.'
+                        : 'Você pode gerenciar a chave em Preferências → Chave OpenAI.'}
                     </p>
                   )}
                   {error && <p role="alert">{error}</p>}

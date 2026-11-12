@@ -52,6 +52,14 @@ Não há campo livre, consulta `/models`, uso de chave real ou chamada paga. Sel
 
 Gates: `npm run verify` passou com 750 TS (18 skipped), 12 runner, lint/formato/tipos/build. Testes UI verificam opção inicial, mudança de modelo, envio do ID selecionado e ausência de textbox. E2E offline focalizado: 3/3 aprovados (consentimento ausente, mini e GPT-5.4); transporte falso valida os IDs, zero rede real. Captura do seletor inspecionada no Electron. A suíte completa de 13 E2E havia passado na correção de layout anterior; nesta mudança foram repetidos os três cenários afetados.
 
+## Chave via `.env` — 2026-11-12
+
+A pedido do usuário, o main carrega `OPENAI_API_KEY` de `.env` na raiz em desenvolvimento, usando parser nativo Node e leitura limitada a 16 KiB. Uma variável válida exportada tem prioridade; cofre continua como alternativa. Builds empacotados ignoram arquivo e variável. Não há expansão de variáveis, execução de comandos nem alteração de `process.env` pelo leitor; somente a chave selecionada fica na memória do main. O renderer recebe apenas o estado `development`. Arquivo ausente/ilegível/grande ou chave inválida deixa disponíveis cofre e transcrição local.
+
+`.env.example` e README orientam configuração/reinício. `.env` real vazio foi preparado localmente e confirmado como ignorado pelo Git; nenhuma chave real foi lida ou preenchida. Preferências e diálogo de início identificam a fonte de desenvolvimento. Consentimento para texto/custo continua separado.
+
+Validação: `verify` com 757 TS aprovados, 18 skipped, 12 runner e lint/formato/tipos/build. Sete novos testes cobrem prioridade e captura da chave até reinício, aspas/comentário, metadados sem segredo, ausência/invalidez/tamanho e build empacotado. Novo smoke Electron usa `.env` sintético em pasta temporária e verifica metadados, ausência de segredo no renderer/localStorage/cofre, ausência de exportação ao ambiente e zero rede. Todos os fixtures agora isolam `app.getAppPath` da raiz real do usuário. Smoke completo: 15/15 aprovados. Uma repetição de verify concorrente ao smoke teve timeout de 5 s no teste de quality-gates/TypeScript; repetição completa sem concorrência passou (757 TS, 12 runner e demais gates), sem mudar timeout ou remover testes.
+
 ## Roteiro proposto para aceite real — ainda não autorizado/executado
 
 1. Confirmar modelo OpenAI compatível, disponibilidade na conta, preço vigente e autorização de custo para **uma tentativa**, sem retry automático, com até 2.048 tokens de saída. Modelo e estimativa monetária ainda precisam ser definidos; limite de chamadas não é teto em moeda.

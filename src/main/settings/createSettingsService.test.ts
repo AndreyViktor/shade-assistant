@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('electron', () => ({
   app: {
     getPath: () => mocks.directory,
+    getAppPath: () => mocks.directory,
     get isPackaged() {
       return mocks.isPackaged;
     },
@@ -45,6 +46,55 @@ function setup() {
 }
 
 describe('settings composition', () => {
+  it('loads .env only in development, exposes metadata and does not export secrets', async () => {
+    vi.stubEnv('OPENAI_API_KEY', '');
+    await writeFile(
+      join(mocks.directory, '.env'),
+      'OPENAI_API_KEY="synthetic-file-key" # comment\n',
+    );
+    expect(await setup().service.getApiKey()).toBeNull();
+    mocks.isPackaged = false;
+    const { service } = setup();
+    expect(await service.getApiKey()).toBe('synthetic-file-key');
+    const snapshot = await service.execute({ version: 1, action: 'read' });
+    expect(snapshot.credential).toBe('development');
+    expect(JSON.stringify(snapshot)).not.toContain('synthetic-file-key');
+    expect(process.env.OPENAI_API_KEY).toBe('');
+    expect(mocks.encrypt).not.toHaveBeenCalled();
+  });
+  it('prefers an exported key to .env and captures it until restart', async () => {
+    mocks.isPackaged = false;
+    await writeFile(
+      join(mocks.directory, '.env'),
+      'OPENAI_API_KEY=synthetic-file-key\n',
+    );
+    const { service } = setup();
+    vi.stubEnv('OPENAI_API_KEY', 'changed-after-start');
+    expect(await service.getApiKey()).toBe('synthetic-env-key');
+  });
+  it.each([
+    '',
+    'OPENAI_API_KEY=',
+    'OPENAI_API_KEY="invalid key"',
+    'x'.repeat(16385),
+  ])(
+    'ignores unusable .env without breaking settings (%#)',
+    async (content) => {
+      mocks.isPackaged = false;
+      vi.stubEnv('OPENAI_API_KEY', '');
+      await writeFile(join(mocks.directory, '.env'), content);
+      const { service } = setup();
+      expect(await service.getApiKey()).toBeNull();
+      expect(
+        (await service.execute({ version: 1, action: 'read' })).credential,
+      ).toBe('missing');
+    },
+  );
+  it('keeps local settings available when .env is absent', async () => {
+    mocks.isPackaged = false;
+    vi.stubEnv('OPENAI_API_KEY', '');
+    expect(await setup().service.getApiKey()).toBeNull();
+  });
   it('ignores environment credentials in packaged builds and exposes only metadata in development', async () => {
     expect(
       (await setup().service.execute({ version: 1, action: 'read' }))
