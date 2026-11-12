@@ -23,6 +23,19 @@ Swift/JSONL não foram alterados; nenhuma captura real foi feita. Gates Swift n�
 - Casos adicionados: autorização estrita IPC v4, chave mock pendente com pause/stop/revoke/reload/failure, limite de tentativas, final/parcial, revisão, silêncio/expiração, respostas antigas, restart/cleanup e quit.
 - E2E novo: processo JSONL sintético com uma pergunta, provider real com transporte Responses falso, perfil temporário e chave falsa. Consentimento false produz zero requests/cartões; true produz um request/cartão, descarte/revogação/stop e zero tentativas de rede.
 
+## Correção de UX — 2026-11-12
+
+Após relato do usuário de confusão entre modelo/chave e autorização sem contexto, o início local passou a apresentar fontes/idioma e informar que não requer OpenAI. Nenhum campo de nuvem aparece até selecionar sugestões opcionais.
+
+- Diálogo dedicado `StartSessionDialog`: estado da chave, importação de arquivo pelo IPC de segredos existente (sem valor/caminho no renderer), modelo explicitamente diferenciado da chave e limite de pedidos explicado. Prefixo `sk-` no campo de modelo impede iniciar sugestões e orienta usar a importação.
+- Ações distintas: “Iniciar transcrição”, “Iniciar com sugestões” e alternativa “Iniciar apenas a transcrição” quando a configuração opcional está aberta. Essa alternativa nunca concede consentimento de texto. Leitura/importação de chave não inicia sessão ou request.
+- Teclado: Tab permanece no diálogo, Escape cancela e devolve foco ao botão inicial. Conteúdo rola independentemente das ações; campos legíveis no overlay 440 × 640. Capturas sintéticas `start-local.png` e `start-suggestions.png` inspecionadas visualmente em `test-results/` (artefatos locais ignorados pelo Git).
+- Preferências explica o uso da chave para sugestões e atualiza seus metadados ao reabrir, preservando rascunho de idioma. Não houve alteração de STT, contratos IPC, provider ou persistência de segredo.
+- `npm run verify`: 749 TS aprovados, 18 skipped, 12 runner, lint/formato/tipos/build. Cinco testes novos cobrem transcrição sem chave, importação mock, configuração incompleta, teclado e atualização dos metadados. `npm run test:smoke`: 13/13 aprovados após as correções, incluindo o fluxo novo e regressões de transcrição/teclado; rede bloqueada, perfil temporário e chave/transporte sintéticos.
+- A primeira rodada detectou seletores ambíguos após renomear botões e foco perdido ao carregar Preferências somente na abertura. Corrigidos com seletores exatos e pré-carregamento dos metadados, mantendo as asserções de teclado.
+
+O aceite real T024 permanece pendente. Esta correção foi validada somente com dados sintéticos, sem captura nem envio à OpenAI.
+
 ## Roteiro proposto para aceite real — ainda não autorizado/executado
 
 1. Confirmar modelo OpenAI compatível, disponibilidade na conta, preço vigente e autorização de custo para **uma tentativa**, sem retry automático, com até 2.048 tokens de saída. Modelo e estimativa monetária ainda precisam ser definidos; limite de chamadas não é teto em moeda.

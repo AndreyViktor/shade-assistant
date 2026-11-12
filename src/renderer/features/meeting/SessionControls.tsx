@@ -1,7 +1,8 @@
 import { SuggestionCards } from '../suggestions/SuggestionCards';
-import { parseSuggestionAuthorization } from '../../../contracts/meeting/suggestionSession';
+import { StartSessionDialog } from './StartSessionDialog';
+import type { SuggestionAuthorization } from '../../../contracts/meeting/suggestionSession';
 import { LocalTranscriptPreview } from './LocalTranscriptPreview';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type {
   AudioSource,
   TranscriptionLocale,
@@ -45,21 +46,16 @@ export function SessionControls() {
     localeOverride ?? (preferences?.language === 'en-US' ? 'en-US' : 'pt-BR');
   const [source, setSource] = useState<SourceChoice>('both');
   const [confirming, setConfirming] = useState(false);
-  const [allowSuggestions, setAllowSuggestions] = useState(false);
-  const [model, setModel] = useState('');
-  const [maxRequests, setMaxRequests] = useState(1);
-  const authorization = parseSuggestionAuthorization({ model, maxRequests });
+  const startButton = useRef<HTMLButtonElement>(null);
   const canStart = session?.phase === 'idle' || session?.phase === 'stopped';
   const localActive = session?.mode === 'apple-local' && !canStart;
 
   function startLocal(): void {
     if (!canStart || busy) return;
-    setAllowSuggestions(false);
     setConfirming(true);
   }
 
-  function confirmLocalConsent(): void {
-    if (allowSuggestions && !authorization) return;
+  function confirmLocalConsent(authorization?: SuggestionAuthorization): void {
     setConfirming(false);
     void command({
       version: 4,
@@ -68,12 +64,10 @@ export function SessionControls() {
         mode: 'apple-local',
         consent: {
           capture: true,
-          context: allowSuggestions,
+          context: Boolean(authorization),
           remoteAudio: false,
         },
-        ...(allowSuggestions && authorization
-          ? { suggestions: authorization }
-          : {}),
+        ...(authorization ? { suggestions: authorization } : {}),
         locale,
         sources: selectedSources(source),
       },
@@ -148,6 +142,7 @@ export function SessionControls() {
       <div className="session-actions">
         {!localActive && (
           <button
+            ref={startButton}
             className="primary-action"
             disabled={busy || !canStart}
             onClick={startLocal}
@@ -262,82 +257,15 @@ export function SessionControls() {
       </details>
 
       {confirming && (
-        <div className="consent-backdrop">
-          <section
-            aria-labelledby="consent-title"
-            aria-modal="true"
-            className="consent-dialog"
-            role="alertdialog"
-          >
-            <h3 id="consent-title">Iniciar transcrição local?</h3>
-            <p>
-              O Meeting Copilot capturará {sourceNames[source]} em{' '}
-              {locale === 'pt-BR' ? 'português (Brasil)' : 'inglês (EUA)'}. O
-              processamento será local e durará até você parar a sessão.
-            </p>
-            <p>
-              Esta confirmação autoriza o app. Permissões do macOS são
-              solicitadas separadamente e ainda precisam ser concedidas por
-              você.
-            </p>
-            <label>
-              <input
-                type="checkbox"
-                checked={allowSuggestions}
-                onChange={(event) => setAllowSuggestions(event.target.checked)}
-              />
-              Autorizar envio de texto e custos de sugestões OpenAI nesta sessão
-            </label>
-            {allowSuggestions && (
-              <fieldset>
-                <p>
-                  Falas finais e resumo limitado serão enviados a api.openai.com
-                  para sugestões. Nenhum áudio ou imagem será enviado. A API é
-                  cobrada separadamente. Confirme preço, acesso ao modelo e
-                  saldo antes de autorizar. O limite abaixo conta tentativas,
-                  inclusive falhas; não é um teto em reais.
-                </p>
-                <label>
-                  Modelo OpenAI confirmado
-                  <input
-                    value={model}
-                    maxLength={200}
-                    onChange={(event) => setModel(event.target.value)}
-                  />
-                </label>
-                <label>
-                  Máximo de chamadas nesta sessão
-                  <input
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={maxRequests}
-                    onChange={(event) =>
-                      setMaxRequests(Number(event.target.value))
-                    }
-                  />
-                </label>
-                <p>
-                  Até 2.048 tokens de saída por chamada. Pause, pare ou desative
-                  sugestões para cancelar novos envios. Isso não desfaz envios
-                  já realizados. Gatilhos automáticos disponíveis em pt-BR.
-                </p>
-              </fieldset>
-            )}
-            <div className="session-actions">
-              <button autoFocus onClick={() => setConfirming(false)}>
-                Cancelar
-              </button>
-              <button
-                className="primary-action"
-                disabled={allowSuggestions && !authorization}
-                onClick={confirmLocalConsent}
-              >
-                Autorizar e iniciar
-              </button>
-            </div>
-          </section>
-        </div>
+        <StartSessionDialog
+          source={sourceNames[source]}
+          language={locale === 'pt-BR' ? 'Português (Brasil)' : 'Inglês (EUA)'}
+          onCancel={() => {
+            setConfirming(false);
+            startButton.current?.focus();
+          }}
+          onStart={confirmLocalConsent}
+        />
       )}
     </section>
   );

@@ -293,9 +293,7 @@ describe('session controls', () => {
     fireEvent.click(
       screen.getByRole('button', { name: 'Iniciar transcrição local' }),
     );
-    expect(screen.getByRole('alertdialog')).toHaveTextContent(
-      'capturará microfone',
-    );
+    expect(screen.getByRole('alertdialog')).toHaveTextContent('microfone');
     expect(session).toHaveBeenCalledTimes(1);
     session.mockResolvedValue({
       version: 4,
@@ -310,7 +308,7 @@ describe('session controls', () => {
       },
     });
     fireEvent.click(
-      screen.getByRole('button', { name: 'Autorizar e iniciar' }),
+      screen.getByRole('button', { name: 'Iniciar transcrição' }),
     );
     await screen.findByText('Em andamento');
     expect(session).toHaveBeenLastCalledWith({
@@ -358,7 +356,12 @@ describe('session controls', () => {
 
 it('requires an explicit text/cost opt-in and valid model/budget before sending authorization', async () => {
   const session = vi.fn().mockResolvedValue(reply('idle'));
-  vi.stubGlobal('meetingCopilot', { session });
+  vi.stubGlobal('meetingCopilot', {
+    session,
+    getSettings: vi
+      .fn()
+      .mockResolvedValue({ ok: true, settings: { credential: 'stored' } }),
+  });
   render(<SessionControls />);
   await waitFor(() =>
     expect(
@@ -371,15 +374,16 @@ it('requires an explicit text/cost opt-in and valid model/budget before sending 
   const checkbox = screen.getByRole('checkbox');
   expect(checkbox).not.toBeChecked();
   fireEvent.click(checkbox);
-  const confirm = screen.getByRole('button', { name: 'Autorizar e iniciar' });
+  const confirm = screen.getByRole('button', { name: 'Iniciar com sugestões' });
   expect(confirm).toBeDisabled();
   fireEvent.change(
-    screen.getByRole('textbox', { name: 'Modelo OpenAI confirmado' }),
+    screen.getByRole('textbox', { name: 'Modelo para as sugestões' }),
     { target: { value: 'synthetic-model' } },
   );
   fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '0' } });
   expect(confirm).toBeDisabled();
   fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '1' } });
+  await waitFor(() => expect(confirm).toBeEnabled());
   fireEvent.click(confirm);
   await waitFor(() =>
     expect(session).toHaveBeenLastCalledWith({

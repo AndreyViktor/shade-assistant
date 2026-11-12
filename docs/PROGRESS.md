@@ -1,13 +1,19 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-11. **Marco:** M3 — integração de sugestões implementada; aceite real pendente.
+**Atualizado:** 2026-11-12. **Marco:** M3 — integração de sugestões implementada; aceite real pendente.
 
 ## Snapshot
 
-- T001–T015 e T017–T023 concluídas. T024 está `BLOCKED` pelo ensaio real. T016 e T036–T039 continuam `DEFERRED`; estados completos em [TASKS.md](TASKS.md).
+- T001–T015 e T017–T023 concluídas. T024 está `BLOCKED` apenas pelo ensaio real; correção de UX solicitada em 12/11 implementada. T016 e T036–T039 continuam `DEFERRED`; estados completos em [TASKS.md](TASKS.md).
 - T023 concluída no commit `59527e7`: agendamento, dedup e invalidação de sugestões.
 - T024 conecta eventos Apple Local → contexto → gatilhos/scheduler → provider OpenAI → cartões IPC v4/overlay. Envio de texto desmarcado por padrão, modelo explícito e limite inicial de uma tentativa; revogação preserva a transcrição local. DEMO offline.
-- Gates T024: 744 TS, 12 runner e 13/13 E2E passaram; 18 TS skipped. Evidências em [TEST-T024.md](TEST-T024.md), decisão técnica no [ADR 0019](adr/0019-live-suggestion-session.md). Sem captura real, chave real ou chamada paga nesta execução.
+- Gates T024 após correção UX: 749 TS, 12 runner e 13/13 E2E passaram; 18 TS skipped. Evidências em [TEST-T024.md](TEST-T024.md), decisão técnica no [ADR 0019](adr/0019-live-suggestion-session.md). Sem captura real, chave real ou chamada paga nesta execução.
+
+## Correção de UX — 2026-11-12
+
+Início local simples, sem campos OpenAI obrigatórios. Sugestões opcionais abrem configuração com estado/importação segura da chave, explicação de modelo e limite; há ação para seguir só com a transcrição. Layout/rolagem/foco do diálogo revisados; Preferências atualiza metadados sem perder rascunho. Evidências em [TEST-T024.md](TEST-T024.md).
+
+`verify`: 749 TS aprovados, 18 skipped, 12 runner e gates/build. Smoke Electron: 13/13 aprovados. A correção não autoriza captura/API nem conclui o aceite real.
 
 ## Bloqueio e próximo passo
 

@@ -111,3 +111,18 @@ describe('settings interface', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 });
+
+it('refreshes key metadata when reopened without losing an unsaved language draft', async () => {
+  const { rerender } = render(<SettingsPanel active />);
+  fireEvent.change(await screen.findByLabelText('Idioma'), {
+    target: { value: 'en-US' },
+  });
+  rerender(<SettingsPanel active={false} />);
+  api.getSettings.mockResolvedValue({
+    ...initial,
+    settings: { ...initial.settings, credential: 'stored' },
+  });
+  rerender(<SettingsPanel active />);
+  await screen.findByText(/armazenada no cofre do Mac/);
+  expect(screen.getByLabelText('Idioma')).toHaveValue('en-US');
+});

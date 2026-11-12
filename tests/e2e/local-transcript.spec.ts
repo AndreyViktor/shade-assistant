@@ -17,7 +17,9 @@ test('reconciles synthetic revisions and echo through the provider, IPC and rend
     await page
       .getByRole('button', { name: 'Iniciar transcrição local' })
       .click();
-    await page.getByRole('button', { name: 'Autorizar e iniciar' }).click();
+    await page
+      .getByRole('button', { name: 'Iniciar transcrição', exact: true })
+      .click();
     const read = () =>
       page.evaluate(() =>
         window.meetingCopilot.session({ version: 4, action: 'read' }),
@@ -83,7 +85,9 @@ test('synthetic native subprocess → real provider → IPC → live transcript 
     await page
       .getByRole('button', { name: 'Iniciar transcrição local' })
       .click();
-    await page.getByRole('button', { name: 'Autorizar e iniciar' }).click();
+    await page
+      .getByRole('button', { name: 'Iniciar transcrição', exact: true })
+      .click();
     const preview = page.getByRole('region', { name: 'Transcrição ao vivo' });
     await expect(
       preview.getByText('Fala sintética do microfone.').first(),
@@ -120,7 +124,9 @@ test('synthetic native subprocess → real provider → IPC → live transcript 
     await page
       .getByRole('button', { name: 'Iniciar transcrição local' })
       .click();
-    await page.getByRole('button', { name: 'Autorizar e iniciar' }).click();
+    await page
+      .getByRole('button', { name: 'Iniciar transcrição', exact: true })
+      .click();
     await expect(preview).toBeVisible();
     await page.reload();
     await expect(page.getByText('Encerrada', { exact: true })).toBeVisible();

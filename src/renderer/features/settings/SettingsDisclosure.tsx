@@ -31,7 +31,7 @@ export function SettingsDisclosure() {
           }
         }}
       >
-        <SettingsPanel />
+        <SettingsPanel active={expanded} />
         <button onClick={close}>Voltar ao painel</button>
       </div>
     </div>

@@ -19,19 +19,30 @@ for (const consent of [false, true]) {
         .getByRole('button', { name: 'Iniciar transcrição local' })
         .click();
       const checkbox = page.getByRole('checkbox', {
-        name: 'Autorizar envio de texto e custos de sugestões OpenAI nesta sessão',
+        name: /Adicionar sugestões de IA/,
       });
       await expect(checkbox).not.toBeChecked();
       if (consent) {
+        await page.screenshot({
+          path: test.info().outputPath('start-local.png'),
+        });
         await checkbox.check();
         await expect(
-          page.getByRole('button', { name: 'Autorizar e iniciar' }),
+          page.getByRole('button', { name: 'Iniciar com sugestões' }),
         ).toBeDisabled();
         await page
-          .getByRole('textbox', { name: 'Modelo OpenAI confirmado' })
+          .getByRole('textbox', { name: 'Modelo para as sugestões' })
           .fill('synthetic-model');
+        await page.screenshot({
+          path: test.info().outputPath('start-suggestions.png'),
+        });
       }
-      await page.getByRole('button', { name: 'Autorizar e iniciar' }).click();
+      await page
+        .getByRole('button', {
+          name: consent ? 'Iniciar com sugestões' : 'Iniciar transcrição',
+          exact: true,
+        })
+        .click();
       await expect(
         page
           .getByRole('log')

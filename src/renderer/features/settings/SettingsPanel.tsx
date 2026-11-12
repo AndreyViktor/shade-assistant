@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { parsePreferences } from '../../../contracts/settings/preferences';
 import type { Preferences } from '../../../contracts/settings/preferences';
 import type {
@@ -6,22 +6,25 @@ import type {
   SettingsSnapshot,
 } from '../../../contracts/ipc/settings';
 
-export function SettingsPanel() {
+export function SettingsPanel({ active = true }: { active?: boolean }) {
   const [snapshot, setSnapshot] = useState<SettingsSnapshot | null>(null);
   const [draft, setDraft] = useState<Preferences | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const loaded = useRef(false);
   useEffect(() => {
-    let active = true;
+    if (!active && loaded.current) return;
+    let current = true;
     async function load() {
       try {
         const result = await window.meetingCopilot.getSettings();
-        if (!active) return;
+        if (!current) return;
         if (!result.ok) throw new Error('UNAVAILABLE');
+        loaded.current = true;
         setSnapshot(result.settings);
-        setDraft(result.settings.preferences);
+        setDraft((previous) => previous ?? result.settings.preferences);
       } catch {
-        if (active)
+        if (current)
           setMessage(
             'Não foi possível carregar as preferências. Reabra o app.',
           );
@@ -29,9 +32,9 @@ export function SettingsPanel() {
     }
     void load();
     return () => {
-      active = false;
+      current = false;
     };
-  }, []);
+  }, [active]);
 
   async function perform(action: () => Promise<SettingsResult>) {
     setBusy(true);
@@ -105,7 +108,15 @@ export function SettingsPanel() {
                   ? 'fornecida pelo ambiente de desenvolvimento'
                   : 'não configurada'}
             </p>
-            <p>O fallback de transcrição OpenAI está desativado.</p>
+            <p>
+              Esta chave permite gerar sugestões de IA quando você ativar essa
+              opção ao iniciar uma sessão. A transcrição local funciona sem ela.
+            </p>
+            <p>
+              Importe um arquivo de texto contendo somente sua chave da API
+              OpenAI. O app a guarda protegida no Mac e nunca a exibe. Importar
+              a chave não inicia envios nem cobranças.
+            </p>
             <div className="settings-actions">
               <button
                 disabled={busy || snapshot.credential === 'development'}
