@@ -1,4 +1,5 @@
 import { SuggestionCards } from '../suggestions/SuggestionCards';
+import { SuggestionDiagnosticsPanel } from '../suggestions/SuggestionDiagnosticsPanel';
 import { StartSessionDialog } from './StartSessionDialog';
 import type { SuggestionAuthorization } from '../../../contracts/meeting/suggestionSession';
 import { LocalTranscriptPreview } from './LocalTranscriptPreview';
@@ -58,7 +59,7 @@ export function SessionControls() {
   function confirmLocalConsent(authorization?: SuggestionAuthorization): void {
     setConfirming(false);
     void command({
-      version: 4,
+      version: 5,
       action: 'start',
       options: {
         mode: 'apple-local',
@@ -76,7 +77,7 @@ export function SessionControls() {
 
   function startDemo(): void {
     void command({
-      version: 4,
+      version: 5,
       action: 'start',
       options: {
         mode: 'demo',
@@ -154,7 +155,7 @@ export function SessionControls() {
           <button
             disabled={busy}
             onClick={() => {
-              void command({ version: 4, action: 'pause' });
+              void command({ version: 5, action: 'pause' });
             }}
           >
             Pausar
@@ -164,7 +165,7 @@ export function SessionControls() {
           <button
             disabled={busy}
             onClick={() => {
-              void command({ version: 4, action: 'resume' });
+              void command({ version: 5, action: 'resume' });
             }}
           >
             Retomar
@@ -176,7 +177,7 @@ export function SessionControls() {
           <button
             disabled={busy}
             onClick={() => {
-              void command({ version: 4, action: 'stop' });
+              void command({ version: 5, action: 'stop' });
             }}
           >
             Parar
@@ -188,20 +189,17 @@ export function SessionControls() {
         <LocalTranscriptPreview transcript={local} />
       )}
 
+      {localActive && <SuggestionDiagnosticsPanel snapshot={suggestions} />}
       {localActive && suggestions.status !== 'disabled' && (
         <>
           <p role="status">
             Sugestões OpenAI: {suggestions.remainingRequests} chamadas restantes
             nesta sessão.
-            {suggestions.status === 'exhausted' &&
-              ' Limite atingido. A transcrição local continua.'}
-            {suggestions.status === 'unavailable' &&
-              ' Não foi possível obter sugestões. Confira a chave e o modelo antes de uma nova sessão.'}
           </p>
           <button
             disabled={busy}
             onClick={() => {
-              void command({ version: 4, action: 'revoke-suggestions' });
+              void command({ version: 5, action: 'revoke-suggestions' });
             }}
           >
             Desativar sugestões
@@ -211,7 +209,7 @@ export function SessionControls() {
             suggestions={suggestions.items}
             busy={busy}
             onDismiss={(id) => {
-              void command({ version: 4, action: 'dismiss-suggestion', id });
+              void command({ version: 5, action: 'dismiss-suggestion', id });
             }}
           />
         </>
@@ -235,7 +233,7 @@ export function SessionControls() {
             phase={session.phase}
             busy={busy}
             onDismiss={(id) => {
-              void command({ version: 4, action: 'dismiss-suggestion', id });
+              void command({ version: 5, action: 'dismiss-suggestion', id });
             }}
           />
         )}

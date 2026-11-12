@@ -459,3 +459,34 @@ button {
 .consent-actions .field-help {
   margin: 0 0 4px;
 }
+/* Diagnostics stay readable within the narrow overlay and keyboard scrollable. */
+.suggestion-diagnostics {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #40516c;
+  border-radius: 12px;
+  background: #152033;
+  overflow-wrap: anywhere;
+}
+.suggestion-diagnostics summary {
+  cursor: pointer;
+  padding: 8px 0;
+}
+.suggestion-diagnostics dt {
+  color: #b8c7dc;
+  margin-top: 8px;
+}
+.suggestion-diagnostics dd {
+  margin: 2px 0 0;
+}
+.suggestion-diagnostics pre {
+  max-height: 280px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 10px;
+  background: #0b1220;
+  user-select: text;
+}

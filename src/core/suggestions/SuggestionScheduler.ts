@@ -122,6 +122,12 @@ export class SuggestionScheduler {
     this.store.dismiss(id);
   }
 
+  activity(): 'idle' | 'debounce' | 'cooldown' | 'generating' {
+    if (this.active && !this.active.signal.aborted) return 'generating';
+    if (!this.pending) return 'idle';
+    return Date.now() < this.pending.dueAt ? 'debounce' : 'cooldown';
+  }
+
   private permitted(): boolean {
     return !!this.session && !this.session.aborted && this.isAuthorized();
   }

@@ -8,6 +8,8 @@ ContextManager, TriggerEngine, SuggestionScheduler e provider OpenAI já existem
 
 ## Decisão
 
+Atualização em 2026-11-12: [ADR 0020](0020-suggestion-diagnostics.md) acrescenta diagnóstico local e migra IPC de sessão para v5; a decisão original v4 abaixo registra a integração inicial.
+
 - `MeetingSuggestions` no core compõe contexto, gatilhos e scheduler por sessão. Recebe somente eventos aceitos pelo transcript local; apenas falas finais e resumo limitado entram no contexto enviado. Revisões ignoram atualizações sem mudança do conteúdo final. O relógio avança durante silêncio para retirar falas antigas da janela; isso não dispara inferência.
 - O main cria o provider com modelo explícito e callback de autorização ligado à geração e ao consentimento da sessão. A chave é lida pelo serviço de settings somente quando uma tentativa autorizada chega ao provider; nunca por IPC, renderer ou logs. A composição usa o adapter existente, sem nova dependência.
 - IPC de sessão passa de v3 para v4, com snapshot `suggestions`, ação `revoke-suggestions` e autorização opcional `{model, maxRequests}` no start Apple Local. Consentimento de contexto e autorização devem estar presentes juntos. Chamadas v3, campos desconhecidos, modelos inválidos e limites fora de 1–100 são rejeitados. O protocolo JSONL Swift permanece v1.

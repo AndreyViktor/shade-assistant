@@ -71,6 +71,49 @@ afterEach(() => {
 });
 
 describe('OpenAI suggestion adapter with synthetic HTTP only', () => {
+  it.each([200, 401, 403, 429, 500])(
+    'reports the exact body and HTTP %i without headers, key or raw errors',
+    async (status) => {
+      const { provider, transport } = setup();
+      transport.mockResolvedValue(
+        Response.json(
+          status === 200 ? envelope() : { error: 'private-error-sentinel' },
+          { status },
+        ),
+      );
+      const onDispatch = vi.fn();
+      const onHttpResponse = vi.fn();
+      await provider.generate({ ...request(), onDispatch, onHttpResponse });
+      expect(onDispatch).toHaveBeenCalledExactlyOnceWith(
+        transport.mock.calls[0]?.[1]?.body,
+      );
+      expect(onHttpResponse).toHaveBeenCalledExactlyOnceWith(status);
+      const publicData = JSON.stringify([
+        onDispatch.mock.calls,
+        onHttpResponse.mock.calls,
+      ]);
+      expect(publicData).toContain('Qual é o prazo?');
+      expect(publicData).not.toMatch(
+        /synthetic-key|Authorization|Bearer|private-error-sentinel|private-session|private-id/,
+      );
+    },
+  );
+  it('never reports dispatch when credentials are missing, and does not invent HTTP on network failure', async () => {
+    const { provider, getApiKey, transport } = setup();
+    const onDispatch = vi.fn();
+    const onHttpResponse = vi.fn();
+    getApiKey.mockResolvedValueOnce(null);
+    expect(
+      await provider.generate({ ...request(), onDispatch, onHttpResponse }),
+    ).toEqual({ ok: false, code: 'credentials-unavailable' });
+    expect(onDispatch).not.toHaveBeenCalled();
+    transport.mockRejectedValue(new Error('private-network-error'));
+    expect(
+      await provider.generate({ ...request(), onDispatch, onHttpResponse }),
+    ).toEqual({ ok: false, code: 'network' });
+    expect(onDispatch).toHaveBeenCalledOnce();
+    expect(onHttpResponse).not.toHaveBeenCalled();
+  });
   it.each([0, 1, 2])('returns %i validated suggestions', async (count) => {
     const suggestions = Array.from({ length: count }, () => card);
     const { provider } = setup(envelope(suggestions));

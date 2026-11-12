@@ -1,16 +1,24 @@
 import { hasExactKeys } from '../validation';
 import { parseSuggestions } from './suggestion';
 import type { Suggestion } from './suggestion';
+import { parseSuggestionDiagnostics } from './suggestionDiagnostics';
+import type { SuggestionDiagnostics } from './suggestionDiagnostics';
 
 export type SuggestionAuthorization = { model: string; maxRequests: number };
 export type SuggestionSessionSnapshot = {
   items: Suggestion[];
   remainingRequests: number;
   status: 'disabled' | 'ready' | 'exhausted' | 'unavailable';
+  diagnostics: SuggestionDiagnostics | null;
 };
 
 export function emptySuggestionSession(): SuggestionSessionSnapshot {
-  return { items: [], remainingRequests: 0, status: 'disabled' };
+  return {
+    items: [],
+    remainingRequests: 0,
+    status: 'disabled',
+    diagnostics: null,
+  };
 }
 
 export function parseSuggestionAuthorization(
@@ -33,7 +41,12 @@ export function parseSuggestionSession(
   value: unknown,
 ): SuggestionSessionSnapshot | null {
   if (
-    !hasExactKeys(value, ['items', 'remainingRequests', 'status']) ||
+    !hasExactKeys(value, [
+      'items',
+      'remainingRequests',
+      'status',
+      'diagnostics',
+    ]) ||
     typeof value.remainingRequests !== 'number' ||
     !Number.isSafeInteger(value.remainingRequests) ||
     value.remainingRequests < 0 ||
@@ -45,11 +58,15 @@ export function parseSuggestionSession(
   )
     return null;
   const items = parseSuggestions(value.items);
+  const diagnostics = parseSuggestionDiagnostics(value.diagnostics);
+  if (value.status === 'disabled' ? value.diagnostics !== null : !diagnostics)
+    return null;
   return items
     ? {
         items,
         remainingRequests: value.remainingRequests,
         status: value.status,
+        diagnostics,
       }
     : null;
 }

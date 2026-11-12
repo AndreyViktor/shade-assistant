@@ -4,39 +4,29 @@
 
 ## Snapshot
 
-- T001–T015 e T017–T023 concluídas. T024 está `BLOCKED` apenas pelo ensaio real; chave via `.env`, seletor de modelos e correções de UX implementados em 12/11. T016 e T036–T039 continuam `DEFERRED`; estados completos em [TASKS.md](TASKS.md).
-- T023 concluída no commit `59527e7`: agendamento, dedup e invalidação de sugestões.
-- T024 conecta eventos Apple Local → contexto → gatilhos/scheduler → provider OpenAI → cartões IPC v4/overlay. Envio de texto desmarcado por padrão, modelo explícito e limite inicial de uma tentativa; revogação preserva a transcrição local. DEMO offline.
-- Gates T024 atuais: 757 TS, 12 runner e 15/15 E2E passaram; 18 TS skipped. Evidências em [TEST-T024.md](TEST-T024.md), decisão técnica no [ADR 0019](adr/0019-live-suggestion-session.md). Sem captura real, chave real ou chamada paga nesta execução.
+- T001–T015 e T017–T023 concluídas. T024 está `BLOCKED` somente pelo ensaio real. T016 e T036–T039 continuam `DEFERRED`; estados completos em [TASKS.md](TASKS.md).
+- T024 conecta Apple Local → contexto → gatilhos/scheduler → provider OpenAI → cartões e diagnóstico IPC v5. Envio de texto desmarcado por padrão, modelo explícito e limite inicial de uma tentativa. Revogação preserva a transcrição local; DEMO offline.
+- Configuração atual: início local sem campos OpenAI, sugestões opcionais, seletor GPT-5.4 mini/GPT-5.4; chave via `.env`/variável exportada somente no main em desenvolvimento, ou importação no cofre. Alterações da chave de desenvolvimento exigem reiniciar.
+- Gates atuais: `verify` com 784 TS aprovados, 18 skipped, 12 runner e lint/formato/tipos/build; smoke Electron completo 17/17. Helper, chave e transporte sintéticos; rede bloqueada. Sem captura real, leitura de chave real ou chamada paga nesta execução.
 
-## Correção de UX — 2026-11-12
+## Diagnóstico OpenAI — entrega atual
 
-Início local simples, sem campos OpenAI obrigatórios. Sugestões opcionais abrem configuração com estado/importação segura da chave, explicação de modelo e limite; há ação para seguir só com a transcrição. Layout/rolagem/foco do diálogo revisados; Preferências atualiza metadados sem perder rascunho. Evidências em [TEST-T024.md](TEST-T024.md).
+Plano executado: snapshot validado/versionado com estágio, gatilho, modelo, tentativas, corpo exato da última requisição sem headers, HTTP, duração e resultado seguro. **Estado da OpenAI → Diagnóstico OpenAI** explica também sugestões desligadas, ausência de gatilho, resposta vazia e cancelamento. Abrir o painel não faz chamada ou retry. A última tentativa em andamento tem prioridade visual sobre limite esgotado.
 
-`verify`: 749 TS aprovados, 18 skipped, 12 runner e gates/build. Smoke Electron: 13/13 aprovados. A correção não autoriza captura/API nem conclui o aceite real.
+Somente a última tentativa fica em memória. Pausa limpa o corpo; parada/revogação/nova sessão/reload limpam tudo. Callbacks antigos não repovoam os dados. Testes cobrem igualdade do corpo com o transporte, sucesso/vazio/401, erros de rede, ausência de segredos/erros brutos, validação, cancelamento e limpeza. Captura sintética do painel/JSON inspecionada no Electron.
 
-## Seletor de modelos — 2026-11-12
-
-Campo livre substituído por lista local: GPT-5.4 mini (inicial, menor custo) e GPT-5.4 (tarefas complexas). Descrição muda com a seleção; fontes oficiais e compatibilidade documentadas em TEST-T024.md. Lista não consulta conta/chave/API nem concede consentimento. Transcrição local não depende da escolha.
-
-`verify`: 750 TS, 18 skipped, 12 runner e gates/build. E2E focalizado: 3/3 (sem consentimento, mini, GPT-5.4), transporte sintético e rede bloqueada. Não houve ensaio pago; manter BLOCKED por esse aceite.
-
-## Chave via `.env` — 2026-11-12
-
-Plano executado: carregar somente `OPENAI_API_KEY` em desenvolvimento no main, com prioridade da variável exportada, seguido de `.env` na raiz e depois cofre. Sem exportar variáveis do arquivo; build empacotado ignora essas fontes de desenvolvimento. Exemplo e instruções no README; `.env` vazio local preparado, ignorado pelo Git. Interface identifica a origem e pede reinício após alterações.
-
-Testes cobrem prioridade, aspas/comentário, arquivo ausente/vazio/inválido/grande, isolamento do processo e metadados. Fixtures Electron sempre usam raiz temporária, evitando ler o `.env` do usuário. `verify`: 757 TS, 18 skipped, 12 runner e gates/build. Smoke offline: 15/15 aprovados. Sem captura ou API real; T024 continua BLOCKED somente pelo ensaio real.
+Evidências e roteiro em [TEST-T024.md](TEST-T024.md). Composição em [ADR 0019](adr/0019-live-suggestion-session.md); diagnóstico e migração IPC v5 em [ADR 0020](adr/0020-suggestion-diagnostics.md). Correções anteriores de UX, modelos e `.env` estão documentadas no teste especializado.
 
 ## Bloqueio e próximo passo
 
-T024 requer ensaio Mac/OpenAI real autorizado. Revisão automática rejeitou o lote irrestrito por possível envio de texto de reunião; execução posterior foi aprovada somente para implementação/testes offline. O usuário pediu continuar após a sessão filha atingir limite de uso; os gates e a documentação foram finalizados na sessão principal.
+T024 requer ensaio Mac/OpenAI real autorizado. O lote irrestrito anterior foi rejeitado pela revisão automática por possível envio de texto de reunião; a autorização subsequente foi para implementação/testes offline. Os pedidos atuais de configuração/diagnóstico não foram tratados como autorização para capturar ou gastar com API.
 
-Antes do ensaio: confirmar modelo/acesso/preço e autorização de captura e de uma tentativa paga, enviando somente a frase fictícia definida em [TEST-T024.md](TEST-T024.md) a `https://api.openai.com/v1/responses`. Limite de tentativas não é teto monetário; medição completa fica em T025. Não marcar DONE nem avançar o runner automaticamente antes de resolver esse bloqueio.
+Para o ensaio assistido: confirmar modelo/acesso/preço e autorização de captura e uma tentativa paga, enviando somente a frase fictícia e destino definidos em TEST-T024.md. Para observar o próprio teste no app, reiniciar com a versão atual, iniciar sessão pt-BR com sugestões autorizadas, abrir diagnóstico, falar a frase e aguardar o final/HTTP/resultado. Falhas contam no limite; após esgotá-lo, parar e iniciar outra sessão autorizada antes de repetir. Não marcar DONE nem avançar runner automaticamente antes do aceite real.
 
-O008: coordenação de shutdown/restart foi implementada e testada com mocks; encerramento real de captura/helper e falhas de SO ainda precisam de ensaio. Windows e fallback remoto não foram reativados.
+O008: shutdown/restart testados com mocks; encerramento físico de captura/helper e falhas do SO ainda dependem de ensaio. Cancelamento após envio não garante ausência de custo. Medição financeira permanece T025; avaliação de qualidade/latência em T027. Windows/fallback remoto não foram reativados.
 
 ## Ambiente
 
-- Usar Node >=26: `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run verify`.
-- Electron E2E falhou no launch sob sandbox; `npm run test:smoke` com escalada aprovada passou com perfil temporário, rede bloqueada e fixtures sintéticos.
-- O runner original não mudou. A execução T024 interrompida saiu com erro; o estado `BLOCKED` impede próximo ciclo. Não confundir implementação offline com aceite real.
+- Node >=26: `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run verify`.
+- Smoke Electron requer execução fora do sandbox; aprovado com perfil temporário e rede bloqueada. Não executar verify concorrentemente ao smoke: houve timeout isolado do quality gate TypeScript na sessão anterior, resolvido em execução sequencial.
+- Runner original não mudou. `BLOCKED` impede próximo ciclo; implementação offline não equivale ao aceite real.

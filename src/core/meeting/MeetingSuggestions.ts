@@ -2,6 +2,11 @@ import { ContextManager } from './ContextManager';
 import type { MeetingContext } from './ContextManager';
 import { SuggestionScheduler } from '../suggestions/SuggestionScheduler';
 import { TriggerEngine } from '../suggestions/TriggerEngine';
+import type { Trigger } from '../suggestions/TriggerEngine';
+import type {
+  SuggestionAttempt,
+  SuggestionDiagnostics,
+} from '../../contracts/meeting/suggestionDiagnostics';
 import type {
   SuggestionResult,
   SuggestionProvider,
@@ -41,6 +46,11 @@ export class MeetingSuggestions {
   private elapsed = 0;
   private lastClock = 0;
   private timer: ReturnType<typeof setInterval> | undefined;
+  private model = '';
+  private maxRequests = 0;
+  private lastTrigger: Trigger = 'none';
+  private hasFinal = false;
+  private lastAttempt: SuggestionAttempt | null = null;
 
   constructor(
     private readonly session: MeetingSession,
@@ -54,17 +64,55 @@ export class MeetingSuggestions {
             return { ok: false, code: 'not-authorized' };
           const generation = this.generation;
           this.remaining -= 1;
+          const attempt: SuggestionAttempt = {
+            number: this.maxRequests - this.remaining,
+            startedAt: Date.now(),
+            durationMs: null,
+            requestBody: null,
+            httpStatus: null,
+            result: 'pending',
+            suggestionCount: null,
+          };
+          this.lastAttempt = attempt;
+          const current = () =>
+            generation === this.generation && this.lastAttempt === attempt;
+          const cancel = () => {
+            if (!current()) return;
+            attempt.result = 'cancelled';
+            attempt.durationMs = Math.max(0, Date.now() - attempt.startedAt);
+          };
+          request.signal.addEventListener('abort', cancel, { once: true });
           let result: SuggestionResult;
           try {
             result = await provider.generate({
               ...request,
               language: this.language,
+              onDispatch: (body) => {
+                if (current() && !request.signal.aborted)
+                  attempt.requestBody = body;
+              },
+              onHttpResponse: (status) => {
+                if (current() && !request.signal.aborted)
+                  attempt.httpStatus = status;
+              },
             });
           } catch {
             result = { ok: false, code: 'unavailable' };
+          } finally {
+            request.signal.removeEventListener('abort', cancel);
           }
-          if (generation === this.generation && !request.signal.aborted)
+          if (current() && !request.signal.aborted) {
             this.failed = !result.ok;
+            attempt.result = result.ok
+              ? result.suggestions.length
+                ? 'success'
+                : 'empty'
+              : result.code;
+            attempt.suggestionCount = result.ok
+              ? result.suggestions.length
+              : null;
+            attempt.durationMs = Math.max(0, Date.now() - attempt.startedAt);
+          }
           return result;
         },
       },
@@ -84,6 +132,8 @@ export class MeetingSuggestions {
     this.enabled = true;
     this.language = config.locale;
     this.remaining = authorization.maxRequests;
+    this.model = authorization.model;
+    this.maxRequests = authorization.maxRequests;
     const generation = this.generation;
     try {
       this.provider = this.createProvider(
@@ -134,10 +184,14 @@ export class MeetingSuggestions {
     });
     if (signature === this.signature) return;
     this.signature = signature;
+    this.hasFinal =
+      finalContext.recent.length > 0 || finalContext.summary.length > 0;
+    if (event?.type === 'final')
+      this.lastTrigger = this.trigger.evaluate(event);
     this.scheduler.submit(
       finalContext,
       ++this.revision,
-      this.remaining > 0 && event ? this.trigger.evaluate(event) : 'none',
+      this.remaining > 0 && event?.type === 'final' ? this.lastTrigger : 'none',
     );
   }
 
@@ -145,6 +199,7 @@ export class MeetingSuggestions {
     clearInterval(this.timer);
     this.timer = undefined;
     this.scheduler.stop();
+    if (this.lastAttempt) this.lastAttempt.requestBody = null;
   }
 
   resume(): void {
@@ -178,6 +233,11 @@ export class MeetingSuggestions {
     this.revision = 0;
     this.signature = '';
     this.elapsed = 0;
+    this.model = '';
+    this.maxRequests = 0;
+    this.lastTrigger = 'none';
+    this.hasFinal = false;
+    this.lastAttempt = null;
   }
 
   dismiss(id: string): void {
@@ -186,7 +246,26 @@ export class MeetingSuggestions {
 
   snapshot(): SuggestionSessionSnapshot {
     if (!this.enabled) return emptySuggestionSession();
+    const activity = this.scheduler.activity();
+    const diagnostics: SuggestionDiagnostics = {
+      model: this.model,
+      maxRequests: this.maxRequests,
+      lastTrigger: this.lastTrigger,
+      activity: !this.authorized()
+        ? 'paused'
+        : activity === 'generating'
+          ? this.lastAttempt?.requestBody
+            ? 'requesting'
+            : 'preparing'
+          : activity !== 'idle'
+            ? activity
+            : this.hasFinal
+              ? 'waiting-trigger'
+              : 'waiting-final',
+      lastAttempt: this.lastAttempt ? { ...this.lastAttempt } : null,
+    };
     return {
+      diagnostics,
       items: this.scheduler.snapshot(),
       remainingRequests: this.remaining,
       status: this.failed

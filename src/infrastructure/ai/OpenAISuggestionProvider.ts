@@ -161,6 +161,18 @@ export class OpenAISuggestionProvider implements SuggestionProvider {
         return { ok: false, code: 'not-authorized' };
       if (!isValidSecret(key))
         return { ok: false, code: 'credentials-unavailable' };
+      const body = JSON.stringify({
+        model,
+        store: false,
+        stream: false,
+        max_output_tokens: maxOutputTokens,
+        instructions: `${suggestionInstructions}\nRequested language: ${request.language}.`,
+        input: [
+          { role: 'user', content: [{ type: 'input_text', text: input }] },
+        ],
+        text: { format: suggestionFormat },
+      });
+      request.onDispatch?.(body);
       const response = await (this.options.fetch ?? globalThis.fetch)(
         'https://api.openai.com/v1/responses',
         {
@@ -171,19 +183,10 @@ export class OpenAISuggestionProvider implements SuggestionProvider {
             Authorization: `Bearer ${key}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            model,
-            store: false,
-            stream: false,
-            max_output_tokens: maxOutputTokens,
-            instructions: `${suggestionInstructions}\nRequested language: ${request.language}.`,
-            input: [
-              { role: 'user', content: [{ type: 'input_text', text: input }] },
-            ],
-            text: { format: suggestionFormat },
-          }),
+          body,
         },
       );
+      if (!signal.aborted) request.onHttpResponse?.(response.status);
       if (signal.aborted) {
         await response.body?.cancel();
         return { ok: false, code: 'cancelled' };

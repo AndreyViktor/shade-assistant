@@ -13,7 +13,7 @@ const base = {
   timestampMs: 100,
 };
 const reply = (): SessionResult => ({
-  version: 4,
+  version: 5,
   ok: true,
   demo: emptyDemo(),
   session: {
@@ -21,7 +21,12 @@ const reply = (): SessionResult => ({
     phase: 'running',
     consent: { capture: true, context: false, remoteAudio: false },
   },
-  suggestions: { items: [], remainingRequests: 0, status: 'disabled' },
+  suggestions: {
+    items: [],
+    remainingRequests: 0,
+    status: 'disabled',
+    diagnostics: null,
+  },
   local: {
     failed: false,
     config: { sessionId: 'test', sources: ['mic', 'system'], locale: 'pt-BR' },

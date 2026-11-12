@@ -1,25 +1,15 @@
 import type { SuggestionContent } from '../../contracts/meeting/suggestion';
 import type { MeetingContext } from '../meeting/ContextManager';
+import type { SuggestionFailure } from '../../contracts/meeting/suggestionDiagnostics';
+export type { SuggestionFailure } from '../../contracts/meeting/suggestionDiagnostics';
 
 export type SuggestionRequest = {
   context: MeetingContext;
   language: 'pt-BR' | 'en-US';
   signal: AbortSignal;
+  onDispatch?: (body: string) => void;
+  onHttpResponse?: (status: number) => void;
 };
-export type SuggestionFailure =
-  | 'not-authorized'
-  | 'credentials-unavailable'
-  | 'invalid-request'
-  | 'cancelled'
-  | 'timeout'
-  | 'network'
-  | 'authentication'
-  | 'rate-limited'
-  | 'unavailable'
-  | 'rejected'
-  | 'refused'
-  | 'incomplete'
-  | 'invalid-response';
 export type SuggestionResult =
   | { ok: true; suggestions: SuggestionContent[] }
   | { ok: false; code: SuggestionFailure };

@@ -59,16 +59,43 @@ for (const { consent, model } of [
         await expect(cards).toContainText('Prazo sintético Aurora');
         await expect(cards).not.toContainText('DEMO');
         await expect(page.getByText(/Limite atingido/)).toBeVisible();
+        const diagnostics = page.getByRole('region', {
+          name: 'Estado da OpenAI',
+        });
+        await diagnostics
+          .getByText('Diagnóstico OpenAI', { exact: true })
+          .click();
+        await expect(diagnostics.getByText('HTTP 200 recebido')).toBeVisible();
+        await diagnostics.getByText('Ver corpo da última requisição').click();
+        const sentBody = diagnostics.getByLabel('Corpo da requisição OpenAI');
+        const observed = JSON.parse(await sentBody.innerText()) as unknown;
+        const transported = await app.evaluate(
+          () =>
+            (
+              globalThis as typeof globalThis & {
+                syntheticSuggestionRequests: unknown[];
+              }
+            ).syntheticSuggestionRequests[0],
+        );
+        expect(observed).toEqual(transported);
+        expect(await page.locator('body').innerText()).not.toContain(
+          't024-synthetic-not-a-key',
+        );
+        await sentBody.scrollIntoViewIfNeeded();
+        await page.screenshot({
+          path: test.info().outputPath('openai-diagnostics.png'),
+        });
         await cards
           .getByRole('button', { name: 'Descartar: Prazo sintético Aurora' })
           .click();
         await expect(cards.getByRole('article')).toHaveCount(0);
         await page.getByRole('button', { name: 'Pausar' }).click();
+        await expect(sentBody).toHaveCount(0);
         await page.getByRole('button', { name: 'Retomar' }).click();
         await page.getByRole('button', { name: 'Desativar sugestões' }).click();
         await expect(cards).toHaveCount(0);
         const snapshot = await page.evaluate(() =>
-          window.meetingCopilot.session({ version: 4, action: 'read' }),
+          window.meetingCopilot.session({ version: 5, action: 'read' }),
         );
         expect(snapshot).toMatchObject({
           session: {
@@ -105,7 +132,7 @@ for (const { consent, model } of [
       await page.getByRole('button', { name: 'Parar' }).click();
       expect(
         await page.evaluate(() =>
-          window.meetingCopilot.session({ version: 4, action: 'read' }),
+          window.meetingCopilot.session({ version: 5, action: 'read' }),
         ),
       ).toMatchObject({
         local: null,

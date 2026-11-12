@@ -65,6 +65,109 @@ afterEach(() => {
 });
 
 describe('session suggestion integration with synthetic speech', () => {
+  it('distinguishes final/trigger/debounce/preparation/transport and clears payload on pause', async () => {
+    const { pipeline, generate, session } = setup();
+    expect(pipeline.snapshot().diagnostics?.activity).toBe('waiting-final');
+    pipeline.receive({ ...speech(), type: 'partial' });
+    expect(pipeline.snapshot().diagnostics?.activity).toBe('waiting-final');
+    pipeline.receive(speech(2, 'Obrigado.'));
+    expect(pipeline.snapshot().diagnostics?.activity).toBe('waiting-trigger');
+    let finish: (result: SuggestionResult) => void = () => {};
+    generate.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    pipeline.receive(speech(3));
+    expect(pipeline.snapshot().diagnostics).toMatchObject({
+      activity: 'debounce',
+      lastTrigger: 'question',
+      lastAttempt: null,
+    });
+    await vi.advanceTimersByTimeAsync(500);
+    expect(pipeline.snapshot().diagnostics).toMatchObject({
+      activity: 'preparing',
+      lastAttempt: { number: 1, result: 'pending', requestBody: null },
+    });
+    const input = generate.mock.calls[0]?.[0];
+    input?.onDispatch?.('{"input":"synthetic"}');
+    expect(pipeline.snapshot().diagnostics?.activity).toBe('requesting');
+    input?.onHttpResponse?.(200);
+    await vi.advanceTimersByTimeAsync(100);
+    finish({ ok: true, suggestions: [] });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(pipeline.snapshot().diagnostics?.lastAttempt).toMatchObject({
+      result: 'empty',
+      httpStatus: 200,
+      suggestionCount: 0,
+      durationMs: 100,
+      requestBody: '{"input":"synthetic"}',
+    });
+    session.pause();
+    pipeline.pause();
+    expect(pipeline.snapshot().diagnostics).toMatchObject({
+      activity: 'paused',
+      lastAttempt: { requestBody: null },
+    });
+    session.resume();
+    pipeline.resume();
+    expect(
+      pipeline.snapshot().diagnostics?.lastAttempt?.requestBody,
+    ).toBeNull();
+    pipeline.stop();
+    expect(pipeline.snapshot().diagnostics).toBeNull();
+  });
+
+  it('records safe HTTP failures, replaces only the latest attempt, and reports cooldown', async () => {
+    const { pipeline, generate } = setup();
+    generate.mockImplementation((input) => {
+      input.onDispatch?.('{"input":"synthetic"}');
+      input.onHttpResponse?.(401);
+      return Promise.resolve({ ok: false, code: 'authentication' });
+    });
+    pipeline.receive(speech());
+    await vi.advanceTimersByTimeAsync(500);
+    expect(pipeline.snapshot().diagnostics?.lastAttempt).toMatchObject({
+      number: 1,
+      result: 'authentication',
+      httpStatus: 401,
+    });
+    pipeline.receive(speech(2));
+    await vi.advanceTimersByTimeAsync(500);
+    expect(pipeline.snapshot().diagnostics?.activity).toBe('cooldown');
+    await vi.advanceTimersByTimeAsync(9500);
+    expect(pipeline.snapshot().diagnostics?.lastAttempt?.number).toBe(2);
+    expect(pipeline.snapshot().remainingRequests).toBe(0);
+  });
+
+  it('marks invalidated attempts cancelled immediately and ignores late transport callbacks after restart', async () => {
+    const { pipeline, generate, session, start } = setup();
+    let finish: (result: SuggestionResult) => void = () => {};
+    generate.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    pipeline.receive(speech());
+    await vi.advanceTimersByTimeAsync(500);
+    const input = generate.mock.calls[0]?.[0];
+    input?.onDispatch?.('synthetic-old-body');
+    pipeline.receive(speech(2, 'Obrigado.'));
+    expect(pipeline.snapshot().diagnostics?.lastAttempt?.result).toBe(
+      'cancelled',
+    );
+    session.stop();
+    pipeline.stop();
+    start();
+    input?.onDispatch?.('late-private-body');
+    input?.onHttpResponse?.(200);
+    finish({ ok: true, suggestions: [card] });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(pipeline.snapshot().diagnostics?.lastAttempt).toBeNull();
+    expect(pipeline.snapshot().items).toEqual([]);
+  });
   it('requires text consent before constructing a provider or retaining context', async () => {
     const { pipeline, create, generate } = setup(false);
     pipeline.receive(speech());
@@ -75,6 +178,7 @@ describe('session suggestion integration with synthetic speech', () => {
       items: [],
       remainingRequests: 0,
       status: 'disabled',
+      diagnostics: null,
     });
   });
 
@@ -222,10 +326,17 @@ describe('session suggestion integration with synthetic speech', () => {
     generate.mockResolvedValue({ ok: false, code: 'credentials-unavailable' });
     pipeline.receive(speech());
     await vi.advanceTimersByTimeAsync(500);
-    expect(pipeline.snapshot()).toEqual({
+    expect(pipeline.snapshot()).toMatchObject({
       items: [],
       remainingRequests: 0,
       status: 'unavailable',
+      diagnostics: {
+        lastAttempt: {
+          result: 'credentials-unavailable',
+          requestBody: null,
+          httpStatus: null,
+        },
+      },
     });
   });
 });

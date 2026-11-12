@@ -24,7 +24,7 @@ const snapshot = {
   segments: [event],
 };
 const reply = {
-  version: 4,
+  version: 5,
   ok: true,
   session: {
     mode: 'apple-local',
@@ -40,7 +40,7 @@ describe('local transcript IPC contract', () => {
   it('accepts validated bounded content and rejects legacy session versions', () => {
     expect(parseLocalTranscript(snapshot)).toEqual(snapshot);
     expect(parseSessionResult(reply)).toEqual(reply);
-    for (const version of [1, 2, 3, 5])
+    for (const version of [1, 2, 3, 4, 6])
       expect(parseSessionResult({ ...reply, version }).ok).toBe(false);
     expect(
       parseSessionResult({
@@ -78,7 +78,7 @@ describe('local transcript IPC contract', () => {
     'rejects malformed or excessive data without echoing content %#',
     (local) => {
       expect(parseSessionResult({ ...reply, local })).toEqual({
-        version: 4,
+        version: 5,
         ok: false,
         code: 'INVALID_RESPONSE',
       });

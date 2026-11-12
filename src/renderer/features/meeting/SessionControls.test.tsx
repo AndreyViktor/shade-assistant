@@ -10,11 +10,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SessionControls } from './SessionControls';
 const consent = { capture: false, context: false, remoteAudio: false };
 const reply = (phase: string) => ({
-  version: 4,
+  version: 5,
   ok: true,
   demo: emptyDemo(),
   local: null,
-  suggestions: { items: [], remainingRequests: 0, status: 'disabled' },
+  suggestions: {
+    items: [],
+    remainingRequests: 0,
+    status: 'disabled',
+    diagnostics: null,
+  },
   session: { mode: 'demo', phase, consent },
 });
 afterEach(() => {
@@ -97,7 +102,7 @@ describe('session controls', () => {
       await Promise.resolve();
     });
     expect(session).toHaveBeenLastCalledWith({
-      version: 4,
+      version: 5,
       action: 'dismiss-suggestion',
       id: card.id,
     });
@@ -248,7 +253,7 @@ describe('session controls', () => {
     render(<SessionControls />);
     await screen.findByText('Pronta para iniciar');
     expect(session).toHaveBeenCalledExactlyOnceWith({
-      version: 4,
+      version: 5,
       action: 'read',
     });
     expect(
@@ -259,7 +264,7 @@ describe('session controls', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Iniciar DEMO' }));
     await screen.findByText('Em andamento');
     expect(session).toHaveBeenLastCalledWith({
-      version: 4,
+      version: 5,
       action: 'start',
       options: { mode: 'demo', consent },
     });
@@ -296,11 +301,16 @@ describe('session controls', () => {
     expect(screen.getByRole('alertdialog')).toHaveTextContent('microfone');
     expect(session).toHaveBeenCalledTimes(1);
     session.mockResolvedValue({
-      version: 4,
+      version: 5,
       ok: true,
       demo: emptyDemo(),
       local: null,
-      suggestions: { items: [], remainingRequests: 0, status: 'disabled' },
+      suggestions: {
+        items: [],
+        remainingRequests: 0,
+        status: 'disabled',
+        diagnostics: null,
+      },
       session: {
         phase: 'running',
         mode: 'apple-local',
@@ -312,7 +322,7 @@ describe('session controls', () => {
     );
     await screen.findByText('Em andamento');
     expect(session).toHaveBeenLastCalledWith({
-      version: 4,
+      version: 5,
       action: 'start',
       options: {
         mode: 'apple-local',
@@ -331,7 +341,7 @@ describe('session controls', () => {
     vi.stubGlobal('meetingCopilot', { session });
     render(<SessionControls />);
     await screen.findByText('Em andamento');
-    session.mockResolvedValue({ version: 4, ok: false, code: 'TIMEOUT' });
+    session.mockResolvedValue({ version: 5, ok: false, code: 'TIMEOUT' });
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     await screen.findByRole('alert');
@@ -387,7 +397,7 @@ it('requires an explicit text/cost opt-in and valid model/budget before sending 
   fireEvent.click(confirm);
   await waitFor(() =>
     expect(session).toHaveBeenLastCalledWith({
-      version: 4,
+      version: 5,
       action: 'start',
       options: {
         mode: 'apple-local',
@@ -409,6 +419,13 @@ it('renders real-session cards separately from DEMO and exposes revocation', asy
       consent: { capture: true, context: true, remoteAudio: false },
     },
     suggestions: {
+      diagnostics: {
+        model: 'synthetic-model',
+        maxRequests: 1,
+        activity: 'waiting-trigger',
+        lastTrigger: 'question',
+        lastAttempt: null,
+      },
       status: 'exhausted',
       remainingRequests: 0,
       items: [
@@ -434,7 +451,7 @@ it('renders real-session cards separately from DEMO and exposes revocation', asy
   fireEvent.click(screen.getByRole('button', { name: 'Desativar sugestões' }));
   await waitFor(() =>
     expect(session).toHaveBeenLastCalledWith({
-      version: 4,
+      version: 5,
       action: 'revoke-suggestions',
     }),
   );

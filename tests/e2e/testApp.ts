@@ -13,6 +13,7 @@ export async function createTestApp(
     denyNetwork?: boolean;
     syntheticNative?: boolean | 'reconciliation' | 'suggestions';
     syntheticSuggestions?: boolean;
+    syntheticSuggestionOutcome?: 'empty' | 'authentication';
   } = {},
 ) {
   const directory = await mkdtemp(join(tmpdir(), 'meeting-copilot-smoke-'));
@@ -66,6 +67,9 @@ app.on('session-created', (session) => {
       const body = JSON.parse(options.body);
       if (options.headers.Authorization !== 'Bearer t024-synthetic-not-a-key' || !['gpt-5.4-mini', 'gpt-5.4'].includes(body.model)) throw new Error('Unexpected synthetic configuration');
       globalThis.syntheticSuggestionRequests.push(body);
+      const outcome = ${JSON.stringify(options.syntheticSuggestionOutcome ?? 'success')};
+      if (outcome === 'authentication') return new Response(JSON.stringify({error:'private-error-sentinel'}), {status:401});
+      if (outcome === 'empty') return new Response(JSON.stringify({status:'completed', output:[{type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:JSON.stringify({suggestions:[]})}]}]}), {status:200});
       return new Response(JSON.stringify({status:'completed', output:[{
         type:'message', role:'assistant', status:'completed', content:[{
           type:'output_text', text:JSON.stringify({suggestions:[{
