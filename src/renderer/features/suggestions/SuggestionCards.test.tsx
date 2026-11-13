@@ -80,3 +80,26 @@ describe('suggestion cards', () => {
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 });
+
+it('explains retention and cleanup for real cards and dismisses by ID', () => {
+  const onDismiss = vi.fn();
+  render(
+    <SuggestionCards
+      suggestions={[{ ...card, expiresAt: null }]}
+      demo={false}
+      busy={false}
+      onDismiss={onDismiss}
+    />,
+  );
+  const region = screen.getByRole('region', { name: 'Sugestões da reunião' });
+  expect(region).toHaveTextContent('sem expiração por tempo');
+  expect(region).toHaveTextContent('Novos substituem os mais antigos');
+  expect(region).toHaveTextContent(
+    'pausar, parar ou desativar sugestões limpa os cartões',
+  );
+  expect(region).not.toHaveTextContent('30 segundos');
+  fireEvent.click(
+    screen.getByRole('button', { name: `Descartar: ${card.title}` }),
+  );
+  expect(onDismiss).toHaveBeenCalledExactlyOnceWith(card.id);
+});

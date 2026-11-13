@@ -58,15 +58,19 @@ export function parseSuggestionSession(
   )
     return null;
   const items = parseSuggestions(value.items);
+  if (!items || items.some((card) => card.expiresAt !== null)) return null;
+  if (
+    value.status === 'disabled' &&
+    (items.length !== 0 || value.remainingRequests !== 0)
+  )
+    return null;
   const diagnostics = parseSuggestionDiagnostics(value.diagnostics);
   if (value.status === 'disabled' ? value.diagnostics !== null : !diagnostics)
     return null;
-  return items
-    ? {
-        items,
-        remainingRequests: value.remainingRequests,
-        status: value.status,
-        diagnostics,
-      }
-    : null;
+  return {
+    items,
+    remainingRequests: value.remainingRequests,
+    status: value.status,
+    diagnostics,
+  };
 }

@@ -2,6 +2,8 @@
 
 Data: 2026-11-12. T024, aceite real pendente.
 
+Atualização T040 (2026-11-12): a política de TTL dos cartões reais descrita abaixo foi substituída pela retenção sem prazo do [ADR 0022](0022-retained-live-suggestions.md). Agendamento contínuo e limites de geração permanecem.
+
 ## Contexto e decisão
 
 O usuário relatou cerca de 20 minutos de transcrição em reunião sem nenhum gatilho. A sessão autorizada solicita uma avaliação para cada atualização de fala final, em vez de exigir correspondência às heurísticas locais. Parciais e passagem do tempo sem fala final não iniciam chamadas. O contexto final é agrupado e limitado como antes; o mesmo modelo decide entre zero e duas sugestões. A classificação local continua visível somente como informação de diagnóstico.

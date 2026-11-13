@@ -59,7 +59,7 @@ export function SessionControls() {
   function confirmLocalConsent(authorization?: SuggestionAuthorization): void {
     setConfirming(false);
     void command({
-      version: 5,
+      version: 6,
       action: 'start',
       options: {
         mode: 'apple-local',
@@ -77,7 +77,7 @@ export function SessionControls() {
 
   function startDemo(): void {
     void command({
-      version: 5,
+      version: 6,
       action: 'start',
       options: {
         mode: 'demo',
@@ -155,7 +155,7 @@ export function SessionControls() {
           <button
             disabled={busy}
             onClick={() => {
-              void command({ version: 5, action: 'pause' });
+              void command({ version: 6, action: 'pause' });
             }}
           >
             Pausar
@@ -165,7 +165,7 @@ export function SessionControls() {
           <button
             disabled={busy}
             onClick={() => {
-              void command({ version: 5, action: 'resume' });
+              void command({ version: 6, action: 'resume' });
             }}
           >
             Retomar
@@ -177,7 +177,7 @@ export function SessionControls() {
           <button
             disabled={busy}
             onClick={() => {
-              void command({ version: 5, action: 'stop' });
+              void command({ version: 6, action: 'stop' });
             }}
           >
             Parar
@@ -199,7 +199,7 @@ export function SessionControls() {
           <button
             disabled={busy}
             onClick={() => {
-              void command({ version: 5, action: 'revoke-suggestions' });
+              void command({ version: 6, action: 'revoke-suggestions' });
             }}
           >
             Desativar sugestões
@@ -209,7 +209,7 @@ export function SessionControls() {
             suggestions={suggestions.items}
             busy={busy}
             onDismiss={(id) => {
-              void command({ version: 5, action: 'dismiss-suggestion', id });
+              void command({ version: 6, action: 'dismiss-suggestion', id });
             }}
           />
         </>
@@ -233,7 +233,7 @@ export function SessionControls() {
             phase={session.phase}
             busy={busy}
             onDismiss={(id) => {
-              void command({ version: 5, action: 'dismiss-suggestion', id });
+              void command({ version: 6, action: 'dismiss-suggestion', id });
             }}
           />
         )}

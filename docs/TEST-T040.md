@@ -1,0 +1,32 @@
+# T040 — Retenção e descarte dos cartões reais
+
+Data: 2026-11-12. Base: `3e0ba1e`, `main`, árvore inicialmente limpa. Dependência T023 concluída. Plano registrado em `PROGRESS.md` e T040 marcada `IN_PROGRESS` antes das mudanças de código/testes. Política em [ADR 0022](adr/0022-retained-live-suggestions.md).
+
+## Implementação e aceite
+
+- Cartões reais usam `expiresAt: null`, permanecem durante silêncio e após esgotar orçamento, sem expiração de 30 s. Alterações do relógio não removem cartões. Avanço/arquivo de contexto continua independente da retenção.
+- Capacidade de dois, substituição do mais antigo, descarte por ID sem fila oculta. Dedup por ID/corpo normalizado nas últimas 100 inserções aceitas; descartados/substituídos continuam suprimidos até saírem desse limite ou ocorrer limpeza. Não cresce com duração da reunião.
+- Pausa limpa cartões/supressão, cancela pendências e limpa corpo do último pedido; retomada não restaura cartões nem orçamento. Stop/revogação/restart também limpam; IDs antigos não descartam cartões novos e respostas tardias não repovoam a sessão.
+- IPC v6 exige retenção nula no fluxo real e prazo numérico na DEMO. Contratos preservam limites de título/corpo/ID/lote, rejeitam payloads inválidos, versões antigas, duplicatas, extras e conteúdo/orçamento residual quando desativado. Main, preload, renderer e fixtures migrados juntos.
+- DEMO mantém limite de dois e TTL de 30 s inclusive em pausa. UI real e diagnóstico passam a descrever retenção e limpeza corretas.
+
+## Evidências automatizadas
+
+- `SuggestionStore.test.ts`: avanço de 30 s/1 h e relógio regressivo, dedup normalizada, descarte, substituição e ausência de restauração; fronteira exata de 100 entradas; TTL e limpeza anteriores da DEMO preservados.
+- `MeetingSuggestions.test.ts`: retenção após 30 s, silêncio/contexto arquivado, orçamento esgotado e 1 h simulada; dedup entre respostas, capacidade, pause/resume/stop/revogação/restart, IDs antigos e cancelamento de resposta tardia.
+- `tests/integration/retainedSuggestionContract.test.ts`: snapshot real através do parser/preload; v5, prazo inválido/ausente, capacidade, ID/campos/duplicatas e estado desativado rejeitados. Contratos DEMO rejeitam prazo nulo. Fixtures/consumidores de sessão usam v6.
+- `registerSessionIpc.test.ts`: integração JSONL → serialização Responses com transporte/chave sintéticos; cartão ainda presente após 60 s simulados e sem chamada extra; revogação limpa conteúdo. Regressões existentes cobrem cancelamento durante pausa/stop/revogação/reload/falha.
+- `SuggestionCards.test.tsx`: política real legível e descarte por ID; regressões de acessibilidade, escaping, busy e rótulo DEMO. `SessionControls` usa DTO retido no cenário real.
+- Smoke `local-suggestions.spec.ts`: relógio do main avançado 60 s após cartão sintético, snapshot e UI preservados; descarte explícito em um cenário e limpeza pela pausa em outro, retomada sem restauração, revogação/parada e contador de rede zero. Smoke DEMO continua exercitando TTL durante pausa.
+
+## Gates executados
+
+- `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run verify`: **aprovado**, lint sem warnings/erros, formato, tipos, **805 testes TS aprovados / 18 skipped** (46 arquivos aprovados / 3 skipped), **19 testes do runner**, build main/preload/renderer. Os skipped não contam como validação manual.
+- `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run test:smoke`: **17/17 aprovados**, 1,9 min, executado com escalada aprovada fora do sandbox. Perfis temporários, transporte sintético e guardas de rede; cenários reais de sugestões e DEMO confirmam contador de rede zero. A fixture de teste de guardas faz sondagens deliberadas bloqueadas antes de qualquer conexão.
+- Lint e formato direcionados ao smoke alterado também aprovados. `git diff --check` aprovado; formato final dos documentos conferido antes do commit.
+- As primeiras passagens identificaram uma expectativa de versão antiga, um teste cross-layer colocado indevidamente em `contracts`, callbacks `async` sem `await` e formatação do handoff; todos corrigidos, sem suprimir regras. A execução completa acima passou após as correções.
+- Logs locais temporários: `/private/tmp/meeting-copilot-T040-verify.log` e `/private/tmp/meeting-copilot-T040-smoke.log`; não são dados de reunião nem artefatos versionados. Sem mudanças nativas, `swift test` não foi repetido nesta tarefa.
+
+## Limites
+
+Toda fala, resposta e credencial dos testes é sintética. Nenhuma captura real, chamada OpenAI, credencial do usuário, custo ou push. A hora simulada prova lógica temporal, não mede estabilidade de uma reunião de uma hora. Não houve mudança no Swift nem nova validação de captura/hardware. Retenção não garante relevância semântica; após 100 inserções, dedup pode aceitar conteúdo antigo. Pausa remove cartões deliberadamente, sem recuperação. Layout, capacidade por espaço e validação de Spaces/tela cheia são T041, não executada nesta sessão.

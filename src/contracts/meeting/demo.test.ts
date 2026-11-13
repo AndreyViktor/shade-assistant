@@ -58,6 +58,7 @@ describe('strict bounded demo snapshot', () => {
     { ...snapshot, suggestions: [{ ...card, body: '' }] },
     { ...snapshot, suggestions: [{ ...card, id: '../path' }] },
     { ...snapshot, suggestions: [{ ...card, groundedIn: 'fact' }] },
+    { ...snapshot, suggestions: [{ ...card, expiresAt: null }] },
     { ...snapshot, suggestions: [{ ...card, expiresAt: Infinity }] },
     { ...snapshot, suggestions: [{ ...card, expiresAt: -1 }] },
     { ...snapshot, suggestions: [{ ...card, expiresAt: 0.5 }] },
@@ -66,7 +67,7 @@ describe('strict bounded demo snapshot', () => {
     expect(parseDemoSnapshot(value)).toBeNull();
     expect(
       parseSessionResult({
-        version: 5,
+        version: 6,
         ok: true,
         session: {
           phase: 'running',
@@ -82,6 +83,6 @@ describe('strict bounded demo snapshot', () => {
           diagnostics: null,
         },
       }),
-    ).toEqual({ version: 5, ok: false, code: 'INVALID_RESPONSE' });
+    ).toEqual({ version: 6, ok: false, code: 'INVALID_RESPONSE' });
   });
 });

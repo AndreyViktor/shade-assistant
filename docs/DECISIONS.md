@@ -24,7 +24,7 @@ Defaults sujeitos a validação de implementação; detalhes do fluxo e fronteir
 
 - **P001:** helper Swift próprio `MeetingCopilotTranscriber`, protocolo JSONL versionado do projeto, `spawn` sem shell e IPC restrito.
 - **P002–P003:** Responses API para sugestões e visão, com modelos configuráveis e verificados quanto à disponibilidade, custo, latência e qualidade antes da integração.
-- **P004–P006:** zero a duas sugestões; gatilhos relevantes e silêncio deliberado; janela curta de contexto, cooldown inicial e expiração; DEMO offline e dados em memória por padrão.
+- **P004–P006:** zero a duas sugestões; gatilhos relevantes e silêncio deliberado; janela curta de contexto e cooldown inicial; DEMO offline com expiração e dados em memória por padrão. T040 remove expiração por tempo dos cartões reais, mantendo dois cartões e limpeza ao pausar/parar/revogar/reiniciar, conforme [ADR 0022](adr/0022-retained-live-suggestions.md).
 - **P007–P008:** chave do usuário protegida pelo cofre do sistema; limites de custo; providers selecionáveis. Áudio só sai do Mac no fallback remoto opt-in.
 - **P009:** usar os padrões de engenharia existentes, com boundaries testados, testes e gates reproduzíveis; evitar camadas ou frameworks sem necessidade demonstrada.
 

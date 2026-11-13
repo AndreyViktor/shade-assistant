@@ -30,7 +30,7 @@ export function SuggestionCards({
       <p>
         {demo
           ? 'Até dois cartões. Expiram após 30 segundos, inclusive durante a pausa.'
-          : 'Até dois cartões. Expiram após 30 segundos e são removidos ao pausar.'}
+          : 'Até dois cartões, sem expiração por tempo. Novos substituem os mais antigos. Descarte quando quiser; pausar, parar ou desativar sugestões limpa os cartões.'}
       </p>
       {suggestions.length === 0 && (
         <p role="status">Nenhuma sugestão neste momento.</p>

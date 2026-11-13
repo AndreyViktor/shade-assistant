@@ -115,3 +115,50 @@ describe('session suggestion policy', () => {
     expect(store.add('two', content)).toBe(true);
   });
 });
+
+describe('retained real session cards', () => {
+  it('ignores elapsed time and clock changes, deduplicates and dismisses without restoring evicted cards', () => {
+    let now = 1000;
+    const store = new SuggestionStore(() => now, null);
+    store.add('one', content);
+    const first = store.snapshot();
+    for (const time of [31000, 3601000, -1000]) {
+      now = time;
+      expect(store.snapshot()).toEqual(first);
+      expect(
+        store.add('duplicate', { ...content, body: ' QUAL É   O PRAZO? ' }),
+      ).toBe(false);
+      expect(store.add('one', { ...content, body: 'Changed' })).toBe(false);
+    }
+    store.add('two', { ...content, body: 'Second' });
+    store.add('three', { ...content, body: 'Third' });
+    expect(store.snapshot().map(({ id }) => id)).toEqual(['two', 'three']);
+    store.dismiss('missing');
+    store.dismiss('three');
+    expect(store.snapshot().map(({ id }) => id)).toEqual(['two']);
+    expect(store.add('repeated', content)).toBe(false);
+    expect(store.add('repeated', { ...content, body: 'Third' })).toBe(false);
+    store.clear();
+    expect(store.snapshot()).toEqual([]);
+    expect(store.add('one', content)).toBe(true);
+    expect(store.snapshot()).toEqual([
+      { ...content, id: 'one', expiresAt: null },
+    ]);
+  });
+
+  it('bounds suppression to the last 100 insertions and keeps only two cards without a hidden queue', () => {
+    const store = new SuggestionStore(Date.now, null);
+    for (let i = 0; i < 100; i++)
+      expect(store.add(`id-${i}`, { ...content, body: `Body ${i}` })).toBe(
+        true,
+      );
+    expect(store.add('repeat', { ...content, body: 'Body 0' })).toBe(false);
+    expect(store.add('id-100', { ...content, body: 'Body 100' })).toBe(true);
+    expect(store.add('repeat', { ...content, body: 'Body 1' })).toBe(false);
+    expect(store.add('id-0', { ...content, body: 'Body 0' })).toBe(true);
+    expect(store.snapshot().map(({ id }) => id)).toEqual(['id-100', 'id-0']);
+    store.dismiss('id-100');
+    store.dismiss('id-0');
+    expect(store.snapshot()).toEqual([]);
+  });
+});

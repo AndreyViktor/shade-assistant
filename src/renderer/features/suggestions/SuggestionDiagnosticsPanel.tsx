@@ -139,8 +139,10 @@ export function SuggestionDiagnosticsPanel({
             </p>
             {attempt?.result === 'success' && (
               <p>
-                Cartões podem desaparecer por nova fala, pausa, descarte,
-                repetição ou expiração após 30 segundos.
+                Cartões não expiram por tempo. Podem ser substituídos por
+                cartões novos, descartados ou limpos ao pausar, parar, desativar
+                sugestões ou encerrar a transcrição. Conteúdo repetido pode ser
+                suprimido.
               </p>
             )}
             <details>

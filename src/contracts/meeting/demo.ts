@@ -37,7 +37,8 @@ export function parseDemoSnapshot(value: unknown): DemoSnapshot | null {
     return null;
   const transcript = value.transcript;
   const suggestions = parseSuggestions(value.suggestions);
-  if (!suggestions) return null;
+  if (!suggestions || suggestions.some((card) => card.expiresAt === null))
+    return null;
   let parsedTranscript: DemoTranscript | null = null;
   if (transcript !== null) {
     if (

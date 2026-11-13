@@ -23,7 +23,7 @@ describe('App shell', () => {
         },
       }),
       session: vi.fn().mockResolvedValue({
-        version: 5,
+        version: 6,
         ok: true,
         demo: emptyDemo(),
         local: null,

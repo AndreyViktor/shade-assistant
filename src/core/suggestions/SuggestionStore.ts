@@ -15,13 +15,17 @@ function fingerprint(content: SuggestionContent): string {
 /** Session-local cards. No persistence, timers, network or UI dependencies. */
 export class SuggestionStore {
   private cards: Suggestion[] = [];
-  private recent: { id: string; fingerprint: string; expiresAt: number }[] = [];
+  private recent: {
+    id: string;
+    fingerprint: string;
+    expiresAt: number | null;
+  }[] = [];
 
   constructor(
     private readonly now: () => number = Date.now,
-    private readonly ttlMs = 30000,
+    private readonly ttlMs: number | null = 30000,
   ) {
-    if (!Number.isSafeInteger(ttlMs) || ttlMs <= 0)
+    if (ttlMs !== null && (!Number.isSafeInteger(ttlMs) || ttlMs <= 0))
       throw new Error('Invalid suggestion lifetime');
   }
 
@@ -30,9 +34,10 @@ export class SuggestionStore {
     const key = fingerprint(content);
     if (this.recent.some((item) => item.id === id || item.fingerprint === key))
       return false;
-    const expiresAt = this.now() + this.ttlMs;
+    const expiresAt = this.ttlMs === null ? null : this.now() + this.ttlMs;
     this.cards = [...this.cards, { ...content, id, expiresAt }].slice(-2);
-    // Bounded suppression includes dismissed/evicted cards for their original lifetime.
+    // Suppress the last 100 insertions, including dismissed/evicted cards.
+    // Timed cards leave suppression at their deadline; retained cards at cleanup.
     this.recent = [...this.recent, { id, fingerprint: key, expiresAt }].slice(
       -100,
     );
@@ -62,7 +67,11 @@ export class SuggestionStore {
 
   private prune(): void {
     const now = this.now();
-    this.cards = this.cards.filter((card) => card.expiresAt > now);
-    this.recent = this.recent.filter((item) => item.expiresAt > now);
+    this.cards = this.cards.filter(
+      (card) => card.expiresAt === null || card.expiresAt > now,
+    );
+    this.recent = this.recent.filter(
+      (item) => item.expiresAt === null || item.expiresAt > now,
+    );
   }
 }

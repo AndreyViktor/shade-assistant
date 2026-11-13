@@ -213,7 +213,7 @@ describe('session suggestion integration with synthetic speech', () => {
     });
   });
 
-  it('debounces finals, excludes partials and publishes dismissible expiring cards', async () => {
+  it('debounces finals, excludes partials and publishes dismissible retained cards', async () => {
     const { pipeline, generate } = setup();
     pipeline.receive({ ...speech(), type: 'partial' });
     await vi.advanceTimersByTimeAsync(500);
@@ -334,12 +334,15 @@ describe('session suggestion integration with synthetic speech', () => {
     expect(generate).toHaveBeenCalledTimes(2);
   });
 
-  it('advances context during silence, archives old speech, and expires cards without new speech', async () => {
+  it('advances context during silence, archives old speech, and retains cards without new speech', async () => {
     const { pipeline, generate } = setup();
     pipeline.receive(speech());
     await vi.advanceTimersByTimeAsync(30500);
-    expect(pipeline.snapshot().items).toEqual([]);
+    expect(pipeline.snapshot().items).toEqual([
+      { ...card, id: 'suggestion-1', expiresAt: null },
+    ]);
     await vi.advanceTimersByTimeAsync(240000);
+    expect(pipeline.snapshot().items).toHaveLength(1);
     pipeline.receive({
       ...speech(2),
       timestampMs: 280000,
@@ -370,3 +373,68 @@ describe('session suggestion integration with synthetic speech', () => {
     });
   });
 });
+
+it('retains cards after budget exhaustion, deduplicates after 30 s and replaces the oldest at capacity', async () => {
+  const { pipeline, generate } = setup(true, 4);
+  pipeline.receive(speech());
+  await vi.advanceTimersByTimeAsync(500);
+  const first = pipeline.snapshot().items[0];
+  await vi.advanceTimersByTimeAsync(60000);
+  pipeline.receive(speech(2, 'Outro assunto sintético.'));
+  await vi.advanceTimersByTimeAsync(500);
+  expect(pipeline.snapshot().items).toEqual([first]);
+  for (const seq of [3, 4]) {
+    generate.mockResolvedValueOnce({
+      ok: true,
+      suggestions: [{ ...card, body: `Body ${seq}` }],
+    });
+    pipeline.receive(speech(seq, `Nova fala sintética ${seq}.`));
+    await vi.advanceTimersByTimeAsync(10000);
+  }
+  expect(pipeline.snapshot()).toMatchObject({
+    status: 'exhausted',
+    items: [{ body: 'Body 3' }, { body: 'Body 4' }],
+  });
+  await vi.advanceTimersByTimeAsync(3600000);
+  expect(pipeline.snapshot().items).toHaveLength(2);
+  expect(generate).toHaveBeenCalledTimes(4);
+});
+
+it.each(['pause', 'stop', 'revoke', 'restart'] as const)(
+  'clears retained cards and suppression on %s without reusing old IDs',
+  async (action) => {
+    const { pipeline, session, start } = setup(true, 3);
+    pipeline.receive(speech());
+    await vi.advanceTimersByTimeAsync(500);
+    const oldId = pipeline.snapshot().items[0]?.id ?? '';
+    expect(oldId).not.toBe('');
+    if (action === 'pause') {
+      session.pause();
+      pipeline.pause();
+    } else if (action === 'revoke') {
+      session.revokeContext();
+      pipeline.stop();
+    } else {
+      session.stop();
+      pipeline.stop();
+    }
+    expect(pipeline.snapshot().items).toEqual([]);
+    expect(
+      pipeline.snapshot().diagnostics?.lastAttempt?.requestBody ?? null,
+    ).toBeNull();
+    if (action === 'pause') {
+      session.resume();
+      pipeline.resume();
+    } else {
+      if (action === 'revoke') session.stop();
+      start();
+    }
+    expect(pipeline.snapshot().items).toEqual([]);
+    pipeline.receive(speech(2, 'Nova pergunta sintética?'));
+    await vi.advanceTimersByTimeAsync(500);
+    expect(pipeline.snapshot().items).toHaveLength(1);
+    expect(pipeline.snapshot().items[0]?.id).not.toBe(oldId);
+    pipeline.dismiss(oldId);
+    expect(pipeline.snapshot().items).toHaveLength(1);
+  },
+);

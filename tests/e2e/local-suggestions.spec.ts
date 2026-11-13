@@ -59,6 +59,21 @@ for (const { consent, model } of [
         await expect(cards.getByRole('article')).toHaveCount(1);
         await expect(cards).toContainText('Prazo sintético Aurora');
         await expect(cards).not.toContainText('DEMO');
+        await expect(cards).toContainText('sem expiração por tempo');
+        // Advance the main clock only: no capture, network or real-time wait.
+        await app.evaluate(() => {
+          const now = Date.now.bind(Date);
+          Date.now = () => now() + 60000;
+        });
+        const retained = await page.evaluate(() =>
+          window.meetingCopilot.session({ version: 6, action: 'read' }),
+        );
+        expect(retained).toMatchObject({
+          suggestions: {
+            items: [{ title: 'Prazo sintético Aurora', expiresAt: null }],
+          },
+        });
+        await expect(cards.getByRole('article')).toHaveCount(1);
         await expect(page.getByText(/Limite atingido/)).toBeVisible();
         const diagnostics = page.getByRole('region', {
           name: 'Estado da OpenAI',
@@ -86,17 +101,21 @@ for (const { consent, model } of [
         await page.screenshot({
           path: test.info().outputPath('openai-diagnostics.png'),
         });
-        await cards
-          .getByRole('button', { name: 'Descartar: Prazo sintético Aurora' })
-          .click();
-        await expect(cards.getByRole('article')).toHaveCount(0);
+        if (model === 'gpt-5.4-mini') {
+          await cards
+            .getByRole('button', { name: 'Descartar: Prazo sintético Aurora' })
+            .click();
+          await expect(cards.getByRole('article')).toHaveCount(0);
+        }
         await page.getByRole('button', { name: 'Pausar' }).click();
+        await expect(cards.getByRole('article')).toHaveCount(0);
         await expect(sentBody).toHaveCount(0);
         await page.getByRole('button', { name: 'Retomar' }).click();
+        await expect(cards.getByRole('article')).toHaveCount(0);
         await page.getByRole('button', { name: 'Desativar sugestões' }).click();
         await expect(cards).toHaveCount(0);
         const snapshot = await page.evaluate(() =>
-          window.meetingCopilot.session({ version: 5, action: 'read' }),
+          window.meetingCopilot.session({ version: 6, action: 'read' }),
         );
         expect(snapshot).toMatchObject({
           session: {
@@ -133,7 +152,7 @@ for (const { consent, model } of [
       await page.getByRole('button', { name: 'Parar' }).click();
       expect(
         await page.evaluate(() =>
-          window.meetingCopilot.session({ version: 5, action: 'read' }),
+          window.meetingCopilot.session({ version: 6, action: 'read' }),
         ),
       ).toMatchObject({
         local: null,

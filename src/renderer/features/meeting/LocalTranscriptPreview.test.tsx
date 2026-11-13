@@ -13,7 +13,7 @@ const base = {
   timestampMs: 100,
 };
 const reply = (): SessionResult => ({
-  version: 5,
+  version: 6,
   ok: true,
   demo: emptyDemo(),
   session: {

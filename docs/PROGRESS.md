@@ -1,23 +1,20 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-12. **Marco:** M3 — T024 concluída após aceite manual informado pelo usuário; M7 planejada.
+**Atualizado:** 2026-11-12. **Marco:** M7 — T040 concluída.
 
 ## Snapshot
 
-- T001–T015 e T017–T024 concluídas; T016 e T036–T039 `DEFERRED`. T044 concluída. Estados em [TASKS.md](TASKS.md).
-- T024: o usuário relatou dois cartões reais e confirmou transcrição sem sugestões, pausa/retomada, revogação, parada e fechamento/reabertura com limpeza e sem captura/helper residuais nos cenários apresentados. Registro em [TEST-T024.md](TEST-T024.md) e D019; o agente não capturou áudio nem usou chave/API real.
-- Gates: `verify` com 784 TS aprovados, 18 skipped, 19 runner, lint/formato/tipos/build; smoke Electron 17/17 com fixtures e rede bloqueada. Falhas de SO não foram especificamente validadas (O008/T032); custo, relevância e latência permanecem T025/T027.
+- T001–T015 e T017–T024 concluídas; T040 e T044 concluídas. T016 e T036–T039 `DEFERRED`. Estados/aceites em [TASKS.md](TASKS.md).
+- T024 permanece validada pelo relato do usuário (D019); evidências e limites em [TEST-T024.md](TEST-T024.md). Falhas excepcionais de SO seguem O008/T032.
+- T040: cartões reais sem expiração por tempo, dois mais recentes e descarte explícito. Dedup limitada a 100 inserções; pausa limpa cartões/supressão, retomada não restaura; stop/revogação/restart limpam. DEMO mantém TTL de 30 s. IPC de sessão agora v6. Política em [ADR 0022](adr/0022-retained-live-suggestions.md).
+- Gates T040: verify aprovado (805 TS, 18 skipped, 19 runner, lint/formato/tipos/build); smoke Electron offline 17/17. Evidências em [TEST-T040.md](TEST-T040.md). Sem captura, API real ou custos; Swift não alterado.
 
-## M7 — próxima sequência planejada
+## Próximo passo
 
-T040 retenção dos cartões → T041 layout com chat e cartões lado a lado, janela flutuante e validação de Spaces/tela cheia → T042 configurações escondidas durante uso, abertas sob demanda → T043 DEMO secundária e validação. Uma tarefa por sessão; detalhes e critérios em [TASKS.md](TASKS.md). O usuário autorizou planejamento e, antes de executar M7, pediu confirmar T024; não iniciar M7 sem pedido de execução.
-
-`python3 scripts/run-codex-tasks.py --tasks T040 T041 T042 T043 --dry-run` pré-valida a lista; sem `--dry-run` executa apenas esses IDs em ordem e em sessões separadas, respeitando dependências e bloqueios. Começar preferencialmente com `--max-tasks 1`. T044 e testes em [TEST-T044.md](TEST-T044.md).
-
-Rascunho de código iniciado durante planejamento foi restaurado; diff temporário não validado em `/private/tmp/meeting-copilot-layout-interrompido.patch`. Nenhum segredo ou conteúdo de reunião foi lido pelo agente.
+Sessão T040 encerrada após commit local; nenhum bloqueio de aceite. Próxima tarefa elegível: **T041, em nova sessão**, para layout lado a lado e validação de janela/Spaces/tela cheia. T042/T043 continuam dependentes dessa sequência. Não houve implementação dessas tarefas nesta sessão.
 
 ## Ambiente
 
 - Node >=26: `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run verify`.
-- Smoke Electron requer execução fora do sandbox; aprovado com perfil temporário e rede bloqueada. Novas capturas, uso de credenciais ou custos pelo agente exigem autorização explícita.
-- Sem push automático. Windows e STT remoto continuam adiados.
+- Smoke Electron exige execução fora do sandbox; T040 aprovado com perfil temporário, fixtures sintéticas e rede bloqueada. Captura, credenciais reais e custos exigem autorização explícita.
+- Git protegido: add/commit locais usam escalada revisada. Sem push automático. Windows e STT remoto continuam adiados.

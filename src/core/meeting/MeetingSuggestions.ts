@@ -118,7 +118,7 @@ export class MeetingSuggestions {
       },
       this.authorized,
       'pt-BR',
-      {},
+      { ttlMs: null },
       true,
     );
   }

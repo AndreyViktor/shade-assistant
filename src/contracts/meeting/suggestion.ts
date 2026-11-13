@@ -13,7 +13,11 @@ export type SuggestionContent = {
   body: string;
   groundedIn: 'meeting' | 'inference';
 };
-export type Suggestion = SuggestionContent & { id: string; expiresAt: number };
+// null retains the card until explicit dismissal or session lifecycle cleanup.
+export type Suggestion = SuggestionContent & {
+  id: string;
+  expiresAt: number | null;
+};
 export const SUGGESTION_TITLE_LIMIT = 80;
 export const SUGGESTION_BODY_LIMIT = 300;
 export const SUGGESTION_BATCH_LIMIT = 2;
@@ -75,9 +79,10 @@ export function parseSuggestion(value: unknown): Suggestion | null {
       'expiresAt',
     ]) ||
     !isSuggestionId(value.id) ||
-    typeof value.expiresAt !== 'number' ||
-    !Number.isSafeInteger(value.expiresAt) ||
-    value.expiresAt < 0
+    (value.expiresAt !== null &&
+      (typeof value.expiresAt !== 'number' ||
+        !Number.isSafeInteger(value.expiresAt) ||
+        value.expiresAt < 0))
   )
     return null;
   const content = parseSuggestionContent({

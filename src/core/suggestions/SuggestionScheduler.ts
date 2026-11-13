@@ -6,7 +6,7 @@ import type { Trigger } from './TriggerEngine';
 export type SuggestionPolicy = {
   debounceMs: number;
   cooldownMs: number;
-  ttlMs: number;
+  ttlMs: number | null;
   maxResponseAgeMs: number;
 };
 
@@ -49,7 +49,9 @@ export class SuggestionScheduler {
   ) {
     this.policy = { ...DEFAULT_SUGGESTION_POLICY, ...policy };
     for (const [key, value] of Object.entries(this.policy)) {
+      if (key === 'ttlMs' && value === null) continue;
       if (
+        value === null ||
         !Number.isSafeInteger(value) ||
         value < (key === 'debounceMs' || key === 'cooldownMs' ? 0 : 1) ||
         value > 2_147_483_647
@@ -101,7 +103,7 @@ export class SuggestionScheduler {
     this.arm();
   }
 
-  /** Explicit topic/context invalidation; suppression survives until its TTL. */
+  /** Explicit topic/context invalidation; bounded suppression survives. */
   invalidate(): void {
     clearTimeout(this.timer);
     this.timer = undefined;
