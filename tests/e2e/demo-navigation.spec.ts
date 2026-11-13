@@ -42,7 +42,11 @@ test('DEMO stays in diagnostics across preferences, keyboard navigation and sess
     expect(await read()).toEqual(idle);
     await page.keyboard.press('Space');
     const preview = page.getByRole('region', { name: 'Roteiro DEMO' });
-    await expect(preview.getByRole('article')).toHaveCount(1);
+    // The first simulated turn has no suggestion; the next card arrives after
+    // two transcript stages and two suggestion stages (six seconds total).
+    await expect(preview.getByRole('article')).toHaveCount(1, {
+      timeout: 12000,
+    });
     await page.getByRole('button', { name: 'Pausar', exact: true }).click();
     const paused = await read();
     expect(paused).toMatchObject({
