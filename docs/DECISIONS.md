@@ -16,6 +16,8 @@ Decisões confirmadas pelo usuário prevalecem sobre propostas e hipóteses anti
 
 - **D018 (2026-11-11):** o usuário informou que T019 está validada e autorizou avançar se concluída. Registrar a confirmação como aceite manual da entrega Apple Local existente, junto dos gates automatizados e evidências anteriores. A confirmação não detalha cenários de quit/reload, medições ou inspeção de processos; não afirmar que esses ensaios específicos ocorreram nem que o risco estático foi corrigido. Manter esse risco em O008 para revisão na integração/auditoria.
 
+- **D019 (2026-11-12):** após relatar a geração real de dois cartões, o usuário confirmou todos os pontos solicitados para T024: funcionamento sem sugestões, pausa/retomada, revogação com transcrição preservada e parada/fechamento/reabertura sem captura ou helper residuais nos cenários apresentados. Registrar como aceite manual informado pelo usuário; não inventar dados do ensaio nem alegar verificação de falhas de SO ou medição. A usabilidade permanece em T040–T043.
+
 ## Propostas técnicas reversíveis
 
 Defaults sujeitos a validação de implementação; detalhes do fluxo e fronteiras estão em [ARCHITECTURE.md](ARCHITECTURE.md).
@@ -42,7 +44,7 @@ Não bloqueiam tarefas independentes; atualize esta lista quando houver decisão
 - **O006:** política para retenção opcional de histórico e perfis de reunião; o padrão atual é temporário/em memória.
 - **O007:** necessidade de consultar documentos ou materiais do usuário durante a reunião; fora do escopo atual.
 
-- **O008:** T024 acrescentou bloqueio de start durante inicialização/parada e coordenação de cleanup no quit, com regressões automatizadas para reload/restart e criação tardia do provider (ADR 0019). Falta ensaio Mac real de encerramento de captura/helper e falhas de SO, registrado no roteiro T024/T032. Não há reprodução confirmada de helper órfão; mocks e aceite T019 (D018) não comprovam ausência de processos residuais no hardware.
+- **O008:** T024 acrescentou bloqueio de start durante inicialização/parada e coordenação de cleanup no quit, com regressões automatizadas para reload/restart e criação tardia do provider (ADR 0019). O usuário confirmou encerramento normal de captura/helper ao parar, fechar e reabrir (D019). Falhas de SO e cenários excepcionais permanecem sem ensaio específico, para T032; não há reprodução confirmada de helper órfão.
 
 ## Como aplicar
 

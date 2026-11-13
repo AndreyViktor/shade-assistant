@@ -1,8 +1,10 @@
 # T024 — integração de sugestões na sessão Apple Local
 
-Data: 2026-11-11. Estado: `BLOCKED` pelos critérios reais ainda não confirmados; implementação e gates offline concluídos.
+Data: 2026-11-11. Estado: `DONE` por confirmação manual do usuário e gates offline registrados.
 
-O usuário relatou em 12/11 que, após adicionar créditos, falou uma frase e viu dois cartões reais. Isso confirma o fluxo básico, mas não registra os demais casos de consentimento, limites ou encerramento. O roteiro fictício abaixo é uma proposta para um ensaio controlado; não presumir que foi o conteúdo ou o procedimento utilizado pelo usuário.
+## Aceite manual informado pelo usuário — 2026-11-12
+
+O usuário relatou que uma frase transcrita, com API e créditos configurados, produziu dois cartões reais. Ao receber a lista dos demais pontos, confirmou que todos estavam validados: transcrição sem sugestões; pausa e retomada; desativação das sugestões mantendo transcrição e removendo cartões; parada e fechamento/reabertura com limpeza e sem captura ou helper residuais nos casos apresentados. Registro baseado na confirmação do usuário; o agente não executou captura, não acessou a chave e não conhece conteúdo, modelo ou detalhes adicionais do ensaio. Não se afirma teste de falha de SO, métricas de latência/custo nem qualidade geral. A usabilidade relatada segue T040–T043; O008 mantém cenários excepcionais para T032.
 
 ## Execução e autorização
 
@@ -36,7 +38,7 @@ Após relato do usuário de confusão entre modelo/chave e autorização sem con
 - `npm run verify`: 749 TS aprovados, 18 skipped, 12 runner, lint/formato/tipos/build. Cinco testes novos cobrem transcrição sem chave, importação mock, configuração incompleta, teclado e atualização dos metadados. `npm run test:smoke`: 13/13 aprovados após as correções, incluindo o fluxo novo e regressões de transcrição/teclado; rede bloqueada, perfil temporário e chave/transporte sintéticos.
 - A primeira rodada detectou seletores ambíguos após renomear botões e foco perdido ao carregar Preferências somente na abertura. Corrigidos com seletores exatos e pré-carregamento dos metadados, mantendo as asserções de teclado.
 
-O aceite real T024 permanece pendente. Esta correção foi validada somente com dados sintéticos, sem captura nem envio à OpenAI.
+À época, o aceite real permanecia pendente. Esta correção foi validada somente com dados sintéticos, sem captura nem envio à OpenAI; ver aceite posterior acima.
 
 ## Seleção de modelos — 2026-11-12
 
@@ -78,7 +80,7 @@ Usuário relatou uma reunião de aproximadamente 20 minutos sem gatilho. Impleme
 
 `verify`: 784 TS aprovados, 18 skipped, 12 runner e lint/formato/tipos/build. Teste sintético cobre falas sem gatilho, agrupamento, preservação de chamada ativa e enfileiramento do contexto mais recente; testes existentes cobrem revogação, pausa, orçamento e limpeza. Smoke Electron offline: 17/17 aprovados com helper e transporte sintéticos e rede bloqueada. Política e compromissos em [ADR 0021](adr/0021-continuous-suggestion-evaluation.md).
 
-## Roteiro proposto para aceite real — ainda não autorizado/executado
+## Roteiro fictício proposto anteriormente — não executado pelo agente
 
 1. Confirmar modelo OpenAI compatível, disponibilidade na conta, preço vigente e autorização de custo para **uma tentativa**, sem retry automático, com até 2.048 tokens de saída. Modelo e estimativa monetária ainda precisam ser definidos; limite de chamadas não é teto em moeda.
 2. Usar ambiente silencioso e sem reunião real. Selecionar somente microfone, pt-BR, Apple Local. Autorizar captura e texto separadamente no diálogo, modelo escolhido no seletor e limite 1. Chave fica no cofre/main; não colar chave em chat/logs.
