@@ -2,6 +2,10 @@
 
 **Atualizado:** 2026-11-12. **Marco:** M3 — integração de sugestões implementada; aceite real pendente.
 
+## Runner: seleção explícita T044 — concluída
+
+`--tasks T040 T041 T042 T043` seleciona somente esses IDs em ordem, sem ignorar bloqueios globais ou dependências. A lista inteira é pré-validada e estados reais são revalidados a cada sessão; `--dry-run` não executa. Seleção padrão sem `--tasks` permanece. `verify`: 784 TS, 18 skipped, 19 runner e lint/formato/tipos/build. Simulação isolada de M7 com T024/T044 hipoteticamente DONE aprovou a sequência; backlog real segue T024 BLOCKED. [TEST-T044.md](TEST-T044.md).
+
 ## Planejamento de usabilidade — 2026-11-12
 
 O usuário informou que, após adicionar créditos, uma frase transcrita gerou dois cartões reais. Isso valida o caminho básico transcrição → OpenAI → cartões, mas não todos os critérios de T024. Também observou que 30 s é pouco, cartões e histórico competem pela mesma coluna e configurações precisam de tela própria.

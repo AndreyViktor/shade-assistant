@@ -1,6 +1,8 @@
 # T024 — integração de sugestões na sessão Apple Local
 
-Data: 2026-11-11. Estado: `BLOCKED` somente pelo ensaio real; implementação e gates offline concluídos.
+Data: 2026-11-11. Estado: `BLOCKED` pelos critérios reais ainda não confirmados; implementação e gates offline concluídos.
+
+O usuário relatou em 12/11 que, após adicionar créditos, falou uma frase e viu dois cartões reais. Isso confirma o fluxo básico, mas não registra os demais casos de consentimento, limites ou encerramento. O roteiro fictício abaixo é uma proposta para um ensaio controlado; não presumir que foi o conteúdo ou o procedimento utilizado pelo usuário.
 
 ## Execução e autorização
 

@@ -38,6 +38,30 @@ def eligible_task(tasks: list[Task]) -> Task | None:
     return None
 
 
+def validate_selection(tasks: list[Task], selected: list[str]) -> None:
+    if not selected:
+        raise RuntimeError("A lista de tarefas não pode estar vazia.")
+    if len(selected) > 35:
+        raise RuntimeError("A lista aceita no máximo 35 tarefas.")
+    if len(set(selected)) != len(selected):
+        raise RuntimeError("A lista contém tarefas duplicadas.")
+    by_id = {task.id: task for task in tasks}
+    if len(by_id) != len(tasks):
+        raise RuntimeError("O backlog contém IDs duplicados.")
+    completed = {task.id for task in tasks if task.state == "DONE"}
+    for task_id in selected:
+        if not TASK_ID.fullmatch(task_id) or task_id not in by_id:
+            raise RuntimeError(f"Tarefa desconhecida ou inválida: {task_id}.")
+        task = by_id[task_id]
+        if task.state != "TODO":
+            raise RuntimeError(f"{task_id} está {task.state}; a lista aceita apenas tarefas TODO.")
+        missing = [dep for dep in task.dependencies if dep not in completed]
+        if missing:
+            raise RuntimeError(f"{task_id} possui dependências pendentes ou fora de ordem: {', '.join(missing)}.")
+        # Simulate only the ordering; real execution rechecks DONE at each step.
+        completed.add(task_id)
+
+
 def check_pending_tasks(tasks: list[Task]) -> None:
     pending = [task.id for task in tasks if task.state in {"IN_PROGRESS", "BLOCKED"}]
     if pending:
@@ -107,13 +131,19 @@ def make_prompt(task: Task) -> str:
     """
 
 
-def run(root: Path, maximum: int, dry_run: bool) -> int:
+def run(root: Path, maximum: int, dry_run: bool, selected: list[str] | None = None) -> int:
     task_file = root / "docs/TASKS.md"
     if not task_file.is_file():
         raise RuntimeError(f"docs/TASKS.md não encontrado em {root}")
+    if selected is not None and not selected:
+        raise RuntimeError("A lista de tarefas não pode estar vazia.")
     if dry_run:
         tasks = parse_tasks(task_file.read_text(encoding="utf-8"))
         check_pending_tasks(tasks)
+        if selected is not None:
+            validate_selection(tasks, selected)
+            print(f"Sequência selecionada: {', '.join(selected[:maximum])}")
+            return 0
         task = eligible_task(tasks)
         print(f"Próxima tarefa elegível: {task.id}" if task else "Nenhuma tarefa elegível.")
         return 0
@@ -127,7 +157,15 @@ def run(root: Path, maximum: int, dry_run: bool) -> int:
         check_clean_git(root)
         tasks = parse_tasks(task_file.read_text(encoding="utf-8"))
         check_pending_tasks(tasks)
-        task = eligible_task(tasks)
+        remaining = selected[index - 1:] if selected is not None else None
+        if remaining is not None:
+            if not remaining:
+                print("Lista de tarefas concluída. Fim do ciclo.")
+                return 0
+            validate_selection(tasks, remaining)
+            task = next(item for item in tasks if item.id == remaining[0])
+        else:
+            task = eligible_task(tasks)
         if task is None:
             print("Nenhuma tarefa TODO elegível. Fim do ciclo.")
             return 0
@@ -158,13 +196,15 @@ def run(root: Path, maximum: int, dry_run: bool) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-dir", type=Path, default=Path(__file__).resolve().parent.parent)
-    parser.add_argument("--max-tasks", type=int, default=1)
+    parser.add_argument("--max-tasks", type=int, default=None)
+    parser.add_argument("--tasks", nargs="+", metavar="TNNN", help="IDs TODO em ordem, por exemplo --tasks T040 T041")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
-    if not 1 <= args.max_tasks <= 35:
+    maximum = args.max_tasks if args.max_tasks is not None else (len(args.tasks) if args.tasks else 1)
+    if not 1 <= maximum <= 35:
         parser.error("--max-tasks deve estar entre 1 e 35")
     try:
-        return run(args.project_dir.resolve(), args.max_tasks, args.dry_run)
+        return run(args.project_dir.resolve(), maximum, args.dry_run, args.tasks)
     except RuntimeError as exc:
         print(f"ERRO: {exc}", file=sys.stderr)
         return 1

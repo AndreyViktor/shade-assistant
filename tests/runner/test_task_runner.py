@@ -51,7 +51,7 @@ class RunnerTests(unittest.TestCase):
                 lines[index] = "|".join(fields)
         self.task_file.write_text("\n".join(lines) + "\n")
 
-    def simulate(self, action=None, maximum=1, dry_run=False):
+    def simulate(self, action=None, maximum=1, dry_run=False, selected=None):
         def execute(args, **kwargs):
             if args == ["codex", "exec", "--help"]:
                 return subprocess.CompletedProcess(args, self.help_code, self.help_output, "")
@@ -64,7 +64,7 @@ class RunnerTests(unittest.TestCase):
         with patch("subprocess.run", side_effect=execute), \
                 patch("shutil.which", return_value="/test/tool"), \
                 contextlib.redirect_stdout(io.StringIO()) as output:
-            result = RUNNER["run"](self.root, maximum, dry_run)
+            result = RUNNER["run"](self.root, maximum, dry_run, selected)
         return result, output.getvalue()
 
     def complete(self, number):
@@ -72,6 +72,86 @@ class RunnerTests(unittest.TestCase):
         self.state(task, "DONE")
         self.commit(f"feat({task}): simulated delivery")
         return 0
+
+    def add_independent_chain(self):
+        with self.task_file.open("a") as file:
+            file.write("| T040 | TODO | — | target | evidence |\n"
+                       "| T041 | TODO | T040 | next | evidence |\n")
+        self.commit("add independent chain")
+
+    def complete_selected(self, number):
+        task = ["T040", "T041"][number - 1]
+        self.state(task, "DONE")
+        self.commit(f"feat({task}): simulated delivery")
+        return 0
+
+    def test_selected_chain_skips_other_eligible_tasks_and_uses_separate_sessions(self):
+        self.add_independent_chain()
+        _, output = self.simulate(self.complete_selected, maximum=2, selected=["T040", "T041"])
+        self.assertEqual(len(self.launches), 2)
+        self.assertIn("EXCLUSIVAMENTE na tarefa T040", self.launches[0][1]["input"])
+        self.assertIn("EXCLUSIVAMENTE na tarefa T041", self.launches[1][1]["input"])
+        self.assertIn("T041: DONE", output)
+        self.assertIn("| T001 | TODO |", self.task_file.read_text())
+        self.assertEqual(self.git("status", "--porcelain"), "")
+
+    def test_selected_dry_run_prevalidates_chain_without_launch(self):
+        self.add_independent_chain()
+        before = self.git("rev-parse", "HEAD")
+        _, output = self.simulate(maximum=2, dry_run=True, selected=["T040", "T041"])
+        self.assertIn("Sequência selecionada: T040, T041", output)
+        self.assertEqual(self.launches, [])
+        self.assertEqual(before, self.git("rev-parse", "HEAD"))
+
+    def test_selection_rejects_invalid_unknown_duplicate_and_out_of_order_before_launch(self):
+        self.add_independent_chain()
+        for selected in [[], ["T040", "T040"], ["T999"], ["bad"], ["T041"], ["T041", "T040"], ["T036"], ["T040", "T999"]]:
+            with self.subTest(selected=selected):
+                for dry_run in [True, False]:
+                    with self.assertRaises(RuntimeError):
+                        self.simulate(maximum=2, dry_run=dry_run, selected=selected)
+                self.assertEqual(self.launches, [])
+
+    def test_selection_respects_unrelated_blocked_or_in_progress_task(self):
+        self.add_independent_chain()
+        for state in ["BLOCKED", "IN_PROGRESS"]:
+            self.state("T001", state)
+            self.commit(f"record {state}")
+            for dry_run in [False, True]:
+                with self.assertRaisesRegex(RuntimeError, "IN_PROGRESS/BLOCKED"):
+                    self.simulate(maximum=2, dry_run=dry_run, selected=["T040", "T041"])
+            self.assertEqual(self.launches, [])
+
+    def test_selection_stops_on_failure_and_respects_maximum(self):
+        self.add_independent_chain()
+        with self.assertRaisesRegex(RuntimeError, "Codex terminou com erro"):
+            self.simulate(lambda _: 1, maximum=2, selected=["T040", "T041"])
+        self.assertEqual(len(self.launches), 1)
+        self.launches.clear()
+        self.simulate(self.complete_selected, maximum=1, selected=["T040", "T041"])
+        self.assertEqual(len(self.launches), 1)
+        self.assertIn("| T041 | TODO |", self.task_file.read_text())
+
+    def test_selection_rechecks_real_completion_before_next_task(self):
+        self.add_independent_chain()
+        def missing_commit(_):
+            self.state("T040", "DONE")
+            return 0
+        with self.assertRaisesRegex(RuntimeError, "DONE sem commit"):
+            self.simulate(missing_commit, maximum=2, selected=["T040", "T041"])
+        self.assertEqual(len(self.launches), 1)
+
+    def test_cli_defaults_to_whole_explicit_list_but_default_automatic_stays_one(self):
+        self.add_independent_chain()
+        calls = []
+        runner_globals = RUNNER["main"].__globals__
+        with patch.dict(runner_globals, {"run": lambda *args: calls.append(args) or 0}):
+            with patch("sys.argv", ["runner", "--tasks", "T040", "T041", "--dry-run"]):
+                self.assertEqual(RUNNER["main"](), 0)
+            with patch("sys.argv", ["runner", "--dry-run"]):
+                self.assertEqual(RUNNER["main"](), 0)
+        self.assertEqual(calls[0][1:], (2, True, ["T040", "T041"]))
+        self.assertEqual(calls[1][1:], (1, True, None))
 
     def test_fresh_session_uses_reviewed_approvals_and_requires_commit(self):
         result, _ = self.simulate(self.complete)

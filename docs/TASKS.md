@@ -1,4 +1,4 @@
-# Backlog executável — V0.7 | 39 tarefas (35 MVP Mac + 4 futuras Windows)
+# Backlog executável — V0.7 | 44 tarefas (40 Mac/fluxo + 4 futuras Windows)
 
 **Estados:** `TODO`, `IN_PROGRESS`, `BLOCKED`, `DONE`, `DEFERRED`. `DONE` requer teste/evidência verificáveis, `BLOCKED` descreve desbloqueio. **Decisão atual:** a implementação de STT será **Swift própria + Electron** no MVP macOS, sem dependência de ferramentas externas de STT; Windows é M6 futuro. T001–T015 e T017–T021 concluídas; T016 e Windows (T036–T039) permanecem DEFERRED.
 
@@ -61,6 +61,8 @@ Planejado após o relato de uso real: transcrição precisa permanecer visível 
 | T041 | TODO | T040,T017 | Painel de reunião com transcrição e cartões lado a lado | Janela utilizável com histórico ao estilo chat e lista de cartões em coluna adjacente; ambas legíveis ao mesmo tempo, rolagem/foco acessíveis, redimensionamento e overflow adequados. Definir remoção de cartões antigos por espaço disponível sem descarte inesperado por resize transitório; testar dimensões normais e estreitas, estado vazio e falas longas. Evidências visuais e smoke offline. |
 | T042 | TODO | T041,T004 | Tela exclusiva de configurações | Separar configurações da tela da reunião; permitir escolher idioma, modelo OpenAI e fornecedores disponíveis (Apple Local e OpenAI), com estrutura para opções futuras sem sugerir suporte inexistente. Configurar chave pelo fluxo seguro existente e `.env` de desenvolvimento; persistir escolhas apropriadas com migração de preferências, sem expor segredos ao renderer. Consentimento de captura/envio e limite continuam explícitos por sessão. Testar navegação, persistência, segurança e compatibilidade. |
 | T043 | TODO | T042 | Reorganizar DEMO e validar a experiência completa | Retirar demonstração do fluxo principal e mantê-la identificada em área secundária de configurações/diagnóstico, sem captura ou rede. Exercitar navegação, sessão simulada, configuração e painéis em conjunto; testes de regressão/acessibilidade e evidências visuais. Registrar o que exige validação humana no Mac e não confundir mocks com ensaio real. Remoção definitiva da DEMO requer decisão posterior do usuário. |
+
+| T044 | DONE | T002 | Seleção explícita de tarefas no runner | `--tasks` recebe IDs TODO ordenados; pré-valida lista e revalida estados/dependências a cada sessão. Mantém bloqueio global, sessões e commits independentes e seleção padrão. `verify`: 784 TS, 18 skipped, 19 runner, lint/formato/tipos/build; dry-run de M7 simulado em cópia isolada. Sem execução M7 real. Evidências em [TEST-T044.md](TEST-T044.md). |
 
 ## Critérios gerais
 
