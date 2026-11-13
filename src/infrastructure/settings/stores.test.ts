@@ -31,7 +31,8 @@ describe('preferences on disk', () => {
     const preferences = {
       ...defaultPreferences('darwin'),
       mode: 'real' as const,
-      language: 'pt-BR+en-US' as const,
+      language: 'en-US' as const,
+      suggestionModel: 'gpt-5.4' as const,
     };
     await store.save(preferences);
     expect(await new PreferencesStore(path, 'darwin').read()).toEqual(
@@ -41,7 +42,11 @@ describe('preferences on disk', () => {
       expect((await stat(path)).mode & 0o777).toBe(0o600);
     expect(await readdir(directory)).toEqual(['preferences.json']);
   });
-  it.each(['{', JSON.stringify({ version: 2 }), 'x'.repeat(4097)])(
+  it.each([
+    '{',
+    JSON.stringify({ ...defaultPreferences('darwin'), version: 3 }),
+    'x'.repeat(4097),
+  ])(
     'fails closed on corruption, newer versions or oversize without overwriting',
     async (contents) => {
       const path = join(directory, 'preferences.json');
@@ -52,6 +57,70 @@ describe('preferences on disk', () => {
       expect(await readFile(path, 'utf8')).toBe(contents);
     },
   );
+  it.each(['pt-BR', 'en-US', 'pt-BR+en-US'])(
+    'migrates legacy %s once, preserves mode/provider and never grants consent',
+    async (language) => {
+      const path = join(directory, 'preferences.v1.json');
+      await writeFile(
+        path,
+        JSON.stringify({
+          version: 1,
+          mode: 'real',
+          sttProvider: 'mock',
+          language,
+        }),
+      );
+      const expected = {
+        ...defaultPreferences('darwin'),
+        mode: 'real',
+        sttProvider: 'mock',
+        language: language === 'en-US' ? 'en-US' : 'pt-BR',
+      };
+      expect(await new PreferencesStore(path, 'darwin').read()).toEqual(
+        expected,
+      );
+      const contents = await readFile(path, 'utf8');
+      expect(JSON.parse(contents)).toEqual(expected);
+      expect(await new PreferencesStore(path, 'darwin').read()).toEqual(
+        expected,
+      );
+      expect(await readFile(path, 'utf8')).toBe(contents);
+      expect(Object.keys(expected).sort()).toEqual(
+        [
+          'version',
+          'mode',
+          'sttProvider',
+          'language',
+          'suggestionProvider',
+          'suggestionModel',
+        ].sort(),
+      );
+    },
+  );
+  it.each([
+    {
+      version: 1,
+      mode: 'real',
+      sttProvider: 'apple-local',
+      language: 'en-US',
+      secret: 'synthetic',
+    },
+    { version: 1, mode: 'real', sttProvider: 'openai-stt', language: 'en-US' },
+    {
+      version: 1,
+      mode: 'real',
+      sttProvider: 'apple-local',
+      language: 'unknown',
+    },
+  ])('preserves malformed legacy files without migrating', async (legacy) => {
+    const path = join(directory, 'preferences.v1.json');
+    const contents = JSON.stringify(legacy);
+    await writeFile(path, contents);
+    await expect(new PreferencesStore(path, 'darwin').read()).rejects.toThrow(
+      'PREFERENCES_UNAVAILABLE',
+    );
+    expect(await readFile(path, 'utf8')).toBe(contents);
+  });
   it('reports write failure without paths and does not overwrite an unrelated directory', async () => {
     await expect(
       new PreferencesStore(directory, 'darwin').save(

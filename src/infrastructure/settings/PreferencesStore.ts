@@ -1,6 +1,7 @@
 import {
   defaultPreferences,
   parsePreferences,
+  migratePreferences,
 } from '../../contracts/settings/preferences';
 import type { Preferences } from '../../contracts/settings/preferences';
 import {
@@ -21,8 +22,9 @@ export class PreferencesStore {
       const value: unknown = JSON.parse(
         (await readBoundedFile(this.path, 4096)).toString('utf8'),
       );
-      const preferences = parsePreferences(value);
+      const preferences = migratePreferences(value);
       if (!preferences) throw new Error('INVALID_PREFERENCES');
+      if (!parsePreferences(value)) await this.save(preferences);
       return preferences;
     } catch (error) {
       if (isMissingFile(error)) return defaultPreferences(this.platform);

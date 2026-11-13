@@ -20,6 +20,13 @@ for (const { consent, model } of [
     try {
       const page = await app.firstWindow();
       await page
+        .getByRole('button', { name: 'Preferências', exact: true })
+        .click();
+      await page.getByLabel('Modelo para as sugestões').selectOption(model);
+      await page.getByRole('button', { name: 'Salvar preferências' }).click();
+      await expect(page.getByText(/Nenhum serviço foi iniciado/)).toBeVisible();
+      await page.getByRole('button', { name: 'Voltar ao painel' }).click();
+      await page
         .getByRole('button', { name: 'Iniciar transcrição local' })
         .click();
       const checkbox = page.getByRole('checkbox', {
@@ -32,13 +39,13 @@ for (const { consent, model } of [
         });
         await checkbox.check();
         await page.getByLabel('Limite de pedidos de sugestão').fill('1');
-        const modelSelect = page.getByRole('combobox', {
-          name: 'Modelo para as sugestões',
-        });
-        await expect(modelSelect).toHaveValue('gpt-5.4-mini');
+        await expect(
+          page.getByRole('combobox', { name: 'Modelo para as sugestões' }),
+        ).toHaveCount(0);
         await expect(page.getByRole('textbox')).toHaveCount(0);
-        await modelSelect.selectOption(model);
-        await modelSelect.scrollIntoViewIfNeeded();
+        await expect(page.getByRole('alertdialog')).toContainText(
+          model === 'gpt-5.4' ? 'GPT-5.4 —' : 'GPT-5.4 mini',
+        );
         await page.screenshot({
           path: test.info().outputPath('start-suggestions.png'),
         });

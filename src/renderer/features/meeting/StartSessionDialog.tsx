@@ -1,7 +1,7 @@
 import {
   DEFAULT_SUGGESTION_MODEL,
   SUGGESTION_MODELS,
-} from './suggestionModels';
+} from '../../../contracts/settings/providerOptions';
 import { useEffect, useRef, useState } from 'react';
 import { parseSuggestionAuthorization } from '../../../contracts/meeting/suggestionSession';
 import type { SuggestionAuthorization } from '../../../contracts/meeting/suggestionSession';
@@ -27,7 +27,6 @@ export function StartSessionDialog({
     SettingsSnapshot['credential'] | null
   >(null);
   const [checking, setChecking] = useState(true);
-  const [importing, setImporting] = useState(false);
   const [error, setError] = useState('');
   const mounted = useRef(false);
   const selectedModel = SUGGESTION_MODELS.find((option) => option.id === model);
@@ -35,7 +34,7 @@ export function StartSessionDialog({
     ? parseSuggestionAuthorization({ model: selectedModel.id, maxRequests })
     : null;
   const hasKey = credential === 'stored' || credential === 'development';
-  const ready = hasKey && authorization !== null && !checking && !importing;
+  const ready = hasKey && authorization !== null && !checking;
 
   useEffect(() => {
     mounted.current = true;
@@ -43,10 +42,12 @@ export function StartSessionDialog({
       .then(() => window.meetingCopilot.getSettings())
       .then((result) => {
         if (!mounted.current) return;
-        if (result.ok) setCredential(result.settings.credential);
-        else
+        if (result.ok) {
+          setCredential(result.settings.credential);
+          setModel(result.settings.preferences.suggestionModel);
+        } else
           setError(
-            'Não foi possível verificar a chave. Tente importar o arquivo novamente.',
+            'Não foi possível verificar a chave. Confira as Preferências.',
           );
       })
       .catch(() => {
@@ -63,25 +64,6 @@ export function StartSessionDialog({
     };
   }, []);
 
-  async function importKey() {
-    setImporting(true);
-    setError('');
-    try {
-      const result = await window.meetingCopilot.importSecret();
-      if (!mounted.current) return;
-      if (result.ok) setCredential(result.settings.credential);
-      else
-        setError(
-          'Não foi possível importar. Escolha um arquivo de texto contendo somente a chave.',
-        );
-    } catch {
-      if (mounted.current)
-        setError('Não foi possível importar a chave. Tente novamente.');
-    } finally {
-      if (mounted.current) setImporting(false);
-    }
-  }
-
   return (
     <div className="consent-backdrop">
       <section
@@ -91,7 +73,7 @@ export function StartSessionDialog({
         className="consent-dialog"
         role="alertdialog"
         onKeyDown={(event) => {
-          if (event.key === 'Escape' && !importing) {
+          if (event.key === 'Escape') {
             event.stopPropagation();
             onCancel();
           }
@@ -170,22 +152,10 @@ export function StartSessionDialog({
                         : 'Chave ainda não configurada'}
                   </p>
                   {!hasKey && (
-                    <>
-                      <p className="field-help">
-                        Importe um arquivo de texto contendo sua chave. Ela fica
-                        protegida no Mac e não é exibida aqui.
-                      </p>
-                      <button
-                        disabled={checking || importing}
-                        onClick={() => {
-                          void importKey();
-                        }}
-                      >
-                        {importing
-                          ? 'Importando…'
-                          : 'Importar arquivo com a chave'}
-                      </button>
-                    </>
+                    <p className="field-help">
+                      Configure a chave em Preferências → Chave OpenAI e volte
+                      para iniciar. A transcrição local funciona sem chave.
+                    </p>
                   )}
                   {hasKey && (
                     <p className="field-help">
@@ -196,27 +166,13 @@ export function StartSessionDialog({
                   )}
                   {error && <p role="alert">{error}</p>}
                 </div>
-                <label htmlFor="suggestion-model">
-                  Modelo para as sugestões
-                </label>
-                <select
-                  id="suggestion-model"
-                  value={model}
-                  aria-describedby="suggestion-model-help suggestion-model-access"
-                  onChange={(event) => setModel(event.target.value)}
-                >
-                  {SUGGESTION_MODELS.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <p id="suggestion-model-help" className="field-help">
-                  {selectedModel?.description}
+                <p>
+                  Modelo para as sugestões:{' '}
+                  <strong>{selectedModel?.label}</strong>
                 </p>
-                <p id="suggestion-model-access" className="field-help">
-                  O acesso ao modelo depende da sua conta da API OpenAI.
-                  Escolher uma opção não inicia envios nem cobranças.
+                <p className="field-help">
+                  Altere o modelo em Preferências. O acesso depende da sua conta
+                  da API OpenAI.
                 </p>
                 <label htmlFor="suggestion-limit">
                   Limite de pedidos de sugestão

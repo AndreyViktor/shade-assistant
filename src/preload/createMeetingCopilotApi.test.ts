@@ -81,7 +81,9 @@ describe('limited preload API', () => {
 
 describe('settings preload boundary', () => {
   const preferences = {
-    version: 1 as const,
+    version: 2 as const,
+    suggestionProvider: 'openai' as const,
+    suggestionModel: 'gpt-5.4-mini' as const,
     mode: 'demo' as const,
     sttProvider: 'apple-local' as const,
     language: 'pt-BR' as const,
@@ -104,6 +106,20 @@ describe('settings preload boundary', () => {
       ['meeting-copilot:settings', { version: 1, action: 'import-secret' }],
       ['meeting-copilot:settings', { version: 1, action: 'remove-secret' }],
     ]);
+    const legacy = {
+      version: 1,
+      mode: 'demo',
+      sttProvider: 'apple-local',
+      language: 'pt-BR',
+    };
+    invoke.mockResolvedValue({
+      ...success,
+      settings: { ...success.settings, preferences: legacy },
+    });
+    expect(await api.getSettings()).toEqual(ipcFailure('INVALID_RESPONSE'));
+    expect(await Reflect.apply(api.savePreferences, null, [legacy])).toEqual(
+      ipcFailure('INVALID_REQUEST'),
+    );
     invoke.mockResolvedValue({ ...success, secret: 'synthetic' });
     expect(await api.getSettings()).toEqual(ipcFailure('INVALID_RESPONSE'));
   });

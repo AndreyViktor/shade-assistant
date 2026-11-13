@@ -1,4 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import {
+  SUGGESTION_MODELS,
+  SUGGESTION_PROVIDERS,
+  TRANSCRIPTION_PROVIDERS,
+} from '../../../contracts/settings/providerOptions';
+import { useEffect, useState } from 'react';
 import { parsePreferences } from '../../../contracts/settings/preferences';
 import type { Preferences } from '../../../contracts/settings/preferences';
 import type {
@@ -6,21 +11,25 @@ import type {
   SettingsSnapshot,
 } from '../../../contracts/ipc/settings';
 
-export function SettingsPanel({ active = true }: { active?: boolean }) {
+export function SettingsPanel({
+  active = true,
+  onSaved,
+}: {
+  active?: boolean;
+  onSaved?: ((preferences: Preferences) => void) | undefined;
+}) {
   const [snapshot, setSnapshot] = useState<SettingsSnapshot | null>(null);
   const [draft, setDraft] = useState<Preferences | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
-  const loaded = useRef(false);
   useEffect(() => {
-    if (!active && loaded.current) return;
+    if (!active) return;
     let current = true;
     async function load() {
       try {
         const result = await window.meetingCopilot.getSettings();
         if (!current) return;
         if (!result.ok) throw new Error('UNAVAILABLE');
-        loaded.current = true;
         setSnapshot(result.settings);
         setDraft((previous) => previous ?? result.settings.preferences);
       } catch {
@@ -49,6 +58,7 @@ export function SettingsPanel({ active = true }: { active?: boolean }) {
       }
       setSnapshot(result.settings);
       setDraft(result.settings.preferences);
+      onSaved?.(result.settings.preferences);
       setMessage(
         'Preferências e estado da chave atualizados. Nenhum serviço foi iniciado.',
       );
@@ -70,7 +80,8 @@ export function SettingsPanel({ active = true }: { active?: boolean }) {
     <section className="settings" aria-labelledby="settings-title">
       <h2 id="settings-title">Preferências</h2>
       <p>
-        O idioma fica salvo para a próxima sessão. Isso não inicia a captura.
+        Idioma, fornecedores e modelo ficam salvos para a próxima sessão. Isso
+        não inicia captura ou envio e não altera uma sessão em andamento.
       </p>
       <p role="status">{message}</p>
       {!draft || !snapshot ? (
@@ -84,7 +95,30 @@ export function SettingsPanel({ active = true }: { active?: boolean }) {
             }}
           >
             <fieldset disabled={busy}>
-              <legend>Transcrição local</legend>
+              <legend>Fornecedores e idioma</legend>
+              <label>
+                Fornecedor de transcrição
+                <select
+                  value={draft.sttProvider}
+                  onChange={(event) =>
+                    change('sttProvider', event.target.value)
+                  }
+                >
+                  {TRANSCRIPTION_PROVIDERS.map((provider) => (
+                    <option
+                      key={provider.id}
+                      value={provider.id}
+                      disabled={!provider.available}
+                    >
+                      {provider.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p>
+                Apple Local requer macOS, permissões e idioma instalado. OpenAI
+                STT não está disponível nesta versão.
+              </p>
               <label>
                 Idioma
                 <select
@@ -95,6 +129,53 @@ export function SettingsPanel({ active = true }: { active?: boolean }) {
                   <option value="en-US">Inglês (EUA)</option>
                 </select>
               </label>
+              <label>
+                Fornecedor de sugestões
+                <select
+                  value={draft.suggestionProvider}
+                  onChange={(event) =>
+                    change('suggestionProvider', event.target.value)
+                  }
+                >
+                  {SUGGESTION_PROVIDERS.map((provider) => (
+                    <option
+                      key={provider.id}
+                      value={provider.id}
+                      disabled={!provider.available}
+                    >
+                      {provider.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Modelo para as sugestões
+                <select
+                  value={draft.suggestionModel}
+                  onChange={(event) =>
+                    change('suggestionModel', event.target.value)
+                  }
+                  aria-describedby="model-help"
+                >
+                  {SUGGESTION_MODELS.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p id="model-help">
+                {
+                  SUGGESTION_MODELS.find(
+                    (model) => model.id === draft.suggestionModel,
+                  )?.description
+                }{' '}
+                O acesso depende da sua conta da API OpenAI.
+              </p>
+              <p>
+                Captura, envio de texto e limite de pedidos são confirmados a
+                cada sessão. Salvar não autoriza cobranças.
+              </p>
               <button type="submit">Salvar preferências</button>
             </fieldset>
           </form>

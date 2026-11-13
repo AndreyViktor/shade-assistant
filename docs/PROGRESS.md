@@ -1,18 +1,17 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-13. **Marco:** M7 — T041 concluída com aceite em um monitor; T042 é a próxima.
+**Atualizado:** 2026-11-13. **Marco:** M7 — T042 concluída nesta sessão exclusiva.
 
 ## Snapshot
 
-- T040 DONE: cartões reais sem expiração por tempo; até dois, limpeza ao pausar/parar/revogar. Evidências em [TEST-T040.md](TEST-T040.md).
-- T041 DONE: painel com histórico e cartões em colunas e janela configurada para Spaces/tela cheia. `verify`: 808 TS, 18 skipped, 19 runner; smoke Electron 19/19 na retomada. Foco nativo falhou anteriormente, mas passou na repetição; causa anterior não identificada. Usuário confirmou ensaio com um monitor e aceitou adiar o ensaio de dois monitores a T045 (D020). [TEST-T041.md](TEST-T041.md).
-- T042 e T043 permanecem TODO. T045 registra validação futura com dois monitores; não se afirma que ocorreu. T016 e T036–T039 continuam DEFERRED.
+- T042 DONE: tela exclusiva de preferências com retorno/foco acessível e sessão preservada. Idioma/modelo salvos para o próximo início; Apple Local para transcrição, OpenAI para sugestões; STT remoto indisponível. Preferências v2 migram v1; importação segura/cofre/.env mantidos. Consentimento e limite continuam por sessão.
+- Gates: verify aprovado (820 TS, 18 skipped, 19 runner, lint/formato/tipos/build). Smoke inicial 18/20; após corrigir espera de carregamento e seletor nos testes, reteste 2/2 aprovado. Todos os 20 cenários cobertos entre execuções, incluindo navegação em sessão ativa/pausada, reinício e cifra real com valor sintético. [Evidências/limites](TEST-T042.md), [ADR 0023](adr/0023-settings-screen-and-preferences-v2.md).
+- T041 permanece aceita com um monitor (D020); múltiplos monitores pertencem a T045. T016 e T036–T039 DEFERRED. Nenhuma captura, credencial pessoal, API real ou custo nesta sessão.
 
 ## Próximo passo
 
-O usuário pediu executar a sprint M7 e confirmou avançar após aceite da T041. Retomar pelo runner com `python3 scripts/run-codex-tasks.py --tasks T042 T043`, que cria sessões separadas e para em bloqueios; verificar estado e commits ao fim. T045 não entra neste lote. Respeitar limites de credenciais, captura e custos; testes devem usar fixtures e rede bloqueada, salvo autorização explícita adicional.
+Encerrar após commit local de T042. T043 permanece TODO e exige nova sessão independente; não foi iniciada. Não houve push ou deploy.
 
 ## Ambiente
 
-- Node >=26: `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run verify`.
-- Smoke Electron com escalada revisada, perfis temporários e rede bloqueada; sem push ou deploy.
+Node >=26: `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run verify`. Smoke Electron com escalada revisada, perfis temporários e rede bloqueada. Logs temporários `/private/tmp/t042-*.log`.

@@ -1,3 +1,4 @@
+import { defaultPreferences } from '../../contracts/settings/preferences';
 import { emptyDemo } from '../../contracts/meeting/demo';
 import { render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -14,11 +15,7 @@ describe('App shell', () => {
         version: 1,
         ok: true,
         settings: {
-          preferences: {
-            mode: 'real',
-            sttProvider: 'apple-local',
-            language: 'pt-BR',
-          },
+          preferences: defaultPreferences('darwin'),
           credential: 'missing',
         },
       }),

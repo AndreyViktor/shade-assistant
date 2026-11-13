@@ -18,3 +18,27 @@ export const SUGGESTION_MODELS = [
 ] as const;
 
 export const DEFAULT_SUGGESTION_MODEL = 'gpt-5.4-mini';
+
+// Providers are listed by capability; availability here means implemented,
+// not a successful hardware, permission or account-access check.
+export const TRANSCRIPTION_PROVIDERS = [
+  {
+    id: 'apple-local',
+    label: 'Apple Local — áudio neste Mac',
+    available: true,
+  },
+  {
+    id: 'openai-stt',
+    label: 'OpenAI STT — indisponível (adiado)',
+    available: false,
+  },
+  {
+    id: 'mock',
+    label: 'DEMO — preferência legada, sem captura real',
+    available: false,
+  },
+] as const;
+export const SUGGESTION_PROVIDERS = [
+  { id: 'openai', label: 'OpenAI — sugestões de texto', available: true },
+] as const;
+export type SuggestionModel = (typeof SUGGESTION_MODELS)[number]['id'];

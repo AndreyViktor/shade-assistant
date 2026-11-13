@@ -26,7 +26,7 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('settings interface', () => {
-  it('shows only the local language preference and keeps cloud credentials secondary', async () => {
+  it('offers implemented providers by capability and model choices without claiming remote STT', async () => {
     render(<SettingsPanel />);
     expect(await screen.findByLabelText('Idioma')).toHaveValue('pt-BR');
     expect(screen.queryByLabelText('Modo preferido')).not.toBeInTheDocument();
@@ -37,12 +37,27 @@ describe('settings interface', () => {
       screen.getByText('Chave OpenAI (não usada na transcrição local)'),
     ).toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    expect(screen.getByText(/O idioma fica salvo/)).toBeVisible();
+    expect(
+      screen.getByText(/Idioma, fornecedores e modelo ficam salvos/),
+    ).toBeVisible();
+    expect(screen.getByLabelText('Fornecedor de transcrição')).toHaveValue(
+      'apple-local',
+    );
+    expect(screen.getByRole('option', { name: /OpenAI STT/ })).toBeDisabled();
+    expect(screen.getByLabelText('Fornecedor de sugestões')).toHaveValue(
+      'openai',
+    );
+    expect(screen.getByLabelText('Modelo para as sugestões')).toHaveValue(
+      'gpt-5.4-mini',
+    );
   });
   it('saves edited preferences only on explicit submit and renders the canonical response', async () => {
     render(<SettingsPanel />);
     fireEvent.change(await screen.findByLabelText('Idioma'), {
       target: { value: 'en-US' },
+    });
+    fireEvent.change(screen.getByLabelText('Modelo para as sugestões'), {
+      target: { value: 'gpt-5.4' },
     });
     expect(api.savePreferences).not.toHaveBeenCalled();
     fireEvent.click(
@@ -52,6 +67,7 @@ describe('settings interface', () => {
       expect(api.savePreferences).toHaveBeenCalledExactlyOnceWith({
         ...initial.settings.preferences,
         language: 'en-US',
+        suggestionModel: 'gpt-5.4',
       }),
     );
     expect(

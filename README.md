@@ -26,6 +26,14 @@ npm start
 
 Instruções adicionais de instalação, testes e gates Swift estão em [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). O roteiro de demonstração está em [docs/DEMO.md](docs/DEMO.md). O ensaio real da transcrição no overlay está em [docs/TEST-T017.md](docs/TEST-T017.md).
 
+## Preferências e início da sessão
+
+Abra **Preferências** para escolher idioma, fornecedor de transcrição (Apple Local), fornecedor de sugestões (OpenAI) e modelo. **Salvar preferências** aplica as escolhas ao próximo início. **Voltar ao painel** ou Escape retorna à reunião; navegar não pausa nem encerra a sessão. OpenAI STT continua indisponível.
+
+A chave pode ser importada/removida em **Preferências → Chave OpenAI** pelo seletor seguro do Mac. Para iniciar, confirme a captura; sugestões exigem **Adicionar sugestões de IA**, autorização de envio/custo e limite de pedidos novamente a cada sessão. Essas autorizações não ficam salvas.
+
+Preferências antigas são migradas automaticamente; a opção bilíngue legada passa a pt-BR, pois reconhecimento simultâneo não está implementado. Arquivos inválidos não são sobrescritos.
+
 ## Chave OpenAI no desenvolvimento
 
 Para sugestões de IA, copie `.env.example` para `.env` na raiz do projeto e preencha:

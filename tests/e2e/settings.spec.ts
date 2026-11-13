@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { createTestApp } from './testApp';
@@ -57,6 +57,16 @@ test('loads a development .env without passing its secrets to renderer or proces
 
 test('persists preferences across real Electron restarts without network or renderer secrets', async () => {
   const fixture = await createTestApp();
+  await mkdir(fixture.profile, { recursive: true });
+  await writeFile(
+    join(fixture.profile, 'preferences.v1.json'),
+    JSON.stringify({
+      version: 1,
+      mode: 'real',
+      sttProvider: 'apple-local',
+      language: 'pt-BR',
+    }),
+  );
   let app = await fixture.launch();
   try {
     let page = await app.firstWindow();
@@ -71,6 +81,7 @@ test('persists preferences across real Electron restarts without network or rend
       .locator('#panel-settings')
       .getByLabel('Idioma')
       .selectOption('en-US');
+    await page.getByLabel('Modelo para as sugestões').selectOption('gpt-5.4');
     await page.getByRole('button', { name: 'Salvar preferências' }).click();
     await expect(
       page
@@ -78,6 +89,18 @@ test('persists preferences across real Electron restarts without network or rend
         .getByRole('status'),
     ).toContainText('Nenhum serviço foi iniciado');
     expect(outgoing).toEqual([]);
+    expect(
+      JSON.parse(
+        await readFile(join(fixture.profile, 'preferences.v1.json'), 'utf8'),
+      ),
+    ).toEqual({
+      version: 2,
+      mode: 'real',
+      sttProvider: 'apple-local',
+      language: 'en-US',
+      suggestionProvider: 'openai',
+      suggestionModel: 'gpt-5.4',
+    });
     await app.close();
     app = await fixture.launch();
     page = await app.firstWindow();
@@ -87,6 +110,9 @@ test('persists preferences across real Electron restarts without network or rend
     await expect(
       page.locator('#panel-settings').getByLabel('Idioma'),
     ).toHaveValue('en-US');
+    await expect(page.getByLabel('Modelo para as sugestões')).toHaveValue(
+      'gpt-5.4',
+    );
     const state = await page.evaluate(async () => ({
       settings: await window.meetingCopilot.getSettings(),
       storage: { ...localStorage },

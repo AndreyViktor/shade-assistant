@@ -50,9 +50,16 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
       ),
     ).toBe('solid');
     await page.keyboard.press('Enter');
+    await expect(
+      page.getByRole('button', { name: 'Voltar ao painel' }),
+    ).toBeFocused();
+    // Preferences are loaded only after explicit navigation.
+    await expect(page.getByLabel('Fornecedor de transcrição')).toHaveValue(
+      'apple-local',
+    );
     await page.keyboard.press('Tab');
     await expect(
-      page.locator('#panel-settings').getByLabel('Idioma'),
+      page.locator('#panel-settings').getByLabel('Fornecedor de transcrição'),
     ).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(toggle).toBeFocused();

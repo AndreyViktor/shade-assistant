@@ -1,3 +1,4 @@
+import type { Preferences } from '../../../contracts/settings/preferences';
 import { SuggestionCards } from '../suggestions/SuggestionCards';
 import { SuggestionDiagnosticsPanel } from '../suggestions/SuggestionDiagnosticsPanel';
 import { StartSessionDialog } from './StartSessionDialog';
@@ -30,7 +31,11 @@ function selectedSources(choice: SourceChoice): AudioSource[] {
   return choice === 'both' ? ['mic', 'system'] : [choice];
 }
 
-export function SessionControls() {
+export function SessionControls({
+  savedPreferences,
+}: {
+  savedPreferences?: Preferences | null;
+}) {
   const {
     session,
     demo,
@@ -41,10 +46,8 @@ export function SessionControls() {
     preferences,
     command,
   } = useMeetingSession();
-  const [localeOverride, setLocaleOverride] =
-    useState<TranscriptionLocale | null>(null);
   const locale: TranscriptionLocale =
-    localeOverride ?? (preferences?.language === 'en-US' ? 'en-US' : 'pt-BR');
+    (savedPreferences ?? preferences)?.language === 'en-US' ? 'en-US' : 'pt-BR';
   const [source, setSource] = useState<SourceChoice>('both');
   const [confirming, setConfirming] = useState(false);
   const startButton = useRef<HTMLButtonElement>(null);
@@ -110,18 +113,10 @@ export function SessionControls() {
               <option value="system">Áudio do sistema</option>
             </select>
           </label>
-          <label>
-            Idioma
-            <select
-              value={locale}
-              onChange={(event) =>
-                setLocaleOverride(event.target.value as TranscriptionLocale)
-              }
-            >
-              <option value="pt-BR">Português (Brasil)</option>
-              <option value="en-US">English (US)</option>
-            </select>
-          </label>
+          <p>
+            Idioma: {locale === 'pt-BR' ? 'Português (Brasil)' : 'Inglês (EUA)'}
+            . Altere em Preferências.
+          </p>
         </fieldset>
       )}
 

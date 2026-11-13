@@ -11,15 +11,25 @@ vi.mock('./SettingsPanel', () => ({
   ),
 }));
 
-describe('panel preferences disclosure', () => {
+describe('separate preferences screen', () => {
   it('starts collapsed, exposes its relationship, and preserves drafts when closed', () => {
-    render(<SettingsDisclosure />);
+    render(
+      <SettingsDisclosure>
+        <button>Controle da reunião</button>
+      </SettingsDisclosure>,
+    );
     const toggle = screen.getByRole('button', { name: 'Preferências' });
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     expect(toggle).toHaveAttribute('aria-controls', 'panel-settings');
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     fireEvent.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      screen.queryByRole('button', { name: 'Controle da reunião' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Voltar ao painel' }),
+    ).toHaveFocus();
     const input = screen.getByRole('textbox', { name: 'Exemplo' });
     fireEvent.change(input, { target: { value: 'alterado' } });
     input.focus();

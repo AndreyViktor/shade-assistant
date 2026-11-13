@@ -1,3 +1,4 @@
+import { defaultPreferences } from '../../../contracts/settings/preferences';
 import { emptyDemo } from '../../../contracts/meeting/demo';
 import {
   act,
@@ -286,12 +287,17 @@ describe('session controls', () => {
   it('shows consent at start, then sends local source and locale settings', async () => {
     const session = vi.fn().mockResolvedValue(reply('idle'));
     vi.stubGlobal('meetingCopilot', { session });
-    render(<SessionControls />);
+    render(
+      <SessionControls
+        savedPreferences={{
+          ...defaultPreferences('darwin'),
+          language: 'en-US',
+        }}
+      />,
+    );
     await screen.findByText('Pronta para iniciar');
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Idioma'), {
-      target: { value: 'en-US' },
-    });
+    expect(screen.queryByLabelText('Idioma')).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Fonte de áudio'), {
       target: { value: 'mic' },
     });
@@ -368,9 +374,16 @@ it('requires an explicit text/cost opt-in and valid model/budget before sending 
   const session = vi.fn().mockResolvedValue(reply('idle'));
   vi.stubGlobal('meetingCopilot', {
     session,
-    getSettings: vi
-      .fn()
-      .mockResolvedValue({ ok: true, settings: { credential: 'stored' } }),
+    getSettings: vi.fn().mockResolvedValue({
+      ok: true,
+      settings: {
+        credential: 'stored',
+        preferences: {
+          ...defaultPreferences('darwin'),
+          suggestionModel: 'gpt-5.4',
+        },
+      },
+    }),
   });
   render(<SessionControls />);
   await waitFor(() =>
@@ -386,10 +399,9 @@ it('requires an explicit text/cost opt-in and valid model/budget before sending 
   fireEvent.click(checkbox);
   const confirm = screen.getByRole('button', { name: 'Iniciar com sugestões' });
   expect(confirm).toBeDisabled();
-  fireEvent.change(
-    screen.getByRole('combobox', { name: 'Modelo para as sugestões' }),
-    { target: { value: 'gpt-5.4' } },
-  );
+  expect(
+    screen.queryByRole('combobox', { name: 'Modelo para as sugestões' }),
+  ).not.toBeInTheDocument();
   fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '0' } });
   expect(confirm).toBeDisabled();
   fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '1' } });

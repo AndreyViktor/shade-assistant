@@ -1,3 +1,4 @@
+import type { Preferences } from '../../contracts/settings/preferences';
 import { SessionControls } from '../features/meeting/SessionControls';
 import { SettingsDisclosure } from '../features/settings/SettingsDisclosure';
 import { useEffect, useState } from 'react';
@@ -5,6 +6,7 @@ import { ipcFailure } from '../../contracts/ipc/appStatus';
 import type { AppStatusResult } from '../../contracts/ipc/appStatus';
 
 export function App() {
+  const [preferences, setPreferences] = useState<Preferences | null>(null);
   const [result, setResult] = useState<AppStatusResult | null>(null);
   useEffect(() => {
     let active = true;
@@ -23,21 +25,22 @@ export function App() {
   }, []);
   return (
     <main className="app-shell">
-      <header>
-        <p className="eyebrow">TRANSCRIÇÃO LOCAL</p>
-        <h1>Meeting Copilot</h1>
-        <p className="app-intro">
-          Escolha as fontes e inicie quando estiver pronto. O áudio permanece
-          neste Mac.
-        </p>
-      </header>
-      {result?.ok && <SessionControls />}
-      {result && !result.ok && (
-        <p role="alert">
-          Não foi possível verificar o estado do app. Reabra-o.
-        </p>
-      )}
-      <SettingsDisclosure />
+      <SettingsDisclosure onSaved={setPreferences}>
+        <header>
+          <p className="eyebrow">TRANSCRIÇÃO LOCAL</p>
+          <h1>Meeting Copilot</h1>
+          <p className="app-intro">
+            Escolha as fontes e inicie quando estiver pronto. O áudio permanece
+            neste Mac.
+          </p>
+        </header>
+        {result?.ok && <SessionControls savedPreferences={preferences} />}
+        {result && !result.ok && (
+          <p role="alert">
+            Não foi possível verificar o estado do app. Reabra-o.
+          </p>
+        )}
+      </SettingsDisclosure>
     </main>
   );
 }

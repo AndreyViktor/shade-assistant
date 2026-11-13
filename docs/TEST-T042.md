@@ -1,0 +1,40 @@
+# T042 — Tela exclusiva de configurações
+
+Data: 2026-11-13. Base: `43598bf`. Dependências T041/T004 concluídas; execução exclusiva de T042. Plano e IN_PROGRESS registrados em TASKS/PROGRESS antes de alterar código ou testes; escopo executado conforme plano.
+
+## Implementação e aceite
+
+| Critério                          | Implementação/evidência                                                                                                                                                                                                                                                                              |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Configurações fora do uso normal  | Ação Preferências troca a tela visível; painel permanece montado. Retorno por botão/Escape com foco restaurado; campos só carregam após abertura explícita.                                                                                                                                          |
+| Sessão preservada                 | Nenhum comando de pausa/stop/start ao navegar ou salvar. Smoke `settings-session.spec.ts` compara snapshots de sessão em andamento e pausada, histórico, cartões, idioma, modelo e limite.                                                                                                           |
+| Idioma e fornecedores honestos    | pt-BR/en-US; Apple Local para transcrição e OpenAI para sugestões. STT OpenAI desabilitado, rejeitado pelo contrato; T016 permanece DEFERRED. Opções futuras organizadas por capacidade, sem implementação fictícia.                                                                                 |
+| Modelo persistente                | Catálogo existente GPT-5.4 mini/GPT-5.4 movido para contratos; seleção salva e relida na confirmação. Smoke de sugestões verifica o ID enviado ao transporte simulado para ambos os modelos.                                                                                                         |
+| Migração e compatibilidade        | Preferências v2, migração estrita v1 no disco; mesmo caminho histórico. Preserva modo/provedor e idiomas individuais; bilíngue legado torna-se pt-BR (comportamento efetivo anterior). Releitura não regrava. Testes de corrupção/versões futuras preservam conteúdo original; arquivo privado 0600. |
+| Consentimento e limite por sessão | Novas confirmações sempre iniciam sem opt-in de sugestões, limite inicial 10; 1–100 validado. A mudança de preferências não altera autorização vigente. Schema de preferências rejeita consentimento/limite/campos extras.                                                                           |
+| Segredo e `.env`                  | Importar/remover somente pelo fluxo existente no main. Preload não aceita segredo/caminho; renderer recebe apenas metadados. Testes existentes exercitam cifra real do SO com valor sintético, importação/remoção e `.env` temporário sem exportar segredo ao renderer, localStorage ou ambiente.    |
+
+Decisão de persistência, navegação e compatibilidade: [ADR 0023](adr/0023-settings-screen-and-preferences-v2.md). Uso atualizado no [README](../README.md#preferências-e-início-da-sessão).
+
+## Gates
+
+- `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run verify`: aprovado, 820 testes TS, 18 skipped, 19 testes Python do runner; lint, formatação, tipos e build aprovados.
+- `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run test:smoke`: primeira passagem 18/20; as duas falhas foram de automação, descritas abaixo. Electron real fora do sandbox com escalada aprovada, perfis temporários e rede bloqueada.
+- Reteste final: `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npx playwright test tests/e2e/panel.spec.ts tests/e2e/settings-session.spec.ts --reporter=list`: **2/2 aprovados** (7,2 s). Todos os 20 cenários têm execução aprovada entre suíte inicial e reteste; não se afirma uma nova execução integral 20/20.
+- O teste de teclado precisava aguardar os campos carregarem antes de Tab, pois preferências agora carregam sob demanda. A espera foi adicionada, preservando as verificações de foco DOM/nativo, minimizar/restaurar, resize e zoom. O cenário novo usava `getByLabel('Idioma', { exact: true })`, que encontrava zero elementos; diagnóstico mostrou 0 para a busca exata e 1 para a busca usada nos testes existentes. Ajustado o seletor dentro de `#panel-settings`; nenhum timeout foi ampliado e nenhum comportamento de produto precisou ser contornado. Marcadores temporários de diagnóstico foram removidos.
+- `verify` repetido após essas correções: mesmos 820 TS + 19 runner aprovados. `git diff --check` aprovado.
+- Primeira passagem focada revelou fixture do preload ainda em v1; corrigida e acrescentada recusa explícita de payload legado. Primeira execução de verify parou por formatação em três testes; corrigida antes da execução aprovada. Nenhuma regra/teste de segurança foi desativado.
+
+## Evidência visual
+
+[Tela de preferências com sessão sintética em andamento](evidence/T042/settings-session.png), capturada pelo renderer no smoke e inspecionada. Campos legíveis, retorno visível, aviso de aplicação à próxima sessão e chave em seção secundária; painel da reunião oculto nessa tela. O teste de painel também aprovou navegação e ausência de overflow horizontal em 640×480 com zoom 200%.
+
+## Limites
+
+Sem captura de microfone/sistema, requisição real OpenAI, credencial pessoal, custos, instalação, push ou deploy. Sessões dos smokes usam processo JSONL sintético e transporte Responses simulado; não comprovam disponibilidade da conta/modelo ou qualidade do reconhecimento. O catálogo de modelos é o já usado por T024; nenhuma consulta de modelos/preços ou chamada paga foi feita nesta tarefa.
+
+Swift/helper e fronteiras de segurança Electron não mudaram; gates Swift não repetidos. Spaces/tela cheia e dois monitores não foram ensaiados novamente; aceite anterior e T045 permanecem como registrados. Reorganização da DEMO pertence a T043 e não foi iniciada.
+
+O arquivo mantém nome `preferences.v1.json`, mas seu conteúdo passa a v2; binários antigos recusam o novo formato (sem downgrade automático). `mode`/`mock` legados são preservados como dados, sem controlar o início de captura. Não há suporte bilíngue simultâneo. Autorizações, limite e credenciais não são migrados para preferências.
+
+Logs locais de gates em `/private/tmp/t042-*.log` são temporários, sem conteúdo real de reunião.

@@ -4,17 +4,19 @@ import { parseSettingsRequest, parseSettingsResult } from '../ipc/settings';
 
 const defaults = defaultPreferences('darwin');
 
-describe('settings v1 contract', () => {
+describe('settings envelope v1 with preferences v2 contract', () => {
   it('defaults to demo, Apple Swift on Mac and pt-BR; never remote on other platforms', () => {
     expect(defaults).toEqual({
-      version: 1,
+      version: 2,
+      suggestionProvider: 'openai',
+      suggestionModel: 'gpt-5.4-mini',
       mode: 'demo',
       sttProvider: 'apple-local',
       language: 'pt-BR',
     });
     expect(defaultPreferences('linux').sttProvider).toBe('mock');
   });
-  it.each(['pt-BR', 'en-US', 'pt-BR+en-US'])(
+  it.each(['pt-BR', 'en-US'])(
     'accepts a language preference without claiming support: %s',
     (language) => {
       expect(parsePreferences({ ...defaults, mode: 'real', language })).toEqual(
@@ -26,7 +28,13 @@ describe('settings v1 contract', () => {
     null,
     [],
     {},
-    { ...defaults, version: 2 },
+    { ...defaults, version: 3 },
+    { ...defaults, version: 1 },
+    { ...defaults, suggestionProvider: 'future-provider' },
+    { ...defaults, suggestionModel: 'unknown-model' },
+    { ...defaults, maxRequests: 10 },
+    { ...defaults, consent: true },
+    { ...defaults, language: 'pt-BR+en-US' },
     { ...defaults, secret: 'synthetic-key' },
     { ...defaults, sttProvider: 'openai-stt' },
     { ...defaults, language: 'xx' },
