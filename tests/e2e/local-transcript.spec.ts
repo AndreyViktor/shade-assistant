@@ -41,10 +41,16 @@ test('reconciles synthetic revisions and echo through the provider, IPC and rend
     );
     await expect(log.getByText('Sim.', { exact: true })).toHaveCount(2);
     await expect(log.getByText('Hipótese atrasada')).toHaveCount(0);
-    await page.getByText('Sobre este histórico', { exact: true }).click();
+    await page
+      .getByRole('button', { name: 'Preferências', exact: true })
+      .click();
+    await page
+      .getByText('Sobre o histórico de transcrição', { exact: true })
+      .click();
     await expect(
       page.getByText(/A fonte de áudio não identifica a pessoa/),
     ).toBeVisible();
+    await page.getByRole('button', { name: 'Voltar ao painel' }).click();
     await page.screenshot({
       path: 'test-results/transcript-reconciliation-synthetic.png',
     });
@@ -52,7 +58,11 @@ test('reconciles synthetic revisions and echo through the provider, IPC and rend
     await expect.poll(ids).toEqual(reconciledReplayIds.slice(0, -1));
     await expect(log.getByText('Revisão temporária')).toHaveCount(0);
     await page.getByRole('button', { name: 'Retomar' }).click();
-    await expect(page.getByText('Sistema · pt-BR · Ouvindo')).toBeVisible();
+    await expect(
+      page
+        .getByRole('region', { name: 'Transcrição ao vivo' })
+        .getByText('Sistema · pt-BR · Ouvindo'),
+    ).toBeVisible();
     expect(await ids()).toEqual(reconciledReplayIds.slice(0, -1));
     await page.getByRole('button', { name: 'Parar' }).click();
     expect(await read()).toMatchObject({ local: null });
@@ -117,7 +127,8 @@ test('synthetic native subprocess → real provider → IPC → live transcript 
       path: 'test-results/local-transcript-synthetic.png',
     });
     await page.getByRole('button', { name: 'Parar' }).click();
-    await expect(preview).toHaveCount(0);
+    await expect(preview).toBeVisible();
+    await expect(preview.locator('.transcript-segment')).toHaveCount(0);
     expect(await read()).toMatchObject({
       session: { phase: 'stopped' },
       local: null,
@@ -131,7 +142,8 @@ test('synthetic native subprocess → real provider → IPC → live transcript 
     await expect(preview).toBeVisible();
     await page.reload();
     await expect(page.getByText('Encerrada', { exact: true })).toBeVisible();
-    await expect(preview).toHaveCount(0);
+    await expect(preview).toBeVisible();
+    await expect(preview.locator('.transcript-segment')).toHaveCount(0);
     expect(await read()).toMatchObject({ local: null });
     expect(errors).toEqual([]);
     expect(

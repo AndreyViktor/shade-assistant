@@ -1,6 +1,5 @@
 import type { Preferences } from '../../../contracts/settings/preferences';
 import { SuggestionCards } from '../suggestions/SuggestionCards';
-import { SuggestionDiagnosticsPanel } from '../suggestions/SuggestionDiagnosticsPanel';
 import { StartSessionDialog } from './StartSessionDialog';
 import type { SuggestionAuthorization } from '../../../contracts/meeting/suggestionSession';
 import { LocalTranscriptPreview } from './LocalTranscriptPreview';
@@ -33,9 +32,13 @@ function selectedSources(choice: SourceChoice): AudioSource[] {
 export function SessionControls({
   savedPreferences,
   meeting,
+  available = true,
+  appError = '',
 }: {
   meeting: ReturnType<typeof useMeetingSession>;
   savedPreferences?: Preferences | null;
+  available?: boolean;
+  appError?: string;
 }) {
   const { session, local, suggestions, busy, error, preferences, command } =
     meeting;
@@ -44,8 +47,19 @@ export function SessionControls({
   const [source, setSource] = useState<SourceChoice>('both');
   const [confirming, setConfirming] = useState(false);
   const startButton = useRef<HTMLButtonElement>(null);
-  const canStart = session?.phase === 'idle' || session?.phase === 'stopped';
-  const localActive = session?.mode === 'apple-local' && !canStart;
+  const canStart =
+    available && (session?.phase === 'idle' || session?.phase === 'stopped');
+  const localActive =
+    session?.mode === 'apple-local' &&
+    (session.phase === 'running' || session.phase === 'paused');
+  const attempt = suggestions.diagnostics?.lastAttempt;
+  const suggestionsFailed =
+    suggestions.status !== 'disabled' &&
+    (suggestions.status === 'unavailable' ||
+      Boolean(
+        attempt &&
+        !['pending', 'success', 'empty', 'cancelled'].includes(attempt.result),
+      ));
 
   function startLocal(): void {
     if (!canStart || busy) return;
@@ -71,7 +85,10 @@ export function SessionControls({
     });
   }
 
-  if (session?.mode === 'demo' && !canStart) {
+  if (
+    session?.mode === 'demo' &&
+    (session.phase === 'running' || session.phase === 'paused')
+  ) {
     return (
       <section className="session-controls" aria-label="Simulação ativa">
         <h2>DEMO · simulação offline</h2>
@@ -94,12 +111,58 @@ export function SessionControls({
   }
 
   return (
-    <section className="session-controls" aria-labelledby="session-title">
-      <div className="session-heading">
-        <h2 id="session-title">Transcrição</h2>
-        <p role="status">
-          {session ? phaseLabels[session.phase] : 'Verificando…'}
-        </p>
+    <section className="session-controls" aria-label="Controles da reunião">
+      <div className="session-toolbar">
+        <div className="session-heading">
+          <p role="status">
+            {session ? phaseLabels[session.phase] : 'Verificando…'}
+          </p>
+        </div>
+
+        <div className="session-actions">
+          {!localActive && (
+            <button
+              ref={startButton}
+              className="primary-action"
+              disabled={busy || !canStart}
+              onClick={startLocal}
+            >
+              Iniciar transcrição local
+            </button>
+          )}
+          {session?.phase === 'running' && (
+            <button
+              disabled={busy}
+              onClick={() => {
+                void command({ version: 6, action: 'pause' });
+              }}
+            >
+              Pausar
+            </button>
+          )}
+          {session?.phase === 'paused' && (
+            <button
+              disabled={busy}
+              onClick={() => {
+                void command({ version: 6, action: 'resume' });
+              }}
+            >
+              Retomar
+            </button>
+          )}
+          {(session?.phase === 'running' ||
+            session?.phase === 'paused' ||
+            Boolean(error)) && (
+            <button
+              disabled={busy}
+              onClick={() => {
+                void command({ version: 6, action: 'stop' });
+              }}
+            >
+              Parar
+            </button>
+          )}
+        </div>
       </div>
 
       {!localActive && (
@@ -137,128 +200,61 @@ export function SessionControls({
         </p>
       )}
 
-      {error && <p role="alert">{error}</p>}
-
-      <div className="session-actions">
-        {!localActive && (
-          <button
-            ref={startButton}
-            className="primary-action"
-            disabled={busy || !canStart}
-            onClick={startLocal}
-          >
-            Iniciar transcrição local
-          </button>
-        )}
-        {session?.phase === 'running' && (
-          <button
-            disabled={busy}
-            onClick={() => {
-              void command({ version: 6, action: 'pause' });
-            }}
-          >
-            Pausar
-          </button>
-        )}
-        {session?.phase === 'paused' && (
-          <button
-            disabled={busy}
-            onClick={() => {
-              void command({ version: 6, action: 'resume' });
-            }}
-          >
-            Retomar
-          </button>
-        )}
-        {(session?.phase === 'running' ||
-          session?.phase === 'paused' ||
-          Boolean(error)) && (
-          <button
-            disabled={busy}
-            onClick={() => {
-              void command({ version: 6, action: 'stop' });
-            }}
-          >
-            Parar
-          </button>
-        )}
-      </div>
-
-      {session?.mode === 'apple-local' && (localActive || local) && (
-        <div className="meeting-workspace">
-          {local ? (
-            <LocalTranscriptPreview transcript={local} />
-          ) : (
-            <section
-              className="local-transcript"
-              aria-label="Transcrição ao vivo"
-            >
-              <h3>Transcrição ao vivo</h3>
-              <p role="status">Aguardando transcrição local…</p>
-            </section>
+      <div className="meeting-workspace">
+        <LocalTranscriptPreview
+          transcript={local}
+          error={Boolean(error || appError)}
+        />
+        <section
+          className={`meeting-assistance${suggestionsFailed ? ' area-failed' : ''}`}
+          aria-label="Assistência da reunião"
+          tabIndex={0}
+        >
+          {suggestionsFailed && (
+            <p className="area-error" role="alert">
+              <span aria-hidden="true">⚠</span> Falha nas sugestões. Consulte
+              Preferências.
+            </p>
           )}
-          <section
-            className="meeting-assistance"
-            aria-label="Assistência da reunião"
-            tabIndex={0}
-          >
-            {localActive && suggestions.status !== 'disabled' ? (
-              <>
-                <SuggestionCards
-                  demo={false}
-                  suggestions={suggestions.items}
-                  busy={busy}
-                  onDismiss={(id) => {
-                    void command({
-                      version: 6,
-                      action: 'dismiss-suggestion',
-                      id,
-                    });
-                  }}
-                />
-                <p role="status">
-                  Sugestões OpenAI: {suggestions.remainingRequests} chamadas
-                  restantes nesta sessão.
-                </p>
-                <button
-                  disabled={busy}
-                  onClick={() => {
-                    void command({ version: 6, action: 'revoke-suggestions' });
-                  }}
-                >
-                  Desativar sugestões
-                </button>
-              </>
-            ) : (
-              <>
-                <h3>Sugestões</h3>
-                <p>
-                  Sugestões desativadas. A transcrição continua disponível neste
-                  painel.
-                </p>
-              </>
-            )}
-            {localActive && (
-              <SuggestionDiagnosticsPanel snapshot={suggestions} />
-            )}
-          </section>
-        </div>
-      )}
-
-      <details className="privacy-details">
-        <summary>Permissões e privacidade</summary>
-        <p>
-          Ao continuar, você autoriza a captura da fonte selecionada somente
-          durante esta sessão. O macOS também controla as permissões de
-          microfone e gravação de tela/áudio do sistema. Confirme que os demais
-          participantes autorizaram a transcrição.
-        </p>
-        <p>
-          O envio de texto à OpenAI exige autorização separada a cada sessão. As
-          falas recentes ficam em memória e são limpas ao parar. Áudio nunca é
-          enviado no modo local.
-        </p>
-      </details>
+          {localActive && suggestions.status !== 'disabled' ? (
+            <>
+              <SuggestionCards
+                demo={false}
+                suggestions={suggestions.items}
+                busy={busy}
+                onDismiss={(id) => {
+                  void command({
+                    version: 6,
+                    action: 'dismiss-suggestion',
+                    id,
+                  });
+                }}
+              />
+              <p role="status">
+                Sugestões OpenAI: {suggestions.remainingRequests} chamadas
+                restantes nesta sessão.
+                {suggestions.remainingRequests === 0 && ' Limite atingido.'}
+              </p>
+              <button
+                disabled={busy}
+                onClick={() => {
+                  void command({ version: 6, action: 'revoke-suggestions' });
+                }}
+              >
+                Desativar sugestões
+              </button>
+            </>
+          ) : (
+            <>
+              <h3>Sugestões</h3>
+              <p>
+                Sugestões desativadas. A transcrição continua disponível neste
+                painel.
+              </p>
+            </>
+          )}
+        </section>
+      </div>
 
       {confirming && (
         <StartSessionDialog

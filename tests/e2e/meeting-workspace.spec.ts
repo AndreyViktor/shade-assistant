@@ -169,7 +169,8 @@ for (const empty of [false, true]) {
       await page.getByRole('button', { name: 'Retomar', exact: true }).click();
       await expect(cards).toHaveCount(0);
       await page.getByRole('button', { name: 'Parar', exact: true }).click();
-      await expect(log).toHaveCount(0);
+      await expect(log).toBeVisible();
+      await expect(log.locator('.transcript-segment')).toHaveCount(0);
       expect(
         await app.evaluate(
           () =>

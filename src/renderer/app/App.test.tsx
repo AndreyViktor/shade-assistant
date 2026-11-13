@@ -43,17 +43,32 @@ describe('App shell', () => {
   it('keeps DEMO exclusively in preferences and restores keyboard focus', async () => {
     render(<App />);
     expect(
-      screen.getByRole('heading', { name: 'Meeting Copilot', level: 1 }),
-    ).toBeVisible();
+      screen.queryByRole('heading', { name: 'Meeting Copilot', level: 1 }),
+    ).not.toBeInTheDocument();
     expect(
       await screen.findByRole('button', { name: 'Iniciar transcrição local' }),
     ).toBeVisible();
-    expect(screen.getByText(/O áudio permanece neste Mac/)).toBeVisible();
+    expect(
+      screen.getByRole('region', { name: 'Transcrição ao vivo' }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole('region', { name: 'Assistência da reunião' }),
+    ).toBeVisible();
+    expect(
+      screen.getByText('Nenhuma fala exibida nesta sessão.'),
+    ).toBeVisible();
+    expect(
+      screen.queryByText('Sobre o histórico de transcrição'),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Apple Local · histórico temporário'),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText('Diagnóstico · DEMO offline'),
     ).not.toBeInTheDocument();
     const preferences = screen.getByRole('button', { name: 'Preferências' });
     fireEvent.click(preferences);
+    expect(screen.getByText('Sobre o histórico de transcrição')).toBeVisible();
     expect(
       screen.getByRole('button', { name: 'Voltar ao painel' }),
     ).toHaveFocus();
@@ -80,18 +95,24 @@ describe('App shell', () => {
     getStatus.mockReturnValue(new Promise(() => {}));
     render(<App />);
     expect(
-      screen.getByRole('heading', { name: 'Meeting Copilot', level: 1 }),
-    ).toBeVisible();
-    expect(
-      screen.queryByRole('button', { name: 'Iniciar transcrição local' }),
+      screen.queryByRole('heading', { name: 'Meeting Copilot', level: 1 }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Iniciar transcrição local' }),
+    ).toBeDisabled();
   });
 
   it('shows a safe accessible error when the bridge fails', async () => {
     getStatus.mockResolvedValue(ipcFailure('TIMEOUT'));
     render(<App />);
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Não foi possível verificar',
+      'Falha na transcrição. Consulte Preferências.',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Preferências' }));
+    expect(
+      screen.getByRole('region', { name: 'Estado da transcrição' }),
+    ).toHaveTextContent(
+      'Não foi possível verificar o estado do app. Reabra-o.',
     );
   });
 
@@ -99,7 +120,7 @@ describe('App shell', () => {
     vi.stubGlobal('meetingCopilot', undefined);
     render(<App />);
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Não foi possível verificar',
+      'Falha na transcrição. Consulte Preferências.',
     );
   });
 });

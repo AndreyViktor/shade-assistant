@@ -28,7 +28,7 @@ export function SettingsDisclosure({
 
   return (
     <>
-      <div hidden={expanded}>
+      <div className="operation-panel" hidden={expanded}>
         {children}
         <div className="settings-disclosure">
           <button

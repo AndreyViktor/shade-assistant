@@ -81,7 +81,14 @@ for (const { consent, model } of [
           },
         });
         await expect(cards.getByRole('article')).toHaveCount(1);
-        await expect(page.getByText(/Limite atingido/)).toBeVisible();
+        await expect(
+          page
+            .getByRole('region', { name: 'Assistência da reunião' })
+            .getByText(/Limite atingido/),
+        ).toBeVisible();
+        await page
+          .getByRole('button', { name: 'Preferências', exact: true })
+          .click();
         const diagnostics = page.getByRole('region', {
           name: 'Estado da OpenAI',
         });
@@ -108,6 +115,7 @@ for (const { consent, model } of [
         await page.screenshot({
           path: test.info().outputPath('openai-diagnostics.png'),
         });
+        await page.getByRole('button', { name: 'Voltar ao painel' }).click();
         if (model === 'gpt-5.4-mini') {
           await cards
             .getByRole('button', { name: 'Descartar: Prazo sintético Aurora' })
@@ -116,7 +124,11 @@ for (const { consent, model } of [
         }
         await page.getByRole('button', { name: 'Pausar' }).click();
         await expect(cards.getByRole('article')).toHaveCount(0);
+        await page
+          .getByRole('button', { name: 'Preferências', exact: true })
+          .click();
         await expect(sentBody).toHaveCount(0);
+        await page.getByRole('button', { name: 'Voltar ao painel' }).click();
         await page.getByRole('button', { name: 'Retomar' }).click();
         await expect(cards.getByRole('article')).toHaveCount(0);
         await page.getByRole('button', { name: 'Desativar sugestões' }).click();

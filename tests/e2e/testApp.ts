@@ -14,7 +14,12 @@ export async function createTestApp(
     denyNetwork?: boolean;
     denyCapture?: boolean;
     syntheticNative?:
-      boolean | 'reconciliation' | 'suggestions' | 'layout' | 'silent';
+      | boolean
+      | 'reconciliation'
+      | 'suggestions'
+      | 'layout'
+      | 'silent'
+      | 'failure';
     syntheticSuggestions?: boolean;
     syntheticSuggestionOutcome?: 'empty' | 'authentication';
   } = {},
@@ -30,15 +35,17 @@ export async function createTestApp(
     );
     await mkdir(dirname(helper), { recursive: true });
     const fixture =
-      options.syntheticNative === 'silent'
-        ? `const replay = [];\n${nativeHelperFixture}`
-        : options.syntheticNative === 'layout'
-          ? layoutHelperFixture
-          : options.syntheticNative === 'suggestions'
-            ? suggestionHelperFixture
-            : options.syntheticNative === 'reconciliation'
-              ? reconciliationHelperFixture
-              : nativeHelperFixture;
+      options.syntheticNative === 'failure'
+        ? `const replay = [{ source: 'mic', type: 'error', code: 'capture-failed' }];\n${nativeHelperFixture}`
+        : options.syntheticNative === 'silent'
+          ? `const replay = [];\n${nativeHelperFixture}`
+          : options.syntheticNative === 'layout'
+            ? layoutHelperFixture
+            : options.syntheticNative === 'suggestions'
+              ? suggestionHelperFixture
+              : options.syntheticNative === 'reconciliation'
+                ? reconciliationHelperFixture
+                : nativeHelperFixture;
     await writeFile(helper, `#!${process.execPath}\n${fixture}`, {
       mode: 0o700,
     });

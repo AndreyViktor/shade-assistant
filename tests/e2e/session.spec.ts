@@ -75,15 +75,12 @@ test('manual demo session uses real IPC, stops on reload and never enables real 
         }),
       ),
     ).toEqual({ version: 6, ok: false, code: 'REMOTE_STT_DEFERRED' });
-    await page.getByRole('button', { name: 'Voltar ao painel' }).click();
-    await page.locator('.privacy-details summary').click();
+    await page.getByText('Permissões e privacidade', { exact: true }).click();
     await expect(
       page.getByText(/O envio de texto à OpenAI exige autorização separada/),
     ).toBeVisible();
-    await page.locator('.privacy-details summary').click();
-    await page
-      .getByRole('heading', { name: 'Meeting Copilot', exact: true })
-      .scrollIntoViewIfNeeded();
+    await page.getByText('Permissões e privacidade', { exact: true }).click();
+    await page.getByRole('button', { name: 'Voltar ao painel' }).click();
     await page.screenshot({ path: 'test-results/session.png' });
     expect(outgoing).toEqual([]);
     const result = await page.evaluate(() =>

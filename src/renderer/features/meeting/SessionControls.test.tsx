@@ -121,7 +121,9 @@ describe('session controls', () => {
       session: vi.fn().mockRejectedValue(new Error('private')),
     });
     render(<SessionControls />);
-    expect(await screen.findByRole('alert')).toHaveTextContent('Reabra o app');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Falha na transcrição. Consulte Preferências.',
+    );
     expect(screen.queryByText('private')).not.toBeInTheDocument();
   });
 });

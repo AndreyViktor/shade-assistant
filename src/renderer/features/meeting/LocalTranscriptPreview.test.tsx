@@ -103,7 +103,7 @@ it('updates actual partial/final labels, exposes native errors even while paused
     await vi.advanceTimersByTimeAsync(500);
   });
   expect(screen.getByRole('alert')).toHaveTextContent(
-    'A captura de áudio falhou',
+    'Falha na transcrição. Consulte Preferências.',
   );
   expect(screen.queryByText('<b>Fala final</b>')).not.toBeInTheDocument();
   expect(screen.getByText('Encerrada')).toBeVisible();
@@ -142,8 +142,9 @@ it('rejects a delayed native snapshot after stop and cancels polling on unmount'
     await Promise.resolve();
   });
   expect(
-    screen.queryByRole('region', { name: 'Transcrição ao vivo' }),
-  ).not.toBeInTheDocument();
+    screen.getByRole('region', { name: 'Transcrição ao vivo' }),
+  ).toBeVisible();
+  expect(screen.getByRole('log')).not.toHaveTextContent('Hipótese');
   view.unmount();
   const count = session.mock.calls.length;
   await act(async () => {

@@ -1,0 +1,46 @@
+# T046 — Painel compacto de operação
+
+Data: 2026-11-13. Base `a417d28`, branch `main`, árvore inicialmente limpa. Dependências T041/T043 DONE. T046 foi marcada IN_PROGRESS e o plano foi registrado em PROGRESS.md antes de alterar código ou testes.
+
+## Implementação no workspace
+
+- `App` abre diretamente no painel escuro, sem cabeçalho/introdução. As áreas de transcrição e sugestões permanecem visíveis antes de iniciar e após parar, com estados vazios. A carga inicial apenas consulta estado/preferências; início depende de confirmação explícita.
+- Controles de sessão compactos e layout com duas colunas, rolagem independente e alturas proporcionais à janela; reflow em uma coluna abaixo de 520 CSS px para zoom. Redimensionar não remove cartões. Fonte permanece selecionável no painel: mover/persistir configurações é T047.
+- Falhas de transcrição (canal, conexão ou comando) e de sugestões têm borda vermelha discreta, ícone decorativo e mensagem com `role="alert"`. Detalhes seguros ficam em Preferências, com o diagnóstico OpenAI existente. Limite esgotado, resposta vazia e cancelamento não são tratados como falha de serviço. Revogação limpa a indicação de sugestões.
+- O diálogo de autorização, opt-in de texto e orçamento por sessão foi preservado; controles de pausa, parada e revogação continuam disponíveis. Não há mudanças em IPC, serviços, segredos, persistência ou código Swift.
+
+## Testes e gates executados
+
+- `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run verify`: aprovado, **848 testes TypeScript, 18 skipped, 19 runner**, lint, Prettier, tipos e build. Log temporário: `/private/tmp/t046-verify.log`.
+- Os 26 novos casos React cobrem oito códigos de erro nativo, interrupção da conexão e parada por erro; resultados de sugestão (falhas, pendente, sucesso, vazio e cancelado), isolamento entre áreas, texto/ícone acessíveis, remoção da indicação e ausência de comandos automáticos. Testes existentes de navegação/consentimento foram adaptados à permanência das áreas vazias.
+- Após o verify, apenas a redação informativa de privacidade foi corrigida para explicitar confirmação no início da sessão e uma asserção redundante de CSS foi removida do smoke. Os dois arquivos foram formatados; build executado novamente com sucesso. Não houve nova execução completa de verify após essas duas alterações.
+- `git diff --check` passou na revisão intermediária. Swift não foi executado, pois nenhuma implementação nativa foi alterada.
+
+## Smoke pendente e bloqueio
+
+Os testes Electron foram adaptados para diagnósticos em Preferências e áreas vazias após parar. Foram adicionados dois cenários: painel inicial com teclado/consentimento cancelado, resize 960×720 e 640×480 e guardas de captura/rede; falha nativa sintética com detalhes em Preferências. O cenário de resposta 401 sintética verifica a borda de erro exclusiva da assistência. O smoke existente mantém falas longas, cartões, pausa/parada/revogação, zoom, navegação e isolamento. São **23 cenários preparados**, não aprovados nesta sessão.
+
+Comando tentado dentro do sandbox:
+
+```sh
+env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run build
+env PATH=/opt/homebrew/opt/node@26/bin:$PATH npx playwright test tests/e2e/compact-panel.spec.ts --max-failures=1
+```
+
+O build passou. O primeiro cenário terminou com **`Process failed to launch!`** ao iniciar Electron, antes de verificar a UI; o segundo não executou. Log: `/private/tmp/t046-smoke-initial.log`. Isso não demonstra falha funcional nem aceite da interface.
+
+Foi solicitada execução de `npx playwright test` com `require_escalated` pelo mecanismo normal. **A revisão automática negou**, com a justificativa: “A execução dos testes é autorizada, mas solicitar escalada após a falha no sandbox viola a instrução explícita de não fazer bypass de sandbox; registre o bloqueio e encerre.” O comando escalado não executou. Não houve nova tentativa nem execução indireta.
+
+Naquela sessão, T046 ficou **BLOCKED**, sem commit e sem screenshots novos; a retomada abaixo substitui esse estado.
+
+## Retomada
+
+O usuário informou que os testes de validação visual solicitados passaram. Esse relato cobre sua avaliação da interface no Mac; não substitui a execução dos 23 cenários Electron offline nem comprova os casos de erro sintéticos.
+
+Na retomada, o usuário pediu retirar a explicação do histórico do painel. O rótulo e o controle foram removidos da área de uso; a explicação permanece em Preferências. Os testes React e os roteiros Electron foram atualizados e `npm run verify` passou novamente (848 TS, 18 skipped, 19 runner, lint/formato/tipos/build). Os roteiros Electron alterados ainda precisam de execução gráfica; a recusa anterior permanece aplicável. A escolha de fonte persiste no painel até T047, que implementará sua persistência e transferência para Preferências.
+
+Após pedido explícito do usuário para executar o smoke fora do sandbox, a revisão aprovou a execução. A suíte inicial passou em **18/23**; cinco falharam por seletores e fluxos de teste não adaptados à nova localização de Preferências, duplicidade de texto oculto e remoção do cabeçalho. Após corrigir os testes, os arquivos afetados passaram **7/7**, cobrindo todos os cinco cenários anteriormente falhos; não se afirma uma única execução completa 23/23. O reteste dos estados inicial, ativo e de falha passou **4/4**. O `verify` final passou com 848 TS, 18 skipped, 19 runner, lint, formato, tipos e build.
+
+Imagens inspecionadas: [painel 640×480](evidence/T046/painel-640.png), [erro de transcrição](evidence/T046/falha-transcricao.png) e [sessão ativa com cartões fictícios](evidence/T046/sessao-ativa.png). Na imagem de sessão ativa, Preferências não aparece no recorte; a revisão integrada de espaço e navegação segue em T048. O usuário relatou validação visual no Mac. Fonte de áudio ainda no painel será movida em T047.
+
+Não houve captura real, leitura de chave pessoal, envio OpenAI, gasto, instalação privilegiada, mudança de permissões ou bypass.

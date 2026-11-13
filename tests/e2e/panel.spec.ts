@@ -38,7 +38,15 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
       .getByRole('button', { name: 'Iniciar transcrição local' })
       .focus();
     await page.keyboard.press('Tab');
-    await expect(page.locator('.privacy-details summary')).toBeFocused();
+    await expect(page.getByLabel('Fonte de áudio')).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(
+      page.getByRole('log', { name: 'Falas recentes' }),
+    ).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(
+      page.getByRole('region', { name: 'Assistência da reunião' }),
+    ).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(toggle).toBeFocused();
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
@@ -167,7 +175,7 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
         }),
       ]);
       await expect(
-        reopened.getByRole('heading', { name: 'Meeting Copilot', exact: true }),
+        reopened.getByRole('region', { name: 'Transcrição ao vivo' }),
       ).toBeVisible();
       await expect(
         reopened.getByRole('button', { name: 'Iniciar transcrição local' }),

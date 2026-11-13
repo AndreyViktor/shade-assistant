@@ -21,6 +21,27 @@ for (const outcome of ['authentication', 'empty'] as const) {
       await page
         .getByRole('button', { name: 'Iniciar com sugestões', exact: true })
         .click();
+      const assistance = page.getByRole('region', {
+        name: 'Assistência da reunião',
+      });
+      if (outcome === 'authentication') {
+        await expect(assistance.getByRole('alert')).toContainText(
+          'Falha nas sugestões',
+        );
+        await expect(assistance).toHaveCSS(
+          'border-top-color',
+          'rgb(174, 98, 107)',
+        );
+        await expect(
+          page.getByRole('region', { name: 'Transcrição ao vivo' }),
+        ).not.toHaveClass(/area-failed/);
+        await page.screenshot({
+          path: test.info().outputPath('suggestions-error.png'),
+        });
+      }
+      await page
+        .getByRole('button', { name: 'Preferências', exact: true })
+        .click();
       const diagnostics = page.getByRole('region', {
         name: 'Estado da OpenAI',
       });
@@ -64,7 +85,12 @@ for (const outcome of ['authentication', 'empty'] as const) {
             ).syntheticSuggestionRequests.length,
         ),
       ).toBe(1);
+      await page.getByRole('button', { name: 'Voltar ao painel' }).click();
       await page.getByRole('button', { name: 'Desativar sugestões' }).click();
+      await expect(assistance.getByRole('alert')).toHaveCount(0);
+      await page
+        .getByRole('button', { name: 'Preferências', exact: true })
+        .click();
       await expect(
         diagnostics.getByLabel('Corpo da requisição OpenAI'),
       ).toHaveCount(0);
@@ -75,6 +101,7 @@ for (const outcome of ['authentication', 'empty'] as const) {
       ).toMatchObject({
         suggestions: { diagnostics: null, status: 'disabled' },
       });
+      await page.getByRole('button', { name: 'Voltar ao painel' }).click();
       await page.getByRole('button', { name: 'Parar' }).click();
       expect(
         await app.evaluate(

@@ -1,36 +1,9 @@
 import { useEffect, useRef } from 'react';
-import type {
-  LocalTranscriptSnapshot,
-  ChannelEvent,
-} from '../../../contracts/meeting/localTranscript';
-import type { NativeErrorCode } from '../../../contracts/native/protocol';
-
-const errors: Record<NativeErrorCode, string> = {
-  'permission-denied': 'Permissão de captura não concedida pelo macOS.',
-  unavailable: 'Transcrição Apple indisponível neste Mac.',
-  'unsupported-locale': 'Idioma não suportado neste Mac.',
-  'assets-unavailable': 'Modelos do idioma indisponíveis.',
-  'capture-failed': 'A captura de áudio falhou.',
-  'transcription-failed': 'O reconhecimento da fala falhou.',
-  'invalid-command': 'Não foi possível controlar a captura.',
-  internal: 'A transcrição local foi interrompida.',
-};
-
-function channelLabel(event: ChannelEvent | undefined): string {
-  if (!event) return 'Preparando';
-  switch (event.type) {
-    case 'ready':
-      return 'Pronta';
-    case 'status':
-      return event.state === 'paused' ? 'Pausada' : 'Ouvindo';
-    case 'error':
-      return errors[event.code];
-    case 'stopped':
-      return event.reason === 'error'
-        ? 'Transcrição interrompida por erro.'
-        : 'Encerrada';
-  }
-}
+import type { LocalTranscriptSnapshot } from '../../../contracts/meeting/localTranscript';
+import {
+  channelLabel,
+  hasTranscriptionFailure,
+} from './TranscriptionDiagnostics';
 
 function sessionTime(ms: number): string {
   const seconds = Math.floor(ms / 1000);
@@ -46,8 +19,10 @@ function sessionTime(ms: number): string {
 
 export function LocalTranscriptPreview({
   transcript,
+  error = false,
 }: {
   transcript: LocalTranscriptSnapshot | null;
+  error?: boolean;
 }) {
   const log = useRef<HTMLDivElement>(null);
   const follow = useRef(true);
@@ -55,39 +30,39 @@ export function LocalTranscriptPreview({
     if (log.current && follow.current)
       log.current.scrollTop = log.current.scrollHeight;
   }, [transcript]);
-  if (!transcript) return null;
+  const failed = error || hasTranscriptionFailure(transcript);
   return (
-    <section className="local-transcript" aria-label="Transcrição ao vivo">
+    <section
+      className={`local-transcript${failed ? ' area-failed' : ''}`}
+      aria-label="Transcrição ao vivo"
+    >
       <h3>Transcrição ao vivo</h3>
-      <p className="transcript-note">Apple Local · histórico temporário</p>
-      {transcript.failed &&
-        !transcript.channels.some((channel) => channel.type === 'error') && (
-          <p role="alert">
-            A conexão com a transcrição local foi interrompida. Inicie uma nova
-            sessão.
-          </p>
-        )}
-      <ul className="transcript-sources" aria-label="Estado das fontes">
-        {transcript.config.sources.map((source) => {
-          const channel = transcript.channels.find(
-            (event) => event.source === source,
-          );
-          const failed =
-            channel?.type === 'error' ||
-            (channel?.type === 'stopped' && channel.reason === 'error');
-          return (
-            <li key={source} role={failed ? 'alert' : 'status'}>
-              {source === 'mic' ? 'Microfone' : 'Sistema'} ·{' '}
-              {transcript.config.locale} ·{' '}
-              {channel?.type === 'error'
-                ? channelLabel(channel)
-                : transcript.failed
+      {failed && (
+        <p className="area-error" role="alert">
+          <span aria-hidden="true">⚠</span> Falha na transcrição. Consulte
+          Preferências.
+        </p>
+      )}
+      {transcript && (
+        <ul className="transcript-sources" aria-label="Estado das fontes">
+          {transcript.config.sources.map((source) => {
+            const channel = transcript.channels.find(
+              (event) => event.source === source,
+            );
+            return (
+              <li key={source} role="status">
+                {source === 'mic' ? 'Microfone' : 'Sistema'} ·{' '}
+                {transcript.config.locale} ·{' '}
+                {transcript.failed ||
+                channel?.type === 'error' ||
+                (channel?.type === 'stopped' && channel.reason === 'error')
                   ? 'Interrompida'
                   : channelLabel(channel)}
-            </li>
-          );
-        })}
-      </ul>
+              </li>
+            );
+          })}
+        </ul>
+      )}
       <div
         ref={log}
         onScroll={(event) => {
@@ -103,10 +78,10 @@ export function LocalTranscriptPreview({
         aria-live="polite"
         aria-relevant="additions text"
       >
-        {transcript.segments.length === 0 && (
+        {(!transcript || transcript.segments.length === 0) && (
           <p>Nenhuma fala exibida nesta sessão.</p>
         )}
-        {transcript.segments.map((segment) => (
+        {transcript?.segments.map((segment) => (
           <div
             className={`transcript-segment transcript-segment-${segment.source}`}
             key={`${segment.source}:${segment.segmentId}`}
@@ -124,15 +99,6 @@ export function LocalTranscriptPreview({
           </div>
         ))}
       </div>
-      <details className="transcript-note">
-        <summary>Sobre este histórico</summary>
-        <p>
-          Falas recentes em ordem de início, com tempos relativos à sessão. A
-          fonte de áudio não identifica a pessoa. Finais iguais e próximos nas
-          duas fontes podem ser agrupados como possível eco, exibindo Sistema;
-          falas simultâneas iguais também podem ser agrupadas.
-        </p>
-      </details>
     </section>
   );
 }

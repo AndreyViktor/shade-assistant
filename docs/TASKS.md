@@ -70,11 +70,12 @@ Planejado após o relato de uso real: transcrição precisa permanecer visível 
 
 | ID | Estado | Depende de | Implementação | Critério de aceite/evidência |
 | --- | --- | --- | --- | --- |
-| T046 | TODO | T043,T041 | Painel compacto de operação | Abrir diretamente no painel escuro, sem iniciar captura; remover cabeçalho e introdução, manter transcrição e sugestões lado a lado, estados vazios e controles compactos. Falhas de cada área devem ter borda vermelha discreta, ícone e texto acessível; detalhes em Preferências. Preservar consentimentos e limite por sessão. Validar teclado, estados de erro e redimensionamento com dados fictícios e rede bloqueada. |
+| T046 | DONE | T043,T041 | Painel compacto de operação | Painel escuro com transcrição e sugestões lado a lado, controles compactos, estados vazios e falhas acessíveis; consentimento preservado. Usuário confirmou avaliação visual. Verify 848 TS, 18 skipped, 19 runner e demais gates; smoke inicial 18/23 e reteste 7/7 dos arquivos afetados, cobrindo os cinco casos falhos. Imagens inspecionadas; fonte passa a Preferências em T047. [Evidências e limites](TEST-T046.md). |
 | T047 | TODO | T046,T004 | Preferências organizadas | Seções Transcrição de áudio, Sugestões de IA, Permissões e privacidade e Diagnóstico, incluindo DEMO. Mover fonte, idioma, provedores, modelo, chave e conexão; persistir fonte com migração das preferências existentes. Mudança durante sessão vale para a próxima sem interromper a captura; informar isso. Preservar segredos e confirmações por sessão. Validar migração, persistência e sessão ativa offline. |
 | T048 | TODO | T047 | Revisão integrada do layout | Validar navegação, acessibilidade, erros, sessão em andamento e redimensionamento com fixtures e rede bloqueada; inspecionar visualmente no Mac o fluxo completo e registrar evidências e limitações. |
 | T049 | DEFERRED | T048 | Histórico completo da sessão | Substituir a janela de trechos recentes por histórico completo; escopo posterior. |
 | T050 | DEFERRED | T049 | Troca de fonte durante a sessão | Permitir aplicar agora ou na próxima sessão mediante diálogo, preservando histórico; escopo posterior. |
+| T051 | TODO | T048 | Controles separados de transcrição e sugestões | Avaliar e implementar controles próprios para as duas áreas, incluindo ativar, pausar/retomar e parar quando aplicável. Definir explicitamente efeitos cruzados, consentimento por sessão, limites, comportamento de chamadas pendentes e retenção dos cartões antes da implementação; transcrição pausada ou parada não deve gerar novos dados para sugestões. Testar estados independentes e regressões offline. |
 
 ## Critérios gerais
 

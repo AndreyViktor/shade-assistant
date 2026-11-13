@@ -2,13 +2,13 @@ import { createTestApp } from './testApp';
 import { expect, test } from '@playwright/test';
 
 test('opens the real Electron build with an isolated offline renderer', async () => {
-  const fixture = await createTestApp();
+  const fixture = await createTestApp({ denyCapture: true });
   const app = await fixture.launch();
   try {
     const page = await app.firstWindow();
     await expect(
       page.getByRole('heading', { name: 'Meeting Copilot', level: 1 }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expect(
       page.getByRole('button', { name: 'Iniciar transcrição local' }),
     ).toBeVisible();
@@ -83,6 +83,16 @@ test('opens the real Electron build with an isolated offline renderer', async ()
       window.open('https://example.com');
     });
     expect(app.windows()).toHaveLength(1);
+    expect(
+      await app.evaluate((): unknown =>
+        Reflect.get(globalThis, 'captureAttempts'),
+      ),
+    ).toBe(0);
+    expect(
+      await app.evaluate((): unknown =>
+        Reflect.get(globalThis, 'demoNetworkAttempts'),
+      ),
+    ).toBe(0);
   } finally {
     await app.close();
     await fixture.cleanup();
