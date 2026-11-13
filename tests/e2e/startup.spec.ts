@@ -12,7 +12,10 @@ test('opens the real Electron build with an isolated offline renderer', async ()
     await expect(
       page.getByRole('button', { name: 'Iniciar transcrição local' }),
     ).toBeVisible();
-    await expect(page.getByText('Testar a demonstração')).toBeVisible();
+    await expect(page.getByText('Diagnóstico · DEMO offline')).toHaveCount(0);
+    await expect(
+      page.getByRole('button', { name: 'Iniciar DEMO' }),
+    ).toHaveCount(0);
     expect(page.url()).toMatch(/^file:\/\//);
 
     const isolation = await page.evaluate(() => ({

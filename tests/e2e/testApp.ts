@@ -12,6 +12,7 @@ import { _electron as electron } from '@playwright/test';
 export async function createTestApp(
   options: {
     denyNetwork?: boolean;
+    denyCapture?: boolean;
     syntheticNative?:
       boolean | 'reconciliation' | 'suggestions' | 'layout' | 'silent';
     syntheticSuggestions?: boolean;
@@ -43,6 +44,17 @@ export async function createTestApp(
     });
     nativeBootstrap = `require('electron').systemPreferences.askForMediaAccess = async () => true;`;
   }
+
+  const captureBootstrap = options.denyCapture
+    ? `
+globalThis.captureAttempts = 0;
+const denyCapture = () => { globalThis.captureAttempts += 1; throw new Error('Offline smoke: capture disabled'); };
+require('node:child_process').spawn = denyCapture;
+require('node:child_process').execFile = denyCapture;
+require('electron').systemPreferences.askForMediaAccess = denyCapture;
+require('electron').desktopCapturer.getSources = denyCapture;
+`
+    : '';
 
   // Test-only guards installed before product modules. Counts only, no URLs/data.
   const offlineBootstrap =
@@ -89,7 +101,7 @@ app.on('session-created', (session) => {
   // Test-only bootstrap keeps preferences and ciphertext out of the user's profile.
   await writeFile(
     entry,
-    `const { app } = require('electron');\napp.getAppPath = () => ${JSON.stringify(directory)};\n${offlineBootstrap}\n${suggestionBootstrap}\n${nativeBootstrap}\napp.setPath('userData', ${JSON.stringify(profile)});\nrequire(${JSON.stringify(resolve('dist/main/index.js'))});\n`,
+    `const { app } = require('electron');\napp.getAppPath = () => ${JSON.stringify(directory)};\n${offlineBootstrap}\n${captureBootstrap}\n${suggestionBootstrap}\n${nativeBootstrap}\napp.setPath('userData', ${JSON.stringify(profile)});\nrequire(${JSON.stringify(resolve('dist/main/index.js'))});\n`,
   );
   const env: Record<string, string> = {};
   for (const [key, value] of Object.entries(process.env)) {

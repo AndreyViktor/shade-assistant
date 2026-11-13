@@ -42,6 +42,14 @@ test('settings navigation preserves a running and paused session; saved choices 
 
     await open();
     await expect(back).toBeFocused();
+    await page.getByText('Diagnóstico · DEMO offline').click();
+    await expect(
+      page.getByRole('button', { name: 'Iniciar DEMO' }),
+    ).toBeDisabled();
+    await expect(
+      page.getByText('Pare a transcrição no painel antes de iniciar a DEMO.'),
+    ).toBeVisible();
+    await page.getByText('Diagnóstico · DEMO offline').click();
     await expect(page.getByRole('log')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Pausar' })).toHaveCount(0);
     await page

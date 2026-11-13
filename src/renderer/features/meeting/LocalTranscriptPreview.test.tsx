@@ -1,7 +1,12 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { emptyDemo } from '../../../contracts/meeting/demo';
-import { SessionControls } from './SessionControls';
+import { SessionControls as Controls } from './SessionControls';
+import { useMeetingSession } from './useMeetingSession';
+
+function SessionControls() {
+  return <Controls meeting={useMeetingSession()} />;
+}
 import type { SessionResult } from '../../../contracts/ipc/session';
 
 const base = {

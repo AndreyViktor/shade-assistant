@@ -17,7 +17,7 @@ node node_modules/electron/install.js
 npm run dev
 ```
 
-No macOS, `npm run dev` também compila o helper Swift dentro de um app nativo com descrições de uso do microfone e do áudio do sistema. A aplicação abre sem captura ativa, com Apple Local como ação principal e DEMO disponível como simulação. Apple Local só solicita permissões após seleção do modo, consentimento explícito e início da sessão. A primeira autorização de gravação de tela/áudio pode exigir aprovação em Ajustes do Sistema e reabertura do Meeting Copilot. Para compilar e abrir o build:
+No macOS, `npm run dev` também compila o helper Swift dentro de um app nativo com descrições de uso do microfone e do áudio do sistema. A aplicação abre sem captura ativa, com Apple Local como ação principal e DEMO offline disponível em **Preferências → Diagnóstico · DEMO offline**. Apple Local só solicita permissões após seleção do modo, consentimento explícito e início da sessão. A primeira autorização de gravação de tela/áudio pode exigir aprovação em Ajustes do Sistema e reabertura do Meeting Copilot. Para compilar e abrir o build:
 
 ```bash
 npm run build

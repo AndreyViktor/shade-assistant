@@ -9,8 +9,7 @@ import type {
   AudioSource,
   TranscriptionLocale,
 } from '../../../contracts/native/protocol';
-import { useMeetingSession } from './useMeetingSession';
-import { DemoPreview } from './DemoPreview';
+import type { useMeetingSession } from './useMeetingSession';
 
 type SourceChoice = 'mic' | 'system' | 'both';
 
@@ -33,19 +32,13 @@ function selectedSources(choice: SourceChoice): AudioSource[] {
 
 export function SessionControls({
   savedPreferences,
+  meeting,
 }: {
+  meeting: ReturnType<typeof useMeetingSession>;
   savedPreferences?: Preferences | null;
 }) {
-  const {
-    session,
-    demo,
-    local,
-    suggestions,
-    busy,
-    error,
-    preferences,
-    command,
-  } = useMeetingSession();
+  const { session, local, suggestions, busy, error, preferences, command } =
+    meeting;
   const locale: TranscriptionLocale =
     (savedPreferences ?? preferences)?.language === 'en-US' ? 'en-US' : 'pt-BR';
   const [source, setSource] = useState<SourceChoice>('both');
@@ -78,15 +71,26 @@ export function SessionControls({
     });
   }
 
-  function startDemo(): void {
-    void command({
-      version: 6,
-      action: 'start',
-      options: {
-        mode: 'demo',
-        consent: { capture: false, context: false, remoteAudio: false },
-      },
-    });
+  if (session?.mode === 'demo' && !canStart) {
+    return (
+      <section className="session-controls" aria-label="Simulação ativa">
+        <h2>DEMO · simulação offline</h2>
+        <p role="status">
+          Uma demonstração está ativa. Abra Preferências → Diagnóstico para
+          consultar o roteiro ou retomar a simulação. Sem captura ou envio de
+          dados.
+        </p>
+        {error && <p role="alert">{error}</p>}
+        <button
+          disabled={busy}
+          onClick={() => {
+            void command({ version: 6, action: 'stop' });
+          }}
+        >
+          Parar DEMO
+        </button>
+      </section>
+    );
   }
 
   return (
@@ -241,30 +245,6 @@ export function SessionControls({
         </div>
       )}
 
-      <details
-        className="secondary-mode"
-        open={session?.mode === 'demo' && session.phase !== 'idle'}
-      >
-        <summary>Testar a demonstração</summary>
-        <p>
-          A DEMO usa falas simuladas. Não acessa o microfone, não captura áudio
-          do sistema e não transcreve a reunião.
-        </p>
-        <button disabled={busy || !canStart} onClick={startDemo}>
-          Iniciar DEMO
-        </button>
-        {session?.mode === 'demo' && (
-          <DemoPreview
-            demo={demo}
-            phase={session.phase}
-            busy={busy}
-            onDismiss={(id) => {
-              void command({ version: 6, action: 'dismiss-suggestion', id });
-            }}
-          />
-        )}
-      </details>
-
       <details className="privacy-details">
         <summary>Permissões e privacidade</summary>
         <p>
@@ -276,7 +256,7 @@ export function SessionControls({
         <p>
           O envio de texto à OpenAI exige autorização separada a cada sessão. As
           falas recentes ficam em memória e são limpas ao parar. Áudio nunca é
-          enviado no modo local. A DEMO é apenas uma simulação.
+          enviado no modo local.
         </p>
       </details>
 

@@ -6,8 +6,10 @@ import { SettingsPanel } from './SettingsPanel';
 export function SettingsDisclosure({
   children,
   onSaved,
+  diagnostics,
 }: {
   children?: ReactNode;
+  diagnostics?: ReactNode;
   onSaved?: (preferences: Preferences) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -60,6 +62,7 @@ export function SettingsDisclosure({
           valem para a próxima sessão.
         </p>
         {visited && <SettingsPanel active={expanded} onSaved={onSaved} />}
+        {visited && diagnostics}
       </div>
     </>
   );

@@ -9,7 +9,10 @@ test('repeats start → speech → card → pause → stop without late events o
     const page = await app.firstWindow();
     const pageErrors: string[] = [];
     page.on('pageerror', (error) => pageErrors.push(error.name));
-    await page.getByText('Testar a demonstração').click();
+    await page
+      .getByRole('button', { name: 'Preferências', exact: true })
+      .click();
+    await page.getByText('Diagnóstico · DEMO offline').click();
     const start = page.getByRole('button', { name: 'Iniciar DEMO' });
     const preview = page.getByRole('region', { name: 'Roteiro DEMO' });
     const cards = page.getByRole('region', { name: 'Sugestões DEMO' });
@@ -29,7 +32,7 @@ test('repeats start → speech → card → pause → stop without late events o
     for (let run = 0; run < 2; run += 1) {
       await start.click();
       await expect(
-        page.getByText('Em andamento', { exact: true }),
+        page.getByRole('status').filter({ hasText: /^Em andamento$/ }),
       ).toBeVisible();
       expect(await read()).toMatchObject({
         demo: { transcript: null, suggestions: [], completed: false },
@@ -48,7 +51,9 @@ test('repeats start → speech → card → pause → stop without late events o
         cards.getByRole('article', { name: 'Esclareça as dependências' }),
       ).toBeVisible();
       await page.getByRole('button', { name: 'Pausar' }).click();
-      await expect(page.getByText('Pausada', { exact: true })).toBeVisible();
+      await expect(
+        page.getByRole('status').filter({ hasText: /^Pausada$/ }),
+      ).toBeVisible();
       const paused = await read();
       expect(paused).toMatchObject({
         ok: true,
@@ -75,7 +80,9 @@ test('repeats start → speech → card → pause → stop without late events o
       expect(await read()).toEqual(paused);
       await expect(cards.getByRole('article')).toHaveCount(1);
       await page.getByRole('button', { name: 'Parar' }).click();
-      await expect(page.getByText('Encerrada', { exact: true })).toBeVisible();
+      await expect(
+        page.getByRole('status').filter({ hasText: /^Encerrada$/ }),
+      ).toBeVisible();
       await expect(preview).toHaveCount(0);
       await expect(start).toBeEnabled();
       await expect(page.getByRole('button', { name: 'Retomar' })).toHaveCount(

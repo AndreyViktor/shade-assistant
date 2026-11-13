@@ -38,8 +38,6 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
       .getByRole('button', { name: 'Iniciar transcrição local' })
       .focus();
     await page.keyboard.press('Tab');
-    await expect(page.locator('.secondary-mode summary')).toBeFocused();
-    await page.keyboard.press('Tab');
     await expect(page.locator('.privacy-details summary')).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(toggle).toBeFocused();

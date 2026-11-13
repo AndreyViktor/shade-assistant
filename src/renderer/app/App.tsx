@@ -1,3 +1,5 @@
+import { useMeetingSession } from '../features/meeting/useMeetingSession';
+import { DemoDiagnostics } from '../features/meeting/DemoDiagnostics';
 import type { Preferences } from '../../contracts/settings/preferences';
 import { SessionControls } from '../features/meeting/SessionControls';
 import { SettingsDisclosure } from '../features/settings/SettingsDisclosure';
@@ -6,6 +8,7 @@ import { ipcFailure } from '../../contracts/ipc/appStatus';
 import type { AppStatusResult } from '../../contracts/ipc/appStatus';
 
 export function App() {
+  const meeting = useMeetingSession();
   const [preferences, setPreferences] = useState<Preferences | null>(null);
   const [result, setResult] = useState<AppStatusResult | null>(null);
   useEffect(() => {
@@ -25,7 +28,10 @@ export function App() {
   }, []);
   return (
     <main className="app-shell">
-      <SettingsDisclosure onSaved={setPreferences}>
+      <SettingsDisclosure
+        onSaved={setPreferences}
+        diagnostics={result?.ok && <DemoDiagnostics meeting={meeting} />}
+      >
         <header>
           <p className="eyebrow">TRANSCRIÇÃO LOCAL</p>
           <h1>Meeting Copilot</h1>
@@ -34,7 +40,9 @@ export function App() {
             neste Mac.
           </p>
         </header>
-        {result?.ok && <SessionControls savedPreferences={preferences} />}
+        {result?.ok && (
+          <SessionControls meeting={meeting} savedPreferences={preferences} />
+        )}
         {result && !result.ok && (
           <p role="alert">
             Não foi possível verificar o estado do app. Reabra-o.

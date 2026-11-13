@@ -6,7 +6,10 @@ test('plays deterministic demo transcription and suggestions without credentials
   const app = await fixture.launch();
   try {
     const page = await app.firstWindow();
-    await page.getByText('Testar a demonstração').click();
+    await page
+      .getByRole('button', { name: 'Preferências', exact: true })
+      .click();
+    await page.getByText('Diagnóstico · DEMO offline').click();
     const start = page.getByRole('button', { name: 'Iniciar DEMO' });
     await expect(start).toBeEnabled();
     expect(
@@ -65,7 +68,9 @@ test('plays deterministic demo transcription and suggestions without credentials
       preview.getByText('Vamos revisar a migração do módulo de relatórios.'),
     ).toBeVisible();
     await page.reload();
-    await expect(page.getByText('Encerrada', { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('status').filter({ hasText: /^Encerrada$/ }),
+    ).toBeVisible();
     await expect(preview).toHaveCount(0);
     expect(
       await app.evaluate(
