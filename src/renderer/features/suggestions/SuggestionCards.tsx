@@ -30,7 +30,7 @@ export function SuggestionCards({
       <p>
         {demo
           ? 'Até dois cartões. Expiram após 30 segundos, inclusive durante a pausa.'
-          : 'Até dois cartões, sem expiração por tempo. Novos substituem os mais antigos. Descarte quando quiser; pausar, parar ou desativar sugestões limpa os cartões.'}
+          : 'Até dois cartões, sem expiração por tempo.'}
       </p>
       {suggestions.length === 0 && (
         <p role="status">Nenhuma sugestão neste momento.</p>
@@ -63,6 +63,16 @@ export function SuggestionCards({
           </button>
         </article>
       ))}
+      {!demo && (
+        <details className="card-retention">
+          <summary>Quando os cartões são removidos?</summary>
+          <p>
+            Novos substituem os mais antigos. Redimensionar não remove cartões;
+            use a rolagem. Descarte quando quiser; pausar, parar ou desativar
+            sugestões limpa os cartões.
+          </p>
+        </details>
+      )}
     </section>
   );
 }

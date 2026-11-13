@@ -16,7 +16,7 @@ body {
 }
 
 .app-shell {
-  max-width: 560px;
+  max-width: 1200px;
   padding: 20px;
   margin: 0 auto;
 }
@@ -306,23 +306,30 @@ button {
 }
 
 .local-transcript {
-  border-top: 1px solid #445164;
-  margin-top: 16px;
-  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
 }
 .transcript-sources {
   padding-left: 20px;
   font-size: 0.85rem;
 }
 .transcript-segments {
-  max-height: 280px;
+  flex: 1;
+  min-height: 140px;
   overflow-y: auto;
   overflow-wrap: anywhere;
+  padding: 4px;
+  scrollbar-gutter: stable;
 }
 .transcript-segment {
-  border-left: 2px solid #78b6cc;
-  margin: 12px 0;
-  padding-left: 10px;
+  border: 1px solid #40516c;
+  border-left: 3px solid #78b6cc;
+  border-radius: 12px;
+  margin: 8px 18px 12px 0;
+  padding: 10px 12px;
+  background: #1e3048;
 }
 .transcript-segment p {
   white-space: pre-wrap;
@@ -489,4 +496,69 @@ button {
   padding: 10px;
   background: #0b1220;
   user-select: text;
+}
+
+/* Fixed two-card capacity uses scrolling, never viewport-driven deletion. */
+.meeting-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.local-transcript,
+.meeting-assistance {
+  min-width: 0;
+  height: clamp(300px, calc(100dvh - 300px), 680px);
+  padding: 14px;
+  border: 1px solid #40516c;
+  border-radius: 12px;
+  background: #101827;
+  overflow-wrap: anywhere;
+}
+
+.meeting-assistance {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.meeting-assistance .suggestion-diagnostics {
+  margin-top: 16px;
+}
+
+.local-transcript > h3,
+.local-transcript > p,
+.transcript-sources {
+  margin: 0;
+}
+
+.transcript-segment-system {
+  margin-right: 0;
+  margin-left: 18px;
+  background: #182338;
+  border-left-color: #b7a4df;
+}
+
+.transcript-segment p {
+  margin: 0;
+}
+
+.transcript-segment .transcript-metadata {
+  margin-bottom: 8px;
+}
+
+.suggestion-cards > p {
+  font-size: 13px;
+  color: #b7c4d8;
+}
+
+/* Below native minimum only at high zoom: reflow keeps text/controls reachable. */
+@media (max-width: 520px) {
+  .meeting-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .capture-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

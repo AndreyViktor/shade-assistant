@@ -26,10 +26,10 @@ export async function createMainWindow(): Promise<BrowserWindow> {
 
   const window = new BrowserWindow({
     title: 'Meeting Copilot',
-    width: 440,
-    height: 640,
-    minWidth: 360,
-    minHeight: 400,
+    width: 960,
+    height: 720,
+    minWidth: 640,
+    minHeight: 480,
     alwaysOnTop: true,
     show: false,
     backgroundColor: '#101827',
@@ -43,6 +43,11 @@ export async function createMainWindow(): Promise<BrowserWindow> {
       webviewTag: false,
     },
   });
+
+  // Configure once before showing; repeating this can briefly hide the Dock/window.
+  if (process.platform === 'darwin') {
+    window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  }
 
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', (event) => event.preventDefault());

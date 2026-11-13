@@ -185,34 +185,65 @@ export function SessionControls() {
         )}
       </div>
 
-      {session?.mode === 'apple-local' && (
-        <LocalTranscriptPreview transcript={local} />
-      )}
-
-      {localActive && <SuggestionDiagnosticsPanel snapshot={suggestions} />}
-      {localActive && suggestions.status !== 'disabled' && (
-        <>
-          <p role="status">
-            Sugestões OpenAI: {suggestions.remainingRequests} chamadas restantes
-            nesta sessão.
-          </p>
-          <button
-            disabled={busy}
-            onClick={() => {
-              void command({ version: 6, action: 'revoke-suggestions' });
-            }}
+      {session?.mode === 'apple-local' && (localActive || local) && (
+        <div className="meeting-workspace">
+          {local ? (
+            <LocalTranscriptPreview transcript={local} />
+          ) : (
+            <section
+              className="local-transcript"
+              aria-label="Transcrição ao vivo"
+            >
+              <h3>Transcrição ao vivo</h3>
+              <p role="status">Aguardando transcrição local…</p>
+            </section>
+          )}
+          <section
+            className="meeting-assistance"
+            aria-label="Assistência da reunião"
+            tabIndex={0}
           >
-            Desativar sugestões
-          </button>
-          <SuggestionCards
-            demo={false}
-            suggestions={suggestions.items}
-            busy={busy}
-            onDismiss={(id) => {
-              void command({ version: 6, action: 'dismiss-suggestion', id });
-            }}
-          />
-        </>
+            {localActive && suggestions.status !== 'disabled' ? (
+              <>
+                <SuggestionCards
+                  demo={false}
+                  suggestions={suggestions.items}
+                  busy={busy}
+                  onDismiss={(id) => {
+                    void command({
+                      version: 6,
+                      action: 'dismiss-suggestion',
+                      id,
+                    });
+                  }}
+                />
+                <p role="status">
+                  Sugestões OpenAI: {suggestions.remainingRequests} chamadas
+                  restantes nesta sessão.
+                </p>
+                <button
+                  disabled={busy}
+                  onClick={() => {
+                    void command({ version: 6, action: 'revoke-suggestions' });
+                  }}
+                >
+                  Desativar sugestões
+                </button>
+              </>
+            ) : (
+              <>
+                <h3>Sugestões</h3>
+                <p>
+                  Sugestões desativadas. A transcrição continua disponível neste
+                  painel.
+                </p>
+              </>
+            )}
+            {localActive && (
+              <SuggestionDiagnosticsPanel snapshot={suggestions} />
+            )}
+          </section>
+        </div>
       )}
 
       <details

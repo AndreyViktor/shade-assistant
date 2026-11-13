@@ -53,3 +53,16 @@ readline.createInterface({input:process.stdin}).on('line', line => {
 export const reconciliationHelperFixture = `const replay = ${JSON.stringify(transcriptReplay())};\n${nativeHelperFixture}`;
 
 export const suggestionHelperFixture = `const replay = [{ source: 'mic', type: 'final', segmentId: 'synthetic-question', startMs: 0, endMs: 1000, timestampMs: 1000, text: 'Qual é o prazo do projeto fictício Aurora?' }];\n${nativeHelperFixture}`;
+
+// Long, entirely fictitious speech exercises wrapping and independent scrolling.
+export const layoutHelperFixture = `const replay = ${JSON.stringify(
+  Array.from({ length: 8 }, (_, index) => ({
+    source: index % 2 === 0 ? 'mic' : 'system',
+    type: 'final',
+    segmentId: `layout-${index}`,
+    startMs: index * 1500,
+    endMs: index * 1500 + 1000,
+    timestampMs: index * 1500 + 1000,
+    text: `Fala fictícia ${index + 1}. Qual é o prazo do projeto Aurora? ${'Precisamos confirmar os responsáveis e a próxima etapa. '.repeat(8)} Referência: ${'abcdef'.repeat(30)}`,
+  })),
+)};\n${nativeHelperFixture}`;

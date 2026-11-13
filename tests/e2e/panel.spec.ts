@@ -15,6 +15,7 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
     expect(
       await nativeWindow.evaluate((win: BrowserWindow) => ({
         floating: win.isAlwaysOnTop(),
+        workspaces: win.isVisibleOnAllWorkspaces(),
         minimizable: win.isMinimizable(),
         resizable: win.isResizable(),
         size: win.getSize(),
@@ -22,10 +23,11 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
       })),
     ).toEqual({
       floating: true,
+      workspaces: process.platform === 'darwin',
       minimizable: true,
       resizable: true,
-      size: [440, 640],
-      minimum: [360, 400],
+      size: [960, 720],
+      minimum: [640, 480],
     });
 
     const toggle = page.getByRole('button', {
@@ -117,7 +119,7 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
       .toBe(true);
     expect(app.windows()).toHaveLength(1);
 
-    await nativeWindow.evaluate((win: BrowserWindow) => win.setSize(360, 400));
+    await nativeWindow.evaluate((win: BrowserWindow) => win.setSize(640, 480));
     await nativeWindow.evaluate((win: BrowserWindow) =>
       win.webContents.setZoomFactor(2),
     );

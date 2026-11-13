@@ -1,9 +1,10 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BrowserWindowConstructorOptions } from 'electron';
 import { createMainWindow } from './createMainWindow';
 
 const mocks = vi.hoisted(() => ({
+  workspaces: vi.fn(),
   options: vi.fn<(options: BrowserWindowConstructorOptions) => void>(),
   loadURL: vi.fn(),
   loadFile: vi.fn(),
@@ -31,6 +32,7 @@ vi.mock('electron', () => ({
     }
     webContents = { setWindowOpenHandler: vi.fn(), on: vi.fn() };
     once = vi.fn();
+    setVisibleOnAllWorkspaces = mocks.workspaces;
     loadURL = mocks.loadURL;
     loadFile = mocks.loadFile;
   },
@@ -38,15 +40,32 @@ vi.mock('electron', () => ({
 
 describe('secure window composition', () => {
   beforeEach(() => vi.clearAllMocks());
+  afterEach(() => vi.unstubAllGlobals());
+
+  it.each(['darwin', 'linux', 'win32'])(
+    'configures Spaces only on macOS (%s)',
+    async (platform) => {
+      vi.stubGlobal('process', { ...process, platform });
+      await createMainWindow();
+      if (platform === 'darwin') {
+        expect(mocks.workspaces).toHaveBeenCalledExactlyOnceWith(true, {
+          visibleOnFullScreen: true,
+        });
+        expect(mocks.workspaces.mock.invocationCallOrder[0]).toBeLessThan(
+          mocks.loadFile.mock.invocationCallOrder[0] ?? 0,
+        );
+      } else expect(mocks.workspaces).not.toHaveBeenCalled();
+    },
+  );
 
   it('loads a local preload and registers IPC before loading the renderer', async () => {
     await createMainWindow();
     expect(mocks.options).toHaveBeenCalledWith(
       expect.objectContaining({
-        width: 440,
-        height: 640,
-        minWidth: 360,
-        minHeight: 400,
+        width: 960,
+        height: 720,
+        minWidth: 640,
+        minHeight: 480,
         alwaysOnTop: true,
       }),
     );

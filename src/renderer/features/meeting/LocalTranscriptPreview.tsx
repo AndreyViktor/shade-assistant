@@ -58,8 +58,8 @@ export function LocalTranscriptPreview({
   if (!transcript) return null;
   return (
     <section className="local-transcript" aria-label="Transcrição ao vivo">
-      <h3>APPLE LOCAL (SWIFT)</h3>
-      <p>Texto temporário neste Mac · sem envio à OpenAI</p>
+      <h3>Transcrição ao vivo</h3>
+      <p className="transcript-note">Apple Local · histórico temporário</p>
       {transcript.failed &&
         !transcript.channels.some((channel) => channel.type === 'error') && (
           <p role="alert">
@@ -98,13 +98,17 @@ export function LocalTranscriptPreview({
         }}
         className="transcript-segments"
         role="log"
+        tabIndex={0}
         aria-label="Falas recentes"
         aria-live="polite"
         aria-relevant="additions text"
       >
+        {transcript.segments.length === 0 && (
+          <p>Nenhuma fala exibida nesta sessão.</p>
+        )}
         {transcript.segments.map((segment) => (
           <div
-            className="transcript-segment"
+            className={`transcript-segment transcript-segment-${segment.source}`}
             key={`${segment.source}:${segment.segmentId}`}
           >
             <p className="transcript-metadata">
@@ -120,15 +124,15 @@ export function LocalTranscriptPreview({
           </div>
         ))}
       </div>
-      {transcript.segments.length === 0 && (
-        <p>Nenhuma fala exibida nesta sessão.</p>
-      )}
-      <p className="transcript-note">
-        Falas recentes em ordem de início, com tempos relativos à sessão. A
-        fonte de áudio não identifica a pessoa. Finais iguais e próximos nas
-        duas fontes podem ser agrupados como possível eco, exibindo Sistema;
-        falas simultâneas iguais também podem ser agrupadas.
-      </p>
+      <details className="transcript-note">
+        <summary>Sobre este histórico</summary>
+        <p>
+          Falas recentes em ordem de início, com tempos relativos à sessão. A
+          fonte de áudio não identifica a pessoa. Finais iguais e próximos nas
+          duas fontes podem ser agrupados como possível eco, exibindo Sistema;
+          falas simultâneas iguais também podem ser agrupadas.
+        </p>
+      </details>
     </section>
   );
 }

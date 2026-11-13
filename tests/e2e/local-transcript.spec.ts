@@ -41,6 +41,7 @@ test('reconciles synthetic revisions and echo through the provider, IPC and rend
     );
     await expect(log.getByText('Sim.', { exact: true })).toHaveCount(2);
     await expect(log.getByText('Hipótese atrasada')).toHaveCount(0);
+    await page.getByText('Sobre este histórico', { exact: true }).click();
     await expect(
       page.getByText(/A fonte de áudio não identifica a pessoa/),
     ).toBeVisible();

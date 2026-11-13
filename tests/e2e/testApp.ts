@@ -2,6 +2,7 @@ import {
   nativeHelperFixture,
   suggestionHelperFixture,
   reconciliationHelperFixture,
+  layoutHelperFixture,
 } from './nativeHelperFixture';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -11,7 +12,8 @@ import { _electron as electron } from '@playwright/test';
 export async function createTestApp(
   options: {
     denyNetwork?: boolean;
-    syntheticNative?: boolean | 'reconciliation' | 'suggestions';
+    syntheticNative?:
+      boolean | 'reconciliation' | 'suggestions' | 'layout' | 'silent';
     syntheticSuggestions?: boolean;
     syntheticSuggestionOutcome?: 'empty' | 'authentication';
   } = {},
@@ -27,11 +29,15 @@ export async function createTestApp(
     );
     await mkdir(dirname(helper), { recursive: true });
     const fixture =
-      options.syntheticNative === 'suggestions'
-        ? suggestionHelperFixture
-        : options.syntheticNative === 'reconciliation'
-          ? reconciliationHelperFixture
-          : nativeHelperFixture;
+      options.syntheticNative === 'silent'
+        ? `const replay = [];\n${nativeHelperFixture}`
+        : options.syntheticNative === 'layout'
+          ? layoutHelperFixture
+          : options.syntheticNative === 'suggestions'
+            ? suggestionHelperFixture
+            : options.syntheticNative === 'reconciliation'
+              ? reconciliationHelperFixture
+              : nativeHelperFixture;
     await writeFile(helper, `#!${process.execPath}\n${fixture}`, {
       mode: 0o700,
     });
@@ -74,7 +80,7 @@ app.on('session-created', (session) => {
         type:'message', role:'assistant', status:'completed', content:[{
           type:'output_text', text:JSON.stringify({suggestions:[{
             category:'question', title:'Prazo sintético Aurora', body:'Confirme a data do projeto fictício.', groundedIn:'inference'
-          }]})
+          }${options.syntheticNative === 'layout' ? ", { category:'action', title:'Ação sintética Boreal', body:'Confirmar os responsáveis e registrar o próximo passo da reunião fictícia. '.repeat(4), groundedIn:'meeting' }" : ''}]})
         }]
       }]}), {status:200});
     };
