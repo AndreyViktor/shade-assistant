@@ -18,6 +18,8 @@ Decisões confirmadas pelo usuário prevalecem sobre propostas e hipóteses anti
 
 - **D019 (2026-11-12):** após relatar a geração real de dois cartões, o usuário confirmou todos os pontos solicitados para T024: funcionamento sem sugestões, pausa/retomada, revogação com transcrição preservada e parada/fechamento/reabertura sem captura ou helper residuais nos cenários apresentados. Registrar como aceite manual informado pelo usuário; não inventar dados do ensaio nem alegar verificação de falhas de SO ou medição. A usabilidade permanece em T040–T043.
 
+- **D020 (2026-11-13):** usuário confirmou validação do painel em um monitor, incluindo Spaces, tela cheia, interação e arraste/redimensionamento, e decidiu concluir T041 deixando o ensaio de dois monitores para T045. Isso não comprova comportamento com múltiplos monitores nem elimina a possibilidade de falha intermitente de foco.
+
 ## Propostas técnicas reversíveis
 
 Defaults sujeitos a validação de implementação; detalhes do fluxo e fronteiras estão em [ARCHITECTURE.md](ARCHITECTURE.md).

@@ -1,6 +1,6 @@
 # T041 — Painel de reunião e janela flutuante
 
-Data: 2026-11-12. Base `0bc1e63`, `main` inicialmente limpa. Dependências T040/T017 concluídas. Plano e `IN_PROGRESS` registrados antes de código/testes. **Aceite bloqueado**: falta ensaio manual de Spaces/tela cheia/múltiplos monitores. O foco nativo e a suíte completa passaram em nova execução em 13/11.
+Data: 2026-11-12. Base `0bc1e63`, `main` inicialmente limpa. Dependências T040/T017 concluídas. Plano e `IN_PROGRESS` registrados antes de código/testes. **Aceite concluído**: usuário confirmou o ensaio com um monitor em 13/11 e autorizou adiar múltiplos monitores para T045. O foco nativo e a suíte completa passaram na retomada.
 
 ## Implementação e política de espaço
 
@@ -39,26 +39,26 @@ A inspeção visual foi da imagem do renderer; não observou sobreposição com 
 
 macOS 26.6.2 (25G83), Electron 45.2.1, Node 26. Uma sondagem temporária observou **um display** via `screen.getAllDisplays()` e `win.isFocused() === false` mesmo após `app.focus({ steal: true })`/`win.focus()`. Reproduziu também com uma **nova BrowserWindow padrão**, sem `setVisibleOnAllWorkspaces`; portanto há indício de limitação do ambiente, não prova de defeito específico da nova configuração. A janela estava visível e focável; foco DOM e comandos Playwright funcionaram. A sondagem não alterou preferências do SO, não capturou desktop e foi removida após diagnóstico. Não inferir que foco nativo funciona para o usuário a partir desses resultados.
 
-Primeiras passagens encontraram um narrowing TypeScript de coordenadas, ocultação de cartões com snapshot local ainda nulo e uma corrida de animações Home/PageDown no teste de rolagem. Corrigidos sem suavizar contratos ou regras. A falha de foco nativo continua pendente.
+Primeiras passagens encontraram um narrowing TypeScript de coordenadas, ocultação de cartões com snapshot local ainda nulo e uma corrida de animações Home/PageDown no teste de rolagem. Corrigidos sem suavizar contratos ou regras. À época, a falha de foco nativo permanecia pendente; passou na retomada descrita abaixo.
 
-## Retomada — 2026-11-13
+## Retomada e aceite — 2026-11-13
 
 A pedido do usuário, o teste de foco nativo `panel.spec.ts` foi repetido em sessão Electron fora do sandbox e passou (1/1), incluindo foco, minimizar/restaurar, teclado e redimensionamento. Em seguida, `npm run test:smoke` completo passou (19/19, 2,1 min), com perfil temporário, fixtures sintéticas e rede bloqueada. A causa da falha anterior não foi identificada; sua aprovação posterior demonstra o resultado desta execução, não elimina possibilidade de falha intermitente.
 
-Os testes de troca real de Spaces, outro app em tela cheia, arraste humano e múltiplos monitores continuam pendentes de confirmação. Nenhum conteúdo real, chave ou captura de áudio foi usado pelo agente.
+Após a retomada, o usuário informou ter um monitor e confirmou a validação dos cenários solicitados: troca de Spaces, outro app em tela cheia, interação, movimentação e redimensionamento do painel. Registro baseado no relato do usuário, sem detalhes adicionais de configuração ou métricas. O cenário de múltiplos monitores não foi executado; o usuário decidiu explicitamente deixá-lo para teste futuro (T045). Nenhum conteúdo real, chave ou captura de áudio foi usado pelo agente.
 
-## Desbloqueio e ensaio manual pendente
+## Ensaio manual e verificação futura
 
-Executar em sessão gráfica interativa do Mac, com dois monitores, e registrar versão do macOS, dimensões/escalas e configuração de Spaces. Usar dados fictícios e DEMO offline para a janela; as fixtures de `meeting-workspace.spec.ts` exercitam o layout real sem áudio/API. Não iniciar captura ou envio real sem autorização separada.
+Para T045, executar em sessão gráfica interativa do Mac com dois monitores e registrar versão do macOS, dimensões/escalas e configuração de Spaces. Usar dados fictícios e DEMO offline para a janela; as fixtures de `meeting-workspace.spec.ts` exercitam o layout real sem áudio/API. Não iniciar captura ou envio real sem autorização separada.
 
 | Cenário                   | Critério                                                                                 | Estado                                      |
 | ------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------- |
 | Foco nativo e controles   | Reexecutar `panel.spec.ts`; foco, minimizar/restaurar e reabrir passam                   | Aprovado em 13/11 (1/1 e smoke 19/19)       |
-| Troca de Spaces           | Painel permanece acessível ao alternar desktops e apps; sessão preservada                | Não observado                               |
-| Outro app em tela cheia   | Avaliar painel sobre app macOS em tela cheia, entrada/saída e interação                  | Não observado                               |
+| Troca de Spaces           | Painel permanece acessível ao alternar desktops e apps; sessão preservada                | Validado pelo usuário com um monitor        |
+| Outro app em tela cheia   | Avaliar painel sobre app macOS em tela cheia, entrada/saída e interação                  | Validado pelo usuário com um monitor        |
 | Múltiplos monitores       | Mover entre displays, trocar Spaces em cada um, redimensionar e usar controles sem perda | Não executado — apenas um display observado |
-| Arrastar moldura e bordas | Movimento/resize humanos sem perda da sessão, além do teste por API                      | Não observado                               |
+| Arrastar moldura e bordas | Movimento/resize humanos sem perda da sessão, além do teste por API                      | Validado pelo usuário com um monitor        |
 
-Sem a evidência manual dos cenários restantes, T041 permanece `BLOCKED`; T042 não começa. Não há promessa de visibilidade universal, proteção de compartilhamento ou suporte a todos os modos de tela cheia/gerenciadores de janelas.
+Usuário confirmou o aceite com um monitor e decidiu adiar o ensaio de múltiplos monitores para T045; T041 passa a `DONE`. Não há promessa de visibilidade universal, proteção de compartilhamento ou suporte a todos os modos de tela cheia/gerenciadores de janelas.
 
 Não houve captura real, chamadas OpenAI, acesso a credenciais reais, custos, instalação, push ou deploy. Swift não mudou; gates Swift não repetidos. Logs locais em `/private/tmp/t041-*.log` são temporários e não são evidência de reunião real.
