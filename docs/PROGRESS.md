@@ -10,7 +10,7 @@
 
 ## M7 — próxima sequência planejada
 
-T040 retenção dos cartões → T041 layout com chat e cartões lado a lado → T042 tela de configurações → T043 DEMO secundária e validação. Uma tarefa por sessão; detalhes e critérios em [TASKS.md](TASKS.md). O usuário autorizou planejamento e, antes de executar M7, pediu confirmar T024; não iniciar M7 sem pedido de execução.
+T040 retenção dos cartões → T041 layout com chat e cartões lado a lado, janela flutuante e validação de Spaces/tela cheia → T042 configurações escondidas durante uso, abertas sob demanda → T043 DEMO secundária e validação. Uma tarefa por sessão; detalhes e critérios em [TASKS.md](TASKS.md). O usuário autorizou planejamento e, antes de executar M7, pediu confirmar T024; não iniciar M7 sem pedido de execução.
 
 `python3 scripts/run-codex-tasks.py --tasks T040 T041 T042 T043 --dry-run` pré-valida a lista; sem `--dry-run` executa apenas esses IDs em ordem e em sessões separadas, respeitando dependências e bloqueios. Começar preferencialmente com `--max-tasks 1`. T044 e testes em [TEST-T044.md](TEST-T044.md).
 
