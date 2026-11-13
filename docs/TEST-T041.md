@@ -1,6 +1,6 @@
 # T041 — Painel de reunião e janela flutuante
 
-Data: 2026-11-12. Base `0bc1e63`, `main` inicialmente limpa. Dependências T040/T017 concluídas. Plano e `IN_PROGRESS` registrados antes de código/testes. **Aceite bloqueado**: falta ensaio manual de Spaces/tela cheia/múltiplos monitores e o smoke de foco nativo falha neste ambiente.
+Data: 2026-11-12. Base `0bc1e63`, `main` inicialmente limpa. Dependências T040/T017 concluídas. Plano e `IN_PROGRESS` registrados antes de código/testes. **Aceite bloqueado**: falta ensaio manual de Spaces/tela cheia/múltiplos monitores. O foco nativo e a suíte completa passaram em nova execução em 13/11.
 
 ## Implementação e política de espaço
 
@@ -41,18 +41,24 @@ macOS 26.6.2 (25G83), Electron 45.2.1, Node 26. Uma sondagem temporária observo
 
 Primeiras passagens encontraram um narrowing TypeScript de coordenadas, ocultação de cartões com snapshot local ainda nulo e uma corrida de animações Home/PageDown no teste de rolagem. Corrigidos sem suavizar contratos ou regras. A falha de foco nativo continua pendente.
 
+## Retomada — 2026-11-13
+
+A pedido do usuário, o teste de foco nativo `panel.spec.ts` foi repetido em sessão Electron fora do sandbox e passou (1/1), incluindo foco, minimizar/restaurar, teclado e redimensionamento. Em seguida, `npm run test:smoke` completo passou (19/19, 2,1 min), com perfil temporário, fixtures sintéticas e rede bloqueada. A causa da falha anterior não foi identificada; sua aprovação posterior demonstra o resultado desta execução, não elimina possibilidade de falha intermitente.
+
+Os testes de troca real de Spaces, outro app em tela cheia, arraste humano e múltiplos monitores continuam pendentes de confirmação. Nenhum conteúdo real, chave ou captura de áudio foi usado pelo agente.
+
 ## Desbloqueio e ensaio manual pendente
 
 Executar em sessão gráfica interativa do Mac, com dois monitores, e registrar versão do macOS, dimensões/escalas e configuração de Spaces. Usar dados fictícios e DEMO offline para a janela; as fixtures de `meeting-workspace.spec.ts` exercitam o layout real sem áudio/API. Não iniciar captura ou envio real sem autorização separada.
 
 | Cenário                   | Critério                                                                                 | Estado                                      |
 | ------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------- |
-| Foco nativo e controles   | Reexecutar `panel.spec.ts`; foco, minimizar/restaurar e reabrir passam                   | BLOCKED — `isFocused()` falso nesta sessão  |
+| Foco nativo e controles   | Reexecutar `panel.spec.ts`; foco, minimizar/restaurar e reabrir passam                   | Aprovado em 13/11 (1/1 e smoke 19/19)       |
 | Troca de Spaces           | Painel permanece acessível ao alternar desktops e apps; sessão preservada                | Não observado                               |
 | Outro app em tela cheia   | Avaliar painel sobre app macOS em tela cheia, entrada/saída e interação                  | Não observado                               |
 | Múltiplos monitores       | Mover entre displays, trocar Spaces em cada um, redimensionar e usar controles sem perda | Não executado — apenas um display observado |
 | Arrastar moldura e bordas | Movimento/resize humanos sem perda da sessão, além do teste por API                      | Não observado                               |
 
-Sem essa evidência e sem o gate nativo, T041 permanece `BLOCKED`; T042 não começa. Não há promessa de visibilidade universal, proteção de compartilhamento ou suporte a todos os modos de tela cheia/gerenciadores de janelas.
+Sem a evidência manual dos cenários restantes, T041 permanece `BLOCKED`; T042 não começa. Não há promessa de visibilidade universal, proteção de compartilhamento ou suporte a todos os modos de tela cheia/gerenciadores de janelas.
 
 Não houve captura real, chamadas OpenAI, acesso a credenciais reais, custos, instalação, push ou deploy. Swift não mudou; gates Swift não repetidos. Logs locais em `/private/tmp/t041-*.log` são temporários e não são evidência de reunião real.
