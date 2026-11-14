@@ -38,7 +38,7 @@ describe('settings interface', () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(
-      screen.getByText(/Idioma, fornecedores e modelo ficam salvos/),
+      screen.getByText(/Fonte, idioma, fornecedores e modelo ficam salvos/),
     ).toBeVisible();
     expect(screen.getByLabelText('Fornecedor de transcrição')).toHaveValue(
       'apple-local',
@@ -59,6 +59,9 @@ describe('settings interface', () => {
     fireEvent.change(screen.getByLabelText('Modelo para as sugestões'), {
       target: { value: 'gpt-5.4' },
     });
+    fireEvent.change(screen.getByLabelText('Fonte de áudio'), {
+      target: { value: 'system' },
+    });
     expect(api.savePreferences).not.toHaveBeenCalled();
     fireEvent.click(
       screen.getByRole('button', { name: 'Salvar preferências' }),
@@ -67,6 +70,7 @@ describe('settings interface', () => {
       expect(api.savePreferences).toHaveBeenCalledExactlyOnceWith({
         ...initial.settings.preferences,
         language: 'en-US',
+        audioSource: 'system',
         suggestionModel: 'gpt-5.4',
       }),
     );
@@ -74,6 +78,7 @@ describe('settings interface', () => {
       await screen.findByText(/Nenhum serviço foi iniciado/),
     ).toBeVisible();
     expect(screen.getByLabelText('Idioma')).toHaveValue('pt-BR');
+    expect(screen.getByLabelText('Fonte de áudio')).toHaveValue('both');
   });
   it('imports and removes with no secret or path arguments; disables actions while pending', async () => {
     let finish: (value: unknown) => void = () => {
@@ -86,6 +91,9 @@ describe('settings interface', () => {
     );
     api.removeSecret.mockResolvedValue(initial);
     render(<SettingsPanel />);
+    fireEvent.change(await screen.findByLabelText('Fonte de áudio'), {
+      target: { value: 'mic' },
+    });
     fireEvent.click(
       await screen.findByText('Chave OpenAI (não usada na transcrição local)'),
     );
@@ -106,6 +114,8 @@ describe('settings interface', () => {
       expect(api.removeSecret).toHaveBeenCalledExactlyOnceWith(),
     );
     await screen.findByText(/não configurada/);
+    expect(api.savePreferences).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Fonte de áudio')).toHaveValue('mic');
   });
   it('reports failed saves without claiming persistence or echoing transport errors', async () => {
     api.savePreferences.mockRejectedValue(new Error('synthetic-private-key'));

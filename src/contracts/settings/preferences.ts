@@ -3,7 +3,8 @@ import { DEFAULT_SUGGESTION_MODEL, SUGGESTION_MODELS } from './providerOptions';
 import type { SuggestionModel } from './providerOptions';
 
 export type Preferences = {
-  version: 2;
+  version: 3;
+  audioSource: 'mic' | 'system' | 'both';
   mode: 'demo' | 'real';
   sttProvider: 'apple-local' | 'mock';
   language: 'pt-BR' | 'en-US';
@@ -13,7 +14,8 @@ export type Preferences = {
 
 export function defaultPreferences(platform: string): Preferences {
   return {
-    version: 2,
+    version: 3,
+    audioSource: 'both',
     mode: 'demo',
     sttProvider: platform === 'darwin' ? 'apple-local' : 'mock',
     language: 'pt-BR',
@@ -26,13 +28,17 @@ export function parsePreferences(value: unknown): Preferences | null {
   if (
     !hasExactKeys(value, [
       'version',
+      'audioSource',
       'mode',
       'sttProvider',
       'language',
       'suggestionProvider',
       'suggestionModel',
     ]) ||
-    value.version !== 2 ||
+    value.version !== 3 ||
+    (value.audioSource !== 'mic' &&
+      value.audioSource !== 'system' &&
+      value.audioSource !== 'both') ||
     (value.mode !== 'demo' && value.mode !== 'real') ||
     (value.sttProvider !== 'apple-local' && value.sttProvider !== 'mock') ||
     (value.language !== 'pt-BR' && value.language !== 'en-US') ||
@@ -41,7 +47,8 @@ export function parsePreferences(value: unknown): Preferences | null {
   )
     return null;
   return {
-    version: 2,
+    version: 3,
+    audioSource: value.audioSource,
     mode: value.mode,
     sttProvider: value.sttProvider,
     language: value.language,
@@ -54,6 +61,19 @@ export function parsePreferences(value: unknown): Preferences | null {
 export function migratePreferences(value: unknown): Preferences | null {
   const current = parsePreferences(value);
   if (current) return current;
+  if (
+    hasExactKeys(value, [
+      'version',
+      'mode',
+      'sttProvider',
+      'language',
+      'suggestionProvider',
+      'suggestionModel',
+    ]) &&
+    value.version === 2
+  ) {
+    return parsePreferences({ ...value, version: 3, audioSource: 'both' });
+  }
   if (
     !hasExactKeys(value, ['version', 'mode', 'sttProvider', 'language']) ||
     value.version !== 1 ||

@@ -4,10 +4,11 @@ import { parseSettingsRequest, parseSettingsResult } from '../ipc/settings';
 
 const defaults = defaultPreferences('darwin');
 
-describe('settings envelope v1 with preferences v2 contract', () => {
+describe('settings envelope v1 with preferences v3 contract', () => {
   it('defaults to demo, Apple Swift on Mac and pt-BR; never remote on other platforms', () => {
     expect(defaults).toEqual({
-      version: 2,
+      version: 3,
+      audioSource: 'both',
       suggestionProvider: 'openai',
       suggestionModel: 'gpt-5.4-mini',
       mode: 'demo',
@@ -16,6 +17,16 @@ describe('settings envelope v1 with preferences v2 contract', () => {
     });
     expect(defaultPreferences('linux').sttProvider).toBe('mock');
   });
+  it.each(['mic', 'system', 'both'])(
+    'accepts saved source %s without consent',
+    (audioSource) => {
+      const preferences = { ...defaults, audioSource };
+      expect(parsePreferences(preferences)).toEqual(preferences);
+      expect(
+        parseSettingsRequest({ version: 1, action: 'save', preferences }),
+      ).toEqual({ version: 1, action: 'save', preferences });
+    },
+  );
   it.each(['pt-BR', 'en-US'])(
     'accepts a language preference without claiming support: %s',
     (language) => {
@@ -28,7 +39,11 @@ describe('settings envelope v1 with preferences v2 contract', () => {
     null,
     [],
     {},
-    { ...defaults, version: 3 },
+    { ...defaults, version: 4 },
+    { ...defaults, version: 2 },
+    { ...defaults, audioSource: undefined },
+    { ...defaults, audioSource: 'unknown' },
+    { ...defaults, audioSource: ['mic', 'system'] },
     { ...defaults, version: 1 },
     { ...defaults, suggestionProvider: 'future-provider' },
     { ...defaults, suggestionModel: 'unknown-model' },

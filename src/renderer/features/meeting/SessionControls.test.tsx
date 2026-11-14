@@ -45,15 +45,14 @@ describe('session controls', () => {
         savedPreferences={{
           ...defaultPreferences('darwin'),
           language: 'en-US',
+          audioSource: 'mic',
         }}
       />,
     );
     await screen.findByText('Pronta para iniciar');
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Idioma')).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Fonte de áudio'), {
-      target: { value: 'mic' },
-    });
+    expect(screen.queryByLabelText('Fonte de áudio')).not.toBeInTheDocument();
     fireEvent.click(
       screen.getByRole('button', { name: 'Iniciar transcrição local' }),
     );
@@ -223,6 +222,45 @@ it('renders real-session cards separately from DEMO and exposes revocation', asy
     expect(session).toHaveBeenLastCalledWith({
       version: 6,
       action: 'revoke-suggestions',
+    }),
+  );
+});
+
+it('loads the persisted source on startup and still requires capture confirmation', async () => {
+  const session = vi.fn().mockResolvedValue(reply('idle'));
+  vi.stubGlobal('meetingCopilot', {
+    session,
+    getSettings: vi.fn().mockResolvedValue({
+      ok: true,
+      settings: {
+        credential: 'missing',
+        preferences: { ...defaultPreferences('darwin'), audioSource: 'system' },
+      },
+    }),
+  });
+  render(<SessionControls />);
+  await screen.findByText('Pronta para iniciar');
+  expect(session).toHaveBeenCalledExactlyOnceWith({
+    version: 6,
+    action: 'read',
+  });
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Iniciar transcrição local' }),
+  );
+  expect(screen.getByRole('alertdialog')).toHaveTextContent('áudio do sistema');
+  expect(screen.getByRole('alertdialog')).not.toHaveTextContent('microfone e');
+  expect(session).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole('button', { name: 'Iniciar transcrição' }));
+  await waitFor(() =>
+    expect(session).toHaveBeenLastCalledWith({
+      version: 6,
+      action: 'start',
+      options: {
+        mode: 'apple-local',
+        sources: ['system'],
+        locale: 'pt-BR',
+        consent: { capture: true, context: false, remoteAudio: false },
+      },
     }),
   );
 });

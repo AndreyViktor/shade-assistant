@@ -4,6 +4,7 @@ import {
   TRANSCRIPTION_PROVIDERS,
 } from '../../../contracts/settings/providerOptions';
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { parsePreferences } from '../../../contracts/settings/preferences';
 import type { Preferences } from '../../../contracts/settings/preferences';
 import type {
@@ -14,8 +15,10 @@ import type {
 export function SettingsPanel({
   active = true,
   onSaved,
+  connection,
 }: {
   active?: boolean;
+  connection?: ReactNode;
   onSaved?: ((preferences: Preferences) => void) | undefined;
 }) {
   const [snapshot, setSnapshot] = useState<SettingsSnapshot | null>(null);
@@ -45,7 +48,10 @@ export function SettingsPanel({
     };
   }, [active]);
 
-  async function perform(action: () => Promise<SettingsResult>) {
+  async function perform(
+    action: () => Promise<SettingsResult>,
+    saveDraft = false,
+  ) {
     setBusy(true);
     setMessage('');
     try {
@@ -57,7 +63,7 @@ export function SettingsPanel({
         return;
       }
       setSnapshot(result.settings);
-      setDraft(result.settings.preferences);
+      if (saveDraft) setDraft(result.settings.preferences);
       onSaved?.(result.settings.preferences);
       setMessage(
         'Preferências e estado da chave atualizados. Nenhum serviço foi iniciado.',
@@ -80,8 +86,10 @@ export function SettingsPanel({
     <section className="settings" aria-labelledby="settings-title">
       <h2 id="settings-title">Preferências</h2>
       <p>
-        Idioma, fornecedores e modelo ficam salvos para a próxima sessão. Isso
-        não inicia captura ou envio e não altera uma sessão em andamento.
+        Fonte, idioma, fornecedores e modelo ficam salvos para a próxima sessão.
+        Isso não inicia captura ou envio e não altera uma sessão em andamento.
+        Para trocar a fonte agora, pare a sessão e inicie outra com nova
+        confirmação.
       </p>
       <p role="status">{message}</p>
       {!draft || !snapshot ? (
@@ -91,11 +99,27 @@ export function SettingsPanel({
           <form
             onSubmit={(event) => {
               event.preventDefault();
-              void perform(() => window.meetingCopilot.savePreferences(draft));
+              void perform(
+                () => window.meetingCopilot.savePreferences(draft),
+                true,
+              );
             }}
           >
             <fieldset disabled={busy}>
-              <legend>Fornecedores e idioma</legend>
+              <legend>Transcrição de áudio</legend>
+              <label>
+                Fonte de áudio
+                <select
+                  value={draft.audioSource}
+                  onChange={(event) =>
+                    change('audioSource', event.target.value)
+                  }
+                >
+                  <option value="both">Ambas as fontes</option>
+                  <option value="mic">Microfone</option>
+                  <option value="system">Áudio do sistema</option>
+                </select>
+              </label>
               <label>
                 Fornecedor de transcrição
                 <select
@@ -129,6 +153,9 @@ export function SettingsPanel({
                   <option value="en-US">Inglês (EUA)</option>
                 </select>
               </label>
+            </fieldset>
+            <fieldset disabled={busy}>
+              <legend>Sugestões de IA</legend>
               <label>
                 Fornecedor de sugestões
                 <select
@@ -176,58 +203,78 @@ export function SettingsPanel({
                 Captura, envio de texto e limite de pedidos são confirmados a
                 cada sessão. Salvar não autoriza cobranças.
               </p>
-              <button type="submit">Salvar preferências</button>
+              <details className="advanced-settings">
+                <summary>Chave OpenAI (não usada na transcrição local)</summary>
+                <p>
+                  Estado:{' '}
+                  {snapshot.credential === 'stored'
+                    ? 'armazenada no cofre do Mac'
+                    : snapshot.credential === 'development'
+                      ? 'carregada de .env ou OPENAI_API_KEY no desenvolvimento'
+                      : 'não configurada'}
+                </p>
+                <p>
+                  Esta chave permite gerar sugestões de IA quando você ativar
+                  essa opção ao iniciar uma sessão. A transcrição local funciona
+                  sem ela.
+                </p>
+                {snapshot.credential !== 'development' && (
+                  <p>
+                    Importe um arquivo de texto contendo somente sua chave da
+                    API OpenAI. O app a guarda protegida no Mac e nunca a exibe.
+                    Importar a chave não inicia envios nem cobranças.
+                  </p>
+                )}
+                <div className="settings-actions">
+                  <button
+                    type="button"
+                    disabled={busy || snapshot.credential === 'development'}
+                    onClick={() => {
+                      void perform(() => window.meetingCopilot.importSecret());
+                    }}
+                  >
+                    Importar chave
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy || snapshot.credential !== 'stored'}
+                    onClick={() => {
+                      void perform(() => window.meetingCopilot.removeSecret());
+                    }}
+                  >
+                    Remover chave
+                  </button>
+                </div>
+                {snapshot.credential === 'development' && (
+                  <p>
+                    Para remover a chave de desenvolvimento, encerre o app e
+                    retire OPENAI_API_KEY do arquivo .env e do ambiente.
+                    Reinicie o app após alterar a chave.
+                  </p>
+                )}
+              </details>
+              {connection}
             </fieldset>
+            <button type="submit" disabled={busy}>
+              Salvar preferências
+            </button>
           </form>
-          <details className="advanced-settings">
-            <summary>Chave OpenAI (não usada na transcrição local)</summary>
-            <p>
-              Estado:{' '}
-              {snapshot.credential === 'stored'
-                ? 'armazenada no cofre do Mac'
-                : snapshot.credential === 'development'
-                  ? 'carregada de .env ou OPENAI_API_KEY no desenvolvimento'
-                  : 'não configurada'}
-            </p>
-            <p>
-              Esta chave permite gerar sugestões de IA quando você ativar essa
-              opção ao iniciar uma sessão. A transcrição local funciona sem ela.
-            </p>
-            {snapshot.credential !== 'development' && (
-              <p>
-                Importe um arquivo de texto contendo somente sua chave da API
-                OpenAI. O app a guarda protegida no Mac e nunca a exibe.
-                Importar a chave não inicia envios nem cobranças.
-              </p>
-            )}
-            <div className="settings-actions">
-              <button
-                disabled={busy || snapshot.credential === 'development'}
-                onClick={() => {
-                  void perform(() => window.meetingCopilot.importSecret());
-                }}
-              >
-                Importar chave
-              </button>
-              <button
-                disabled={busy || snapshot.credential !== 'stored'}
-                onClick={() => {
-                  void perform(() => window.meetingCopilot.removeSecret());
-                }}
-              >
-                Remover chave
-              </button>
-            </div>
-            {snapshot.credential === 'development' && (
-              <p>
-                Para remover a chave de desenvolvimento, encerre o app e retire
-                OPENAI_API_KEY do arquivo .env e do ambiente. Reinicie o app
-                após alterar a chave.
-              </p>
-            )}
-          </details>
         </>
       )}
+      <section aria-labelledby="privacy-title">
+        <h3 id="privacy-title">Permissões e privacidade</h3>
+        <p>
+          A captura da fonte selecionada exige confirmação ao iniciar cada
+          sessão. O macOS também controla as permissões de microfone e gravação
+          de tela/áudio do sistema. Confirme que os demais participantes
+          autorizaram a transcrição.
+        </p>
+        <p>
+          O envio de texto à OpenAI exige autorização separada a cada sessão. As
+          falas recentes ficam em memória e são limpas ao parar. Áudio nunca é
+          enviado no modo local.
+        </p>
+      </section>
     </section>
   );
 }

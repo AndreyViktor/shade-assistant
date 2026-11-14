@@ -1,6 +1,6 @@
 import { defaultPreferences } from '../../contracts/settings/preferences';
 import { emptyDemo } from '../../contracts/meeting/demo';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { APP_STATUS, ipcFailure } from '../../contracts/ipc/appStatus';
 import { App } from './App';
@@ -70,6 +70,26 @@ describe('App shell', () => {
     fireEvent.click(preferences);
     expect(screen.getByText('Sobre o histórico de transcrição')).toBeVisible();
     expect(
+      await screen.findByRole('group', { name: 'Transcrição de áudio' }),
+    ).toContainElement(screen.getByLabelText('Fonte de áudio'));
+    const ai = screen.getByRole('group', { name: 'Sugestões de IA' });
+    expect(within(ai).getByLabelText('Modelo para as sugestões')).toBeVisible();
+    expect(
+      within(ai).getByText('Chave OpenAI (não usada na transcrição local)'),
+    ).toBeVisible();
+    expect(
+      within(ai).getByRole('region', { name: 'Estado da OpenAI' }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole('region', { name: 'Permissões e privacidade' }),
+    ).toBeVisible();
+    expect(
+      within(screen.getByRole('region', { name: 'Diagnóstico' })).getByText(
+        'Diagnóstico · DEMO offline',
+      ),
+    ).toBeVisible();
+
+    expect(
       screen.getByRole('button', { name: 'Voltar ao painel' }),
     ).toHaveFocus();
     fireEvent.click(screen.getByText('Diagnóstico · DEMO offline'));
@@ -89,6 +109,27 @@ describe('App shell', () => {
       screen.queryByRole('button', { name: 'Iniciar DEMO' }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText('Seu painel de reunião')).not.toBeInTheDocument();
+  });
+
+  it('closes preferences with Escape after focus leaves the controls', async () => {
+    render(<App />);
+    const preferences = screen.getByRole('button', { name: 'Preferências' });
+    fireEvent.click(preferences);
+    const back = screen.getByRole('button', { name: 'Voltar ao painel' });
+    await screen.findByLabelText('Fonte de áudio');
+    back.blur();
+    expect(document.body).toHaveFocus();
+    const handledEscape = new KeyboardEvent('keydown', {
+      key: 'Escape',
+      bubbles: true,
+      cancelable: true,
+    });
+    handledEscape.preventDefault();
+    fireEvent(document.body, handledEscape);
+    expect(back).toBeVisible();
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+    expect(preferences).toHaveFocus();
+    expect(back).not.toBeVisible();
   });
 
   it('keeps the shell responsive while status is pending', () => {

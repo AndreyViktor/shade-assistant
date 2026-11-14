@@ -33,7 +33,7 @@ test('settings navigation preserves a running and paused session; saved choices 
     const before = await read();
     expect(before).toMatchObject({
       session: { phase: 'running' },
-      local: { config: { locale: 'pt-BR' } },
+      local: { config: { locale: 'pt-BR', sources: ['mic', 'system'] } },
       suggestions: {
         remainingRequests: 0,
         diagnostics: { model: 'gpt-5.4-mini', maxRequests: 1 },
@@ -56,6 +56,7 @@ test('settings navigation preserves a running and paused session; saved choices 
       .locator('#panel-settings')
       .getByLabel('Idioma')
       .selectOption('en-US');
+    await page.getByLabel('Fonte de áudio').selectOption('mic');
     await page.getByLabel('Modelo para as sugestões').selectOption('gpt-5.4');
     await page.getByRole('button', { name: 'Salvar preferências' }).click();
     await expect(page.getByText(/Nenhum serviço foi iniciado/)).toBeVisible();
@@ -73,6 +74,10 @@ test('settings navigation preserves a running and paused session; saved choices 
     await page.getByRole('button', { name: 'Pausar' }).click();
     const paused = await read();
     await open();
+    await page.getByLabel('Fonte de áudio').selectOption('system');
+    await page.getByRole('button', { name: 'Salvar preferências' }).click();
+    await expect(page.getByText(/Nenhum serviço foi iniciado/)).toBeVisible();
+    expect(await read()).toEqual(paused);
     await page.keyboard.press('Escape');
     await expect(page.getByRole('button', { name: 'Retomar' })).toBeVisible();
     expect(await read()).toEqual(paused);
@@ -83,6 +88,12 @@ test('settings navigation preserves a running and paused session; saved choices 
       .click();
     const dialog = page.getByRole('alertdialog');
     await expect(dialog).toContainText('Inglês (EUA)');
+    await expect(dialog.locator('.capture-summary')).toContainText(
+      'áudio do sistema',
+    );
+    await expect(dialog.locator('.capture-summary')).not.toContainText(
+      'microfone',
+    );
     await expect(page.getByRole('checkbox')).not.toBeChecked();
     await page.getByRole('checkbox').check();
     await expect(dialog).toContainText('GPT-5.4 —');
@@ -97,7 +108,7 @@ test('settings navigation preserves a running and paused session; saved choices 
         phase: 'running',
         consent: { capture: true, context: false, remoteAudio: false },
       },
-      local: { config: { locale: 'en-US' } },
+      local: { config: { locale: 'en-US', sources: ['system'] } },
       suggestions: { status: 'disabled', diagnostics: null },
     });
     await page.getByRole('button', { name: 'Parar' }).click();

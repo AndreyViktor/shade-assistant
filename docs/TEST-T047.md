@@ -1,0 +1,66 @@
+# T047 — Preferências organizadas e fonte persistida
+
+Data: 2026-11-13. Estado: **DONE**. Base `2020d1d`, branch `main`. A implementação anterior foi preservada integralmente; T046 e T004 estavam DONE. T047 foi marcada IN_PROGRESS e o plano específico registrado em PROGRESS.md antes das correções desta retomada.
+
+## Implementação
+
+- Preferências apresenta Transcrição de áudio (fonte, provedor, idioma), Sugestões de IA (provedor, modelo, chave e diagnóstico da conexão), Permissões e privacidade e Diagnóstico, incluindo DEMO offline. O diagnóstico da conexão observa a sessão existente e não envia uma requisição ao abrir a tela.
+- Fonte saiu do painel de operação. `SessionControls` usa a preferência carregada ao abrir o app ou a resposta canônica de um save, e resume a fonte na confirmação de captura. O seletor oferece microfone, sistema e ambas; o padrão continua ambas. A UI informa que fonte/idioma/provedores/modelo salvos só valem para a próxima sessão e não interrompem a atual.
+- Preferências v3 e migração de disco estrita v1/v2, com preservação das escolhas anteriores. V1 mantém a conversão já existente de pt-BR+en-US para pt-BR; v2 mantém provedor/modelo. Arquivo histórico `preferences.v1.json`, escrita privada atômica e permissões existentes preservados. Não há migração via IPC; payloads antigos/extra/inválidos são recusados. [ADR 0024](adr/0024-audio-source-preference-v3.md).
+- Navegação mantém o hook de sessão montado. Salvar preferências não chama comandos de captura. Consentimento e limite continuam por sessão; não são persistidos. Nenhuma mudança em serviço de sessão, Swift, transporte OpenAI ou cofre.
+- Importar/remover chave utiliza somente operações existentes no main, com botões que não submetem o formulário. Essas operações preservam o rascunho de preferências; segredos continuam fora do renderer/localStorage.
+- CSS remove o seletor antigo e separa visualmente os grupos de preferências. Testes de foco foram adaptados à nova ordem de navegação.
+
+## Validação anterior à retomada
+
+Comando:
+
+```sh
+env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run verify
+```
+
+**Aprovado:** lint, Prettier, TypeScript, **865 testes TS**, **18 skipped**, **19 testes runner**, build main/preload/renderer. Log temporário: `/private/tmp/t047-verify.log`. Primeira execução encontrou uma opção de asserção incompatível com os tipos RTL; corrigida antes da execução completa aprovada. `git diff --check` passou.
+
+A suíte cobre:
+
+- Fontes aceitas e recusa de fonte ausente/inválida, versões antigas/desconhecidas e campos extras, consentimento ou segredos no contrato. Preload recusa request/response v1 e v2.
+- Migração real em disco de v1 (três idiomas legados) e v2 (Apple Local/mock), preservação de modo/idioma/provedor/modelo, padrão ambas, releitura sem nova escrita, modo 0600. V2 inválida não sobrescreve o original.
+- Fonte sistema persistida e recuperada por outra instância do store. Leitura inválida e falha de escrita continuam fechadas.
+- Estrutura das seções, fonte/modelo enviados somente ao salvar, resposta canônica e falhas seguras, rascunho preservado ao operar a chave sem submissão acidental. Fonte salva/carregada aparece na confirmação e no comando de início, ainda com autorização explícita.
+- Regressões existentes de sessão, privacidade e fronteiras main/preload/renderer.
+
+Os testes focados iniciais passaram em 82/82, antes de acrescentar o cenário de fonte carregada ao abrir o app e concluir os ajustes. O verify completo acima inclui o estado final da implementação.
+
+Swift não foi executado: nenhum código nativo foi alterado. Os 18 testes skipped não são declarados como executados.
+
+## Bloqueio anterior (histórico)
+
+Comando executado **dentro do sandbox**, após build aprovado:
+
+```sh
+env PATH=/opt/homebrew/opt/node@26/bin:$PATH npx playwright test tests/e2e/settings.spec.ts tests/e2e/settings-session.spec.ts tests/e2e/panel.spec.ts tests/e2e/compact-panel.spec.ts tests/e2e/session.spec.ts --max-failures=1
+```
+
+Resultado: **1 falha de ambiente, 8 não executados**. O primeiro teste (`compact idle panel supports keyboard and resize without capture or network`) falhou em cerca de 0,5 s com **`Process failed to launch!`**, antes de chegar à UI. Log temporário: `/private/tmp/t047-smoke.log`. Não há novos screenshots nem evidência de aceite visual. A falha não comprova defeito funcional do app e tampouco autoriza declarar o smoke aprovado.
+
+Os nove cenários preparados abrangem migração v1/v2 com reinício real do Electron, persistência da fonte, segredo sintético/cofre, sessão sintética ativa e pausada com save, snapshot/histórico/cartões preservados, nova fonte/idioma/modelo na próxima confirmação, opt-in desmarcado e limite renovado, teclado, resize e privacidade. Fixtures substituem captura/transporte; rede permanece bloqueada. **Esses cenários ainda precisam executar nesta versão.**
+
+A instrução da sessão anterior determinava registrar BLOCKED e encerrar se o ambiente impedir o aceite e proíbe bypass do sandbox. Não se tentou execução fora do sandbox, não se solicitou escalada para Electron e não houve recusa de auto-review nesta sessão. Nenhuma alteração de permissões/locks/regras, captura real, acesso a chave pessoal, gasto, push ou deploy ocorreu. O commit de conclusão não foi tentado porque o aceite ainda está pendente.
+
+## Plano de retomada registrado anteriormente
+
+Em nova sessão direcionada a T047, com ambiente gráfico autorizado/disponível, executar o comando de smoke acima, inspecionar a interface e corrigir somente regressões relacionadas. Registrar resultados e limites reais; repetir gates se houver mudanças. Só então marcar DONE e fazer o commit local com T047 no título pelo mecanismo normal de aprovação de `.git`, encerrando antes de T048.
+
+## Retomada autorizada e correção de teclado
+
+O usuário autorizou explicitamente Electron fora do sandbox com perfil temporário, fixtures sintéticas e rede bloqueada, além da execução gráfica aprovada na T046. As execuções foram submetidas a `exec_command` com `sandbox_permissions=require_escalated` e aprovadas pela revisão automática normal. Não houve recusa nem bypass.
+
+O primeiro smoke dos nove cenários executou **4 aprovados, 1 falho e 4 não executados** (`--max-failures=1`). A falha era funcional: após salvar durante a pausa, Escape não fechava Preferências. Log: `/private/tmp/t047-resume-smoke.log`.
+
+Uma reprodução isolada confirmou `document.activeElement.tagName === BODY` após o salvamento: desabilitar o botão com foco transfere o foco ao corpo da página, e o handler anterior estava apenas no contêiner de Preferências. A instrumentação temporária registrou somente a tag e foi retirada. Log: `/private/tmp/t047-resume-focus.log`.
+
+`SettingsDisclosure` agora escuta Escape no documento somente enquanto a tela está aberta; remove o listener ao fechar/desmontar e respeita eventos já tratados (`defaultPrevented`). O retorno mantém o foco no botão Preferências. Teste de regressão em App cobre foco no body e Escape previamente tratado; o smoke mantém a sequência real salvar → Escape, sem foco artificial nem relaxamento de asserções.
+
+Gates após a correção: `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run verify` **aprovado**, com lint, formato, tipos, **866 testes TS**, **18 skipped**, **19 runner** e build. Log: `/private/tmp/t047-resume-verify.log`. Nenhum Swift alterado; gates nativos não se aplicam.
+
+A suíte Electron offline completa passou **24/24**, incluindo migração v1/v2, persistência após reinício, sessão ativa/pausada e Escape após salvar. Log: `/private/tmp/t047-resume-smoke-final.log`. As imagens de [Preferências](evidence/T047/preferencias.png), [sessão ativa](evidence/T047/sessao-ativa.png) e [zoom](evidence/T047/zoom.png) foram inspecionadas; a imagem de zoom mostra somente o trecho visível, enquanto o teste verifica ausência de overflow horizontal. A revisão integrada de dimensões e navegação permanece na T048.

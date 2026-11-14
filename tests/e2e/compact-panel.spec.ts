@@ -48,8 +48,6 @@ test('compact idle panel supports keyboard and resize without capture or network
     }
     await start.focus();
     await page.keyboard.press('Tab');
-    await expect(page.getByLabel('Fonte de áudio')).toBeFocused();
-    await page.keyboard.press('Tab');
     await expect(page.getByRole('log')).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(right).toBeFocused();

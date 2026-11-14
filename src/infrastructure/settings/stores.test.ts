@@ -32,6 +32,7 @@ describe('preferences on disk', () => {
       ...defaultPreferences('darwin'),
       mode: 'real' as const,
       language: 'en-US' as const,
+      audioSource: 'system' as const,
       suggestionModel: 'gpt-5.4' as const,
     };
     await store.save(preferences);
@@ -44,7 +45,7 @@ describe('preferences on disk', () => {
   });
   it.each([
     '{',
-    JSON.stringify({ ...defaultPreferences('darwin'), version: 3 }),
+    JSON.stringify({ ...defaultPreferences('darwin'), version: 4 }),
     'x'.repeat(4097),
   ])(
     'fails closed on corruption, newer versions or oversize without overwriting',
@@ -88,6 +89,7 @@ describe('preferences on disk', () => {
       expect(Object.keys(expected).sort()).toEqual(
         [
           'version',
+          'audioSource',
           'mode',
           'sttProvider',
           'language',
@@ -97,6 +99,57 @@ describe('preferences on disk', () => {
       );
     },
   );
+  it.each(['apple-local', 'mock'])(
+    'migrates v2 %s preserving all choices and adding both sources',
+    async (sttProvider) => {
+      const path = join(directory, 'preferences.v1.json');
+      const legacy = {
+        version: 2,
+        mode: 'real',
+        sttProvider,
+        language: 'en-US',
+        suggestionProvider: 'openai',
+        suggestionModel: 'gpt-5.4',
+      };
+      await writeFile(path, JSON.stringify(legacy));
+      const expected = { ...legacy, version: 3, audioSource: 'both' };
+      expect(await new PreferencesStore(path, 'darwin').read()).toEqual(
+        expected,
+      );
+      expect(JSON.parse(await readFile(path, 'utf8'))).toEqual(expected);
+      const firstWrite = await stat(path);
+      expect(await new PreferencesStore(path, 'darwin').read()).toEqual(
+        expected,
+      );
+      expect((await stat(path)).mtimeMs).toBe(firstWrite.mtimeMs);
+      expect(firstWrite.mode & 0o777).toBe(0o600);
+    },
+  );
+  it.each([
+    { audioSource: 'mic' },
+    { consent: true },
+    { secret: 'synthetic' },
+    { suggestionModel: 'unknown' },
+    { language: 'pt-BR+en-US' },
+    { suggestionProvider: 'unknown' },
+    { sttProvider: 'openai-stt' },
+  ])('rejects invalid v2 without overwriting: %j', async (invalid) => {
+    const path = join(directory, 'preferences.v1.json');
+    const contents = JSON.stringify({
+      version: 2,
+      mode: 'real',
+      sttProvider: 'apple-local',
+      language: 'en-US',
+      suggestionProvider: 'openai',
+      suggestionModel: 'gpt-5.4',
+      ...invalid,
+    });
+    await writeFile(path, contents);
+    await expect(new PreferencesStore(path, 'darwin').read()).rejects.toThrow(
+      'PREFERENCES_UNAVAILABLE',
+    );
+    expect(await readFile(path, 'utf8')).toBe(contents);
+  });
   it.each([
     {
       version: 1,

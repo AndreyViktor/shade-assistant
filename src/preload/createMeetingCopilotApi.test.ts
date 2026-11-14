@@ -81,7 +81,8 @@ describe('limited preload API', () => {
 
 describe('settings preload boundary', () => {
   const preferences = {
-    version: 2 as const,
+    version: 3 as const,
+    audioSource: 'both' as const,
     suggestionProvider: 'openai' as const,
     suggestionModel: 'gpt-5.4-mini' as const,
     mode: 'demo' as const,
@@ -118,6 +119,20 @@ describe('settings preload boundary', () => {
     });
     expect(await api.getSettings()).toEqual(ipcFailure('INVALID_RESPONSE'));
     expect(await Reflect.apply(api.savePreferences, null, [legacy])).toEqual(
+      ipcFailure('INVALID_REQUEST'),
+    );
+    const legacyV2 = {
+      ...legacy,
+      version: 2,
+      suggestionProvider: 'openai',
+      suggestionModel: 'gpt-5.4',
+    };
+    invoke.mockResolvedValue({
+      ...success,
+      settings: { ...success.settings, preferences: legacyV2 },
+    });
+    expect(await api.getSettings()).toEqual(ipcFailure('INVALID_RESPONSE'));
+    expect(await Reflect.apply(api.savePreferences, null, [legacyV2])).toEqual(
       ipcFailure('INVALID_REQUEST'),
     );
     invoke.mockResolvedValue({ ...success, secret: 'synthetic' });

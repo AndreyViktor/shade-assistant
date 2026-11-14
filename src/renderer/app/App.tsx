@@ -36,13 +36,15 @@ export function App() {
     <main className="app-shell">
       <SettingsDisclosure
         onSaved={setPreferences}
+        connection={
+          <SuggestionDiagnosticsPanel snapshot={meeting.suggestions} />
+        }
         diagnostics={
           <>
             <TranscriptionDiagnostics
               transcript={meeting.local}
               error={appError || meeting.error}
             />
-            <SuggestionDiagnosticsPanel snapshot={meeting.suggestions} />
             <details className="privacy-details">
               <summary>Sobre o histórico de transcrição</summary>
               <p>
@@ -53,21 +55,6 @@ export function App() {
                 agrupadas.
               </p>
             </details>
-            <details className="privacy-details">
-              <summary>Permissões e privacidade</summary>
-              <p>
-                A captura da fonte selecionada exige confirmação ao iniciar cada
-                sessão. O macOS também controla as permissões de microfone e
-                gravação de tela/áudio do sistema. Confirme que os demais
-                participantes autorizaram a transcrição.
-              </p>
-              <p>
-                O envio de texto à OpenAI exige autorização separada a cada
-                sessão. As falas recentes ficam em memória e são limpas ao
-                parar. Áudio nunca é enviado no modo local.
-              </p>
-            </details>
-
             {result?.ok && <DemoDiagnostics meeting={meeting} />}
           </>
         }

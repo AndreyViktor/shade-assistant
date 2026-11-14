@@ -7,9 +7,11 @@ export function SettingsDisclosure({
   children,
   onSaved,
   diagnostics,
+  connection,
 }: {
   children?: ReactNode;
   diagnostics?: ReactNode;
+  connection?: ReactNode;
   onSaved?: (preferences: Preferences) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -21,6 +23,19 @@ export function SettingsDisclosure({
     if (expanded) back.current?.focus();
     else if (visited) toggle.current?.focus();
   }, [expanded, visited]);
+
+  useEffect(() => {
+    if (!expanded) return;
+    // Disabling a focused control during save can move focus to the body.
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && !event.defaultPrevented) {
+        event.stopPropagation();
+        setExpanded(false);
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [expanded]);
 
   function close() {
     setExpanded(false);
@@ -44,16 +59,7 @@ export function SettingsDisclosure({
           </button>
         </div>
       </div>
-      <div
-        id="panel-settings"
-        hidden={!expanded}
-        onKeyDown={(event) => {
-          if (event.key === 'Escape' && !event.defaultPrevented) {
-            event.stopPropagation();
-            close();
-          }
-        }}
-      >
+      <div id="panel-settings" hidden={!expanded}>
         <button ref={back} onClick={close}>
           Voltar ao painel
         </button>
@@ -61,8 +67,19 @@ export function SettingsDisclosure({
           Ao navegar, a sessão continua no estado atual. As escolhas salvas
           valem para a próxima sessão.
         </p>
-        {visited && <SettingsPanel active={expanded} onSaved={onSaved} />}
-        {visited && diagnostics}
+        {visited && (
+          <SettingsPanel
+            active={expanded}
+            onSaved={onSaved}
+            connection={connection}
+          />
+        )}
+        {visited && (
+          <section aria-labelledby="diagnostics-title">
+            <h3 id="diagnostics-title">Diagnóstico</h3>
+            {diagnostics}
+          </section>
+        )}
       </div>
     </>
   );

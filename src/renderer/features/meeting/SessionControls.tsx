@@ -10,7 +10,7 @@ import type {
 } from '../../../contracts/native/protocol';
 import type { useMeetingSession } from './useMeetingSession';
 
-type SourceChoice = 'mic' | 'system' | 'both';
+type SourceChoice = Preferences['audioSource'];
 
 const phaseLabels = {
   idle: 'Pronta para iniciar',
@@ -44,7 +44,7 @@ export function SessionControls({
     meeting;
   const locale: TranscriptionLocale =
     (savedPreferences ?? preferences)?.language === 'en-US' ? 'en-US' : 'pt-BR';
-  const [source, setSource] = useState<SourceChoice>('both');
+  const source = (savedPreferences ?? preferences)?.audioSource ?? 'both';
   const [confirming, setConfirming] = useState(false);
   const startButton = useRef<HTMLButtonElement>(null);
   const canStart =
@@ -164,28 +164,6 @@ export function SessionControls({
           )}
         </div>
       </div>
-
-      {!localActive && (
-        <fieldset className="capture-options" disabled={busy || !canStart}>
-          <label>
-            Fonte de áudio
-            <select
-              value={source}
-              onChange={(event) =>
-                setSource(event.target.value as SourceChoice)
-              }
-            >
-              <option value="both">Ambas as fontes</option>
-              <option value="mic">Microfone</option>
-              <option value="system">Áudio do sistema</option>
-            </select>
-          </label>
-          <p>
-            Idioma: {locale === 'pt-BR' ? 'Português (Brasil)' : 'Inglês (EUA)'}
-            . Altere em Preferências.
-          </p>
-        </fieldset>
-      )}
 
       {session?.mode === 'apple-local' && session.phase !== 'stopped' ? (
         <p className="capture-status" role="status">

@@ -38,8 +38,6 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
       .getByRole('button', { name: 'Iniciar transcrição local' })
       .focus();
     await page.keyboard.press('Tab');
-    await expect(page.getByLabel('Fonte de áudio')).toBeFocused();
-    await page.keyboard.press('Tab');
     await expect(
       page.getByRole('log', { name: 'Falas recentes' }),
     ).toBeFocused();
@@ -65,7 +63,7 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
     );
     await page.keyboard.press('Tab');
     await expect(
-      page.locator('#panel-settings').getByLabel('Fornecedor de transcrição'),
+      page.locator('#panel-settings').getByLabel('Fonte de áudio'),
     ).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(toggle).toBeFocused();

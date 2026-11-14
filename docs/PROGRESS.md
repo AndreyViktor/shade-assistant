@@ -1,16 +1,16 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-13. **Marco:** M8 — T046 concluída; próxima T047.
+**Atualizado:** 2026-11-13. **Marco:** M8 — T047 concluída; próxima T048.
 
 ## Snapshot
 
-- T041 e T043 DONE; T041 aceita em um monitor, dois monitores permanecem em T045. [TEST-T041.md](TEST-T041.md), [TEST-T043.md](TEST-T043.md).
-- T046 DONE: painel compacto com transcrição e sugestões lado a lado e falhas por área; usuário confirmou avaliação visual. Verify passou (848 TS, 18 skipped, 19 runner, lint/formato/tipos/build). Smoke Electron inicial 18/23, reteste 7/7 dos arquivos afetados após ajustes nos testes; imagens sintéticas inspecionadas. Detalhes e limites em [TEST-T046.md](TEST-T046.md).
-- Fonte de áudio ainda está no painel e deve ser movida e persistida em T047. Usuário pediu controles separados para transcrição e sugestões, registrados em T051.
+- T046 DONE: painel compacto, validado pelo usuário e por testes offline. [TEST-T046.md](TEST-T046.md).
+- T047 DONE: quatro seções de Preferências; fonte persistida, migração v1/v2 e aplicação na próxima sessão, sem interromper a atual. Um problema de Escape após salvar foi corrigido. Verify passou (866 TS, 18 skipped, 19 runner, lint/formato/tipos/build); smoke Electron offline 24/24. Imagens inspecionadas. [TEST-T047.md](TEST-T047.md), [ADR 0024](adr/0024-audio-source-preference-v3.md).
+- Controles separados de transcrição e sugestões registrados em T051; T045, T049 e T050 permanecem futuros.
 
 ## Próximo passo
 
-Executar T047 e T048 pelo runner em sessões separadas. Verificar visibilidade de Preferências na sessão ativa e dimensões/zoom na revisão integrada. T045, T049 e T050 permanecem futuros.
+Executar T048 pelo runner em sessão separada: revisão integrada da navegação, acessibilidade, erros, sessão ativa, dimensões e zoom, com fixtures e rede bloqueada. Verificar visibilidade de Preferências em sessão ativa e considerar a imagem de zoom parcial registrada em T047.
 
 ## Ambiente
 
