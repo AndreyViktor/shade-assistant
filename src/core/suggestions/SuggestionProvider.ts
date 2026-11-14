@@ -5,6 +5,7 @@ export type { SuggestionFailure } from '../../contracts/meeting/suggestionDiagno
 
 export type SuggestionRequest = {
   context: MeetingContext;
+  userContext?: string;
   language: 'pt-BR' | 'en-US';
   signal: AbortSignal;
   onDispatch?: (body: string) => void;

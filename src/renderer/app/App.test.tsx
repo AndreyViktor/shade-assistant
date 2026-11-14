@@ -20,7 +20,7 @@ describe('App shell', () => {
         },
       }),
       session: vi.fn().mockResolvedValue({
-        version: 6,
+        version: 7,
         ok: true,
         demo: emptyDemo(),
         local: null,
@@ -98,7 +98,7 @@ describe('App shell', () => {
       screen.queryByRole('button', { name: 'Iniciar transcrição local' }),
     ).not.toBeInTheDocument();
     expect(window.meetingCopilot.session).toHaveBeenCalledExactlyOnceWith({
-      version: 6,
+      version: 7,
       action: 'read',
     });
     fireEvent.keyDown(screen.getByRole('button', { name: 'Iniciar DEMO' }), {

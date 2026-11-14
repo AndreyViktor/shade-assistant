@@ -67,7 +67,7 @@ describe('strict bounded demo snapshot', () => {
     expect(parseDemoSnapshot(value)).toBeNull();
     expect(
       parseSessionResult({
-        version: 6,
+        version: 7,
         ok: true,
         session: {
           phase: 'running',
@@ -83,6 +83,6 @@ describe('strict bounded demo snapshot', () => {
           diagnostics: null,
         },
       }),
-    ).toEqual({ version: 6, ok: false, code: 'INVALID_RESPONSE' });
+    ).toEqual({ version: 7, ok: false, code: 'INVALID_RESPONSE' });
   });
 });

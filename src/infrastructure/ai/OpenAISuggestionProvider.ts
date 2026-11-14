@@ -1,3 +1,4 @@
+import { parseUserContext } from '../../contracts/meeting/suggestionSession';
 import { DEFAULT_CONTEXT_LIMITS } from '../../core/meeting/ContextManager';
 import type {
   SuggestionProvider,
@@ -121,6 +122,11 @@ export class OpenAISuggestionProvider implements SuggestionProvider {
         (request.language !== 'pt-BR' && request.language !== 'en-US')
       )
         return { ok: false, code: 'invalid-request' };
+      const userContext =
+        request.userContext === undefined
+          ? ''
+          : parseUserContext(request.userContext);
+      if (userContext === null) return { ok: false, code: 'invalid-request' };
       const context = {
         recent: request.context.recent
           .filter((item) => item.type === 'final')
@@ -142,12 +148,27 @@ export class OpenAISuggestionProvider implements SuggestionProvider {
           }),
         ),
       };
-      const input = JSON.stringify(context);
-      if (
+      const serialize = () =>
+        JSON.stringify({
+          ...context,
+          ...(userContext ? { userContext } : {}),
+        });
+      const exceedsLimit = (input: string) =>
         new TextEncoder().encode(input).byteLength >
-        DEFAULT_CONTEXT_LIMITS.maxEstimatedTokens
-      )
-        return { ok: false, code: 'invalid-request' };
+        DEFAULT_CONTEXT_LIMITS.maxEstimatedTokens;
+      let input = serialize();
+      // Make room for optional context within the existing payload budget.
+      // Preserve the newest final; older lossy history is discarded first.
+      while (
+        userContext &&
+        exceedsLimit(input) &&
+        (context.summary.length > 0 || context.recent.length > 1)
+      ) {
+        if (context.summary.length > 0) context.summary.shift();
+        else context.recent.shift();
+        input = serialize();
+      }
+      if (exceedsLimit(input)) return { ok: false, code: 'invalid-request' };
       if (context.recent.length === 0 && context.summary.length === 0)
         return { ok: true, suggestions: [] };
       let key: string | null;

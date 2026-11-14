@@ -386,7 +386,8 @@ button {
 }
 
 .suggestion-setup-fields > input,
-.suggestion-setup-fields > select {
+.suggestion-setup-fields > select,
+.suggestion-setup-fields > textarea {
   display: block;
   width: 100%;
   min-height: 42px;
@@ -400,7 +401,12 @@ button {
   font-size: 14px;
 }
 
-.suggestion-setup-fields > input::placeholder {
+.suggestion-setup-fields > textarea {
+  resize: vertical;
+}
+
+.suggestion-setup-fields > input::placeholder,
+.suggestion-setup-fields > textarea::placeholder {
   color: #9db2ce;
   font-size: 12px;
 }

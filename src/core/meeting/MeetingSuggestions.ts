@@ -47,6 +47,7 @@ export class MeetingSuggestions {
   private lastClock = 0;
   private timer: ReturnType<typeof setInterval> | undefined;
   private model = '';
+  private userContext = '';
   private maxRequests = 0;
   private lastTrigger: Trigger = 'none';
   private hasFinal = false;
@@ -87,6 +88,7 @@ export class MeetingSuggestions {
             result = await provider.generate({
               ...request,
               language: this.language,
+              ...(this.userContext ? { userContext: this.userContext } : {}),
               onDispatch: (body) => {
                 if (current() && !request.signal.aborted)
                   attempt.requestBody = body;
@@ -136,11 +138,12 @@ export class MeetingSuggestions {
     this.language = config.locale;
     this.remaining = authorization.maxRequests;
     this.model = authorization.model;
+    this.userContext = authorization.userContext ?? '';
     this.maxRequests = authorization.maxRequests;
     const generation = this.generation;
     try {
       this.provider = this.createProvider(
-        authorization,
+        { model: authorization.model, maxRequests: authorization.maxRequests },
         () => generation === this.generation && this.authorized(),
       );
     } catch {
@@ -237,6 +240,7 @@ export class MeetingSuggestions {
     this.signature = '';
     this.elapsed = 0;
     this.model = '';
+    this.userContext = '';
     this.maxRequests = 0;
     this.lastTrigger = 'none';
     this.hasFinal = false;

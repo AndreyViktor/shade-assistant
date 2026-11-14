@@ -3,7 +3,10 @@ import {
   SUGGESTION_MODELS,
 } from '../../../contracts/settings/providerOptions';
 import { useEffect, useRef, useState } from 'react';
-import { parseSuggestionAuthorization } from '../../../contracts/meeting/suggestionSession';
+import {
+  parseSuggestionAuthorization,
+  USER_CONTEXT_LIMIT,
+} from '../../../contracts/meeting/suggestionSession';
 import type { SuggestionAuthorization } from '../../../contracts/meeting/suggestionSession';
 import type { SettingsSnapshot } from '../../../contracts/ipc/settings';
 
@@ -23,6 +26,7 @@ export function StartSessionDialog({
   const [withSuggestions, setWithSuggestions] = useState(false);
   const [model, setModel] = useState<string>(DEFAULT_SUGGESTION_MODEL);
   const [maxRequests, setMaxRequests] = useState(10);
+  const [userContext, setUserContext] = useState('');
   const [credential, setCredential] = useState<
     SettingsSnapshot['credential'] | null
   >(null);
@@ -31,7 +35,11 @@ export function StartSessionDialog({
   const mounted = useRef(false);
   const selectedModel = SUGGESTION_MODELS.find((option) => option.id === model);
   const authorization = selectedModel
-    ? parseSuggestionAuthorization({ model: selectedModel.id, maxRequests })
+    ? parseSuggestionAuthorization({
+        model: selectedModel.id,
+        maxRequests,
+        userContext,
+      })
     : null;
   const hasKey = credential === 'stored' || credential === 'development';
   const ready = hasKey && authorization !== null && !checking;
@@ -80,7 +88,7 @@ export function StartSessionDialog({
           if (event.key !== 'Tab') return;
           const focusable = Array.from(
             event.currentTarget.querySelectorAll<HTMLElement>(
-              'button:not(:disabled), input:not(:disabled), select:not(:disabled), summary, [tabindex="0"]',
+              'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, [tabindex="0"]',
             ),
           );
           const first = focusable[0];
@@ -120,7 +128,10 @@ export function StartSessionDialog({
               <input
                 type="checkbox"
                 checked={withSuggestions}
-                onChange={(event) => setWithSuggestions(event.target.checked)}
+                onChange={(event) => {
+                  setWithSuggestions(event.target.checked);
+                  if (!event.target.checked) setUserContext('');
+                }}
                 aria-controls="suggestion-setup-fields"
                 aria-expanded={withSuggestions}
               />
@@ -139,8 +150,29 @@ export function StartSessionDialog({
                 <p>
                   Receba perguntas e próximos passos a partir da conversa. Para
                   isso, trechos finais e um resumo são enviados periodicamente à
-                  OpenAI, com intervalo mínimo de 10 segundos. O áudio fica no
-                  Mac.
+                  OpenAI junto do contexto opcional, com intervalo mínimo de 10
+                  segundos. O áudio fica no Mac.
+                </p>
+                <label htmlFor="suggestion-context">
+                  Contexto da reunião (opcional)
+                </label>
+                <textarea
+                  id="suggestion-context"
+                  rows={3}
+                  maxLength={USER_CONTEXT_LIMIT}
+                  value={userContext}
+                  aria-describedby="suggestion-context-help"
+                  placeholder="Ex.: revisão do projeto Aurora; quero esclarecer riscos; participo como designer."
+                  onChange={(event) => setUserContext(event.target.value)}
+                />
+                <p id="suggestion-context-help" className="field-help">
+                  {userContext.length}/{USER_CONTEXT_LIMIT} caracteres. Informe
+                  tema, objetivo ou seu papel. Sem preencher, a IA infere o que
+                  é útil pela conversa e pode não gerar cartões. O contexto é
+                  enviado separado da transcrição em cada pedido autorizado.
+                  Fica só em memória, inclusive no diagnóstico do último pedido;
+                  é apagado ao encerrar ou desativar sugestões e não é salvo
+                  para outra sessão.
                 </p>
                 <div className="credential-setup">
                   <strong>Chave da API OpenAI</strong>
@@ -193,9 +225,10 @@ export function StartSessionDialog({
                   cartões. Falhas também contam.
                 </p>
                 <p className="cloud-consent">
-                  Ao iniciar com sugestões, você autoriza o envio de texto à
-                  OpenAI e o custo da API. O limite acima conta pedidos, não
-                  dinheiro. Confira o preço do modelo na sua conta.
+                  Ao iniciar com sugestões, você autoriza o envio da transcrição
+                  e do contexto opcional à OpenAI e o custo da API. O limite
+                  acima conta pedidos, não dinheiro. Confira o preço do modelo
+                  na sua conta.
                 </p>
                 <p className="field-help">
                   Você pode desativar as sugestões durante a sessão.
@@ -210,7 +243,7 @@ export function StartSessionDialog({
               {!hasKey
                 ? 'Configure a chave para usar sugestões.'
                 : !authorization
-                  ? 'Escolha um modelo e um limite de 1 a 100.'
+                  ? 'Confira o limite de 1 a 100 pedidos e o contexto de até 2.000 caracteres.'
                   : 'Aguarde a configuração da chave.'}{' '}
               A transcrição local já pode começar.
             </p>

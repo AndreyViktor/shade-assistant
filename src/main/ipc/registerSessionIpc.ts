@@ -50,7 +50,7 @@ export function registerSessionIpc(
   let lifecycle = 0;
 
   const success = (): SessionResult => ({
-    version: 6,
+    version: 7,
     ok: true,
     session: session.snapshot(),
     demo: demo.snapshot(),
@@ -58,7 +58,7 @@ export function registerSessionIpc(
     suggestions: suggestions.snapshot(),
   });
   const failure = (code: IpcErrorCode): SessionResult => ({
-    version: 6,
+    version: 7,
     ok: false,
     code,
   });

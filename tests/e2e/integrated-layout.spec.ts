@@ -136,7 +136,7 @@ test('active meeting keeps preferences reachable and all panes usable at 200% zo
     });
     const read = () =>
       page.evaluate(() =>
-        window.meetingCopilot.session({ version: 6, action: 'read' }),
+        window.meetingCopilot.session({ version: 7, action: 'read' }),
       );
     await page
       .getByRole('button', { name: 'Iniciar transcrição local' })

@@ -94,7 +94,9 @@ it.each(['gpt-5.4-mini', 'gpt-5.4'])(
     fireEvent.click(screen.getByRole('checkbox'));
     await screen.findByText('Chave configurada');
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('textbox', { name: 'Contexto da reunião (opcional)' }),
+    ).toHaveValue('');
     expect(onStart).not.toHaveBeenCalled();
     fireEvent.click(
       screen.getByRole('button', { name: 'Iniciar com sugestões' }),
@@ -102,3 +104,59 @@ it.each(['gpt-5.4-mini', 'gpt-5.4'])(
     expect(onStart).toHaveBeenCalledExactlyOnceWith({ model, maxRequests: 10 });
   },
 );
+
+it('sends optional context only with explicit suggestions consent and clears it when disabled', async () => {
+  const { onStart } = setup('stored');
+  fireEvent.click(screen.getByRole('checkbox'));
+  await screen.findByText('Chave configurada');
+  const input = screen.getByRole('textbox', {
+    name: 'Contexto da reunião (opcional)',
+  });
+  expect(input).toHaveAttribute('maxlength', '2000');
+  expect(input).toHaveAccessibleDescription(/enviado separado da transcrição/);
+  expect(input).toHaveAccessibleDescription(
+    /apagado ao encerrar ou desativar sugestões/,
+  );
+  fireEvent.change(input, {
+    target: { value: '  Objetivo sintético: esclarecer riscos.  ' },
+  });
+  expect(onStart).not.toHaveBeenCalled();
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Iniciar com sugestões' }),
+  );
+  expect(onStart).toHaveBeenLastCalledWith({
+    model: 'gpt-5.4-mini',
+    maxRequests: 10,
+    userContext: 'Objetivo sintético: esclarecer riscos.',
+  });
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Iniciar apenas a transcrição' }),
+  );
+  expect(onStart).toHaveBeenLastCalledWith();
+  fireEvent.click(screen.getByRole('checkbox'));
+  fireEvent.click(screen.getByRole('checkbox'));
+  expect(screen.getByRole('textbox')).toHaveValue('');
+});
+
+it('rejects oversized context but permits transcription and accepts whitespace as absent', async () => {
+  const { onStart } = setup('stored');
+  fireEvent.click(screen.getByRole('checkbox'));
+  await screen.findByText('Chave configurada');
+  fireEvent.change(screen.getByRole('textbox'), {
+    target: { value: 'a'.repeat(2001) },
+  });
+  expect(
+    screen.getByRole('button', { name: 'Iniciar com sugestões' }),
+  ).toBeDisabled();
+  expect(
+    screen.getByRole('button', { name: 'Iniciar apenas a transcrição' }),
+  ).toBeEnabled();
+  fireEvent.change(screen.getByRole('textbox'), { target: { value: ' \n ' } });
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Iniciar com sugestões' }),
+  );
+  expect(onStart).toHaveBeenCalledExactlyOnceWith({
+    model: 'gpt-5.4-mini',
+    maxRequests: 10,
+  });
+});

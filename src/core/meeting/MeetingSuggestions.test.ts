@@ -37,7 +37,7 @@ function speech(
     text,
   };
 }
-function setup(consent = true, maxRequests = 2) {
+function setup(consent = true, maxRequests = 2, userContext?: string) {
   const session = new MeetingSession();
   const generate = vi
     .fn<(request: SuggestionRequest) => Promise<SuggestionResult>>()
@@ -50,7 +50,11 @@ function setup(consent = true, maxRequests = 2) {
       ...config,
       consent: { capture: true, context: consent, remoteAudio: false },
     });
-    pipeline.start(config, { ...authorization, maxRequests });
+    pipeline.start(config, {
+      ...authorization,
+      maxRequests,
+      ...(userContext ? { userContext } : {}),
+    });
   };
   start();
   return { pipeline, session, generate, create, start };
@@ -438,3 +442,62 @@ it.each(['pause', 'stop', 'revoke', 'restart'] as const)(
     expect(pipeline.snapshot().items).toHaveLength(1);
   },
 );
+
+it.each(['stop', 'revoke'] as const)(
+  'clears optional context after %s and keeps the same request budget across pause',
+  async (action) => {
+    const userContext = 'Tema privado sintético; papel de designer.';
+    const { pipeline, session, generate, create } = setup(true, 2, userContext);
+    expect(create).toHaveBeenCalledWith(authorization, expect.any(Function));
+    await vi.advanceTimersByTimeAsync(10000);
+    expect(generate).not.toHaveBeenCalled();
+    pipeline.receive(speech());
+    await vi.advanceTimersByTimeAsync(500);
+    expect(generate.mock.calls[0]?.[0].userContext).toBe(userContext);
+    expect(JSON.stringify(generate.mock.calls[0]?.[0].context)).not.toContain(
+      userContext,
+    );
+    session.pause();
+    pipeline.pause();
+    session.resume();
+    pipeline.resume();
+    pipeline.receive(speech(2));
+    await vi.advanceTimersByTimeAsync(11000);
+    expect(generate).toHaveBeenCalledTimes(2);
+    expect(generate.mock.calls[1]?.[0].userContext).toBe(userContext);
+    pipeline.receive(speech(3));
+    await vi.advanceTimersByTimeAsync(11000);
+    expect(generate).toHaveBeenCalledTimes(2);
+    if (action === 'revoke') session.revokeContext();
+    else session.stop();
+    pipeline.stop();
+    expect(JSON.stringify(pipeline.snapshot())).not.toContain(userContext);
+    session.stop();
+    session.start({
+      mode: 'apple-local',
+      ...config,
+      consent: { capture: true, context: true, remoteAudio: false },
+    });
+    pipeline.start(config, authorization);
+    pipeline.receive(speech());
+    await vi.advanceTimersByTimeAsync(500);
+    expect(generate).toHaveBeenCalledTimes(3);
+    expect(generate.mock.calls[2]?.[0]).not.toHaveProperty('userContext');
+    pipeline.stop();
+  },
+);
+
+it('does not retain or forward optional context without text consent', async () => {
+  const { pipeline, create, generate } = setup(
+    false,
+    2,
+    'private synthetic context',
+  );
+  pipeline.receive(speech());
+  await vi.advanceTimersByTimeAsync(10000);
+  expect(create).not.toHaveBeenCalled();
+  expect(generate).not.toHaveBeenCalled();
+  expect(JSON.stringify(pipeline.snapshot())).not.toContain(
+    'private synthetic context',
+  );
+});

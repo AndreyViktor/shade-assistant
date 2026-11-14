@@ -41,7 +41,7 @@ export function DemoDiagnostics({
             disabled={busy || !canStart}
             onClick={() => {
               void command({
-                version: 6,
+                version: 7,
                 action: 'start',
                 options: {
                   mode: 'demo',
@@ -61,7 +61,7 @@ export function DemoDiagnostics({
               disabled={busy}
               onClick={() => {
                 void command({
-                  version: 6,
+                  version: 7,
                   action: session.phase === 'paused' ? 'resume' : 'pause',
                 });
               }}
@@ -73,7 +73,7 @@ export function DemoDiagnostics({
             <button
               disabled={busy}
               onClick={() => {
-                void command({ version: 6, action: 'stop' });
+                void command({ version: 7, action: 'stop' });
               }}
             >
               Parar
@@ -86,7 +86,7 @@ export function DemoDiagnostics({
             phase={session.phase}
             busy={busy}
             onDismiss={(id) => {
-              void command({ version: 6, action: 'dismiss-suggestion', id });
+              void command({ version: 7, action: 'dismiss-suggestion', id });
             }}
           />
         )}

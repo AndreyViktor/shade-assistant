@@ -4,7 +4,20 @@ import type { Suggestion } from './suggestion';
 import { parseSuggestionDiagnostics } from './suggestionDiagnostics';
 import type { SuggestionDiagnostics } from './suggestionDiagnostics';
 
-export type SuggestionAuthorization = { model: string; maxRequests: number };
+export const USER_CONTEXT_LIMIT = 2000;
+
+/** UTF-16 units, matching textarea maxLength. Empty input is omitted on the wire. */
+export function parseUserContext(value: unknown): string | null {
+  return typeof value === 'string' && value.length <= USER_CONTEXT_LIMIT
+    ? value.trim()
+    : null;
+}
+
+export type SuggestionAuthorization = {
+  model: string;
+  maxRequests: number;
+  userContext?: string;
+};
 export type SuggestionSessionSnapshot = {
   items: Suggestion[];
   remainingRequests: number;
@@ -25,7 +38,8 @@ export function parseSuggestionAuthorization(
   value: unknown,
 ): SuggestionAuthorization | null {
   if (
-    !hasExactKeys(value, ['model', 'maxRequests']) ||
+    (!hasExactKeys(value, ['model', 'maxRequests']) &&
+      !hasExactKeys(value, ['model', 'maxRequests', 'userContext'])) ||
     typeof value.model !== 'string' ||
     !/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,199}$/.test(value.model) ||
     typeof value.maxRequests !== 'number' ||
@@ -34,7 +48,14 @@ export function parseSuggestionAuthorization(
     value.maxRequests > 100
   )
     return null;
-  return { model: value.model, maxRequests: value.maxRequests };
+  const userContext =
+    'userContext' in value ? parseUserContext(value.userContext) : '';
+  if (userContext === null) return null;
+  return {
+    model: value.model,
+    maxRequests: value.maxRequests,
+    ...(userContext ? { userContext } : {}),
+  };
 }
 
 export function parseSuggestionSession(

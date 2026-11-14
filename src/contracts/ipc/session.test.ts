@@ -5,23 +5,23 @@ const options = {
   mode: 'demo',
   consent: { capture: false, context: false, remoteAudio: false },
 };
-const start = { version: 6, action: 'start', options };
+const start = { version: 7, action: 'start', options };
 describe('strict session contract', () => {
   it('accepts the versioned allowlist and snapshots', () => {
     expect(parseSessionRequest(start)).toEqual(start);
     const dismiss = {
-      version: 6,
+      version: 7,
       action: 'dismiss-suggestion',
       id: 'demo-1-2',
     };
     expect(parseSessionRequest(dismiss)).toEqual(dismiss);
     for (const action of ['read', 'pause', 'resume', 'stop'])
-      expect(parseSessionRequest({ version: 6, action })).toEqual({
-        version: 6,
+      expect(parseSessionRequest({ version: 7, action })).toEqual({
+        version: 7,
         action,
       });
     const result = {
-      version: 6,
+      version: 7,
       ok: true,
       demo: emptyDemo(),
       local: null,
@@ -35,12 +35,12 @@ describe('strict session contract', () => {
     };
     expect(parseSessionResult(result)).toEqual(result);
     expect(
-      parseSessionResult({ version: 6, ok: false, code: 'TIMEOUT' }),
-    ).toEqual({ version: 6, ok: false, code: 'TIMEOUT' });
+      parseSessionResult({ version: 7, ok: false, code: 'TIMEOUT' }),
+    ).toEqual({ version: 7, ok: false, code: 'TIMEOUT' });
   });
   it('validates Apple local source, locale and consent configuration', () => {
     const appleStart = {
-      version: 6,
+      version: 7,
       action: 'start',
       options: {
         mode: 'apple-local',
@@ -71,11 +71,11 @@ describe('strict session contract', () => {
     {},
     { ...start, version: 99 },
     { ...start, version: 1 },
-    { version: 6, action: 'dismiss-suggestion' },
-    { version: 6, action: 'dismiss-suggestion', id: '' },
-    { version: 6, action: 'dismiss-suggestion', id: 'x'.repeat(81) },
-    { version: 6, action: 'dismiss-suggestion', id: 1 },
-    { version: 6, action: 'dismiss-suggestion', id: 'ok', extra: true },
+    { version: 7, action: 'dismiss-suggestion' },
+    { version: 7, action: 'dismiss-suggestion', id: '' },
+    { version: 7, action: 'dismiss-suggestion', id: 'x'.repeat(81) },
+    { version: 7, action: 'dismiss-suggestion', id: 1 },
+    { version: 7, action: 'dismiss-suggestion', id: 'ok', extra: true },
     { ...start, action: 'send' },
     { ...start, options: { ...options, mode: 'unknown' } },
     { ...start, options: { ...options, consent: { capture: true } } },
@@ -91,7 +91,7 @@ describe('strict session contract', () => {
         consent: { ...options.consent, screenshot: true },
       },
     },
-    { version: 6, action: 'stop', extra: true },
+    { version: 7, action: 'stop', extra: true },
   ])('rejects malformed requests %#', (request) => {
     expect(parseSessionRequest(request)).toBeNull();
   });
@@ -112,21 +112,21 @@ describe('strict session contract', () => {
     },
     { version: 1, ok: false, code: 'TIMEOUT' },
     { version: 99, ok: true, session: { phase: 'idle', ...options } },
-    { version: 6, ok: true, session: { phase: 'unknown', ...options } },
+    { version: 7, ok: true, session: { phase: 'unknown', ...options } },
     {
-      version: 6,
+      version: 7,
       ok: true,
       session: { phase: 'idle', ...options, secret: 'synthetic' },
     },
     {
-      version: 6,
+      version: 7,
       ok: true,
       session: { phase: 'idle', ...options },
       extra: true,
     },
   ])('rejects malformed replies %#', (reply) => {
     expect(parseSessionResult(reply)).toEqual({
-      version: 6,
+      version: 7,
       ok: false,
       code: 'INVALID_RESPONSE',
     });
@@ -141,15 +141,16 @@ it('requires explicit model and request budget with context consent; rejects old
     consent: { capture: true, context: true, remoteAudio: false },
     suggestions: { model: 'synthetic-model', maxRequests: 1 },
   };
-  const request = { version: 6, action: 'start', options };
+  const request = { version: 7, action: 'start', options };
   expect(parseSessionRequest(request)).toEqual(request);
   expect(parseSessionRequest({ ...request, version: 3 })).toBeNull();
   expect(parseSessionRequest({ ...request, version: 4 })).toBeNull();
   expect(parseSessionRequest({ ...request, version: 5 })).toBeNull();
+  expect(parseSessionRequest({ ...request, version: 6 })).toBeNull();
   expect(
     parseSessionResult({ version: 5, ok: false, code: 'TIMEOUT' }),
   ).toEqual({
-    version: 6,
+    version: 7,
     ok: false,
     code: 'INVALID_RESPONSE',
   });
@@ -174,6 +175,68 @@ it('requires explicit model and request budget with context consent; rejects old
     }),
   ).toBeNull();
   expect(
-    parseSessionRequest({ version: 6, action: 'revoke-suggestions' }),
-  ).toEqual({ version: 6, action: 'revoke-suggestions' });
+    parseSessionRequest({ version: 7, action: 'revoke-suggestions' }),
+  ).toEqual({ version: 7, action: 'revoke-suggestions' });
+});
+
+it('validates optional context at the session boundary and requires consent', () => {
+  const options = {
+    mode: 'apple-local',
+    locale: 'pt-BR',
+    sources: ['mic'],
+    consent: { capture: true, context: true, remoteAudio: false },
+    suggestions: { model: 'synthetic-model', maxRequests: 1 },
+  };
+  const start = (userContext: unknown, context = true) => ({
+    version: 7,
+    action: 'start',
+    options: {
+      ...options,
+      consent: { ...options.consent, context },
+      suggestions: { ...options.suggestions, userContext },
+    },
+  });
+  for (const userContext of [
+    'a'.repeat(2000),
+    'á'.repeat(2000),
+    '😀'.repeat(1000),
+    'tema\nobjetivo',
+  ]) {
+    expect(parseSessionRequest(start(userContext))).toEqual(start(userContext));
+  }
+  for (const userContext of [
+    null,
+    undefined,
+    1,
+    {},
+    [],
+    'a'.repeat(2001),
+    '😀'.repeat(1001),
+    ' '.repeat(2001),
+  ]) {
+    expect(parseSessionRequest(start(userContext))).toBeNull();
+  }
+  for (const userContext of ['', ' \n ', 'tema']) {
+    expect(parseSessionRequest(start(userContext, false))).toBeNull();
+  }
+  expect(parseSessionRequest(start(' \n '))).toEqual({
+    version: 7,
+    action: 'start',
+    options,
+  });
+  expect(parseSessionRequest(start(' tema '))).toMatchObject({
+    options: { suggestions: { userContext: 'tema' } },
+  });
+  expect(parseSessionRequest({ ...start('tema'), version: 6 })).toBeNull();
+  expect(
+    parseSessionResult({ version: 6, ok: false, code: 'TIMEOUT' }),
+  ).toEqual({ version: 7, ok: false, code: 'INVALID_RESPONSE' });
+  for (const mode of ['demo', 'openai-stt']) {
+    expect(
+      parseSessionRequest({
+        ...start('tema'),
+        options: { ...start('tema').options, mode },
+      }),
+    ).toBeNull();
+  }
 });

@@ -73,7 +73,7 @@ for (const { consent, model } of [
           Date.now = () => now() + 60000;
         });
         const retained = await page.evaluate(() =>
-          window.meetingCopilot.session({ version: 6, action: 'read' }),
+          window.meetingCopilot.session({ version: 7, action: 'read' }),
         );
         expect(retained).toMatchObject({
           suggestions: {
@@ -134,7 +134,7 @@ for (const { consent, model } of [
         await page.getByRole('button', { name: 'Desativar sugestões' }).click();
         await expect(cards).toHaveCount(0);
         const snapshot = await page.evaluate(() =>
-          window.meetingCopilot.session({ version: 6, action: 'read' }),
+          window.meetingCopilot.session({ version: 7, action: 'read' }),
         );
         expect(snapshot).toMatchObject({
           session: {
@@ -171,7 +171,7 @@ for (const { consent, model } of [
       await page.getByRole('button', { name: 'Parar' }).click();
       expect(
         await page.evaluate(() =>
-          window.meetingCopilot.session({ version: 6, action: 'read' }),
+          window.meetingCopilot.session({ version: 7, action: 'read' }),
         ),
       ).toMatchObject({
         local: null,
