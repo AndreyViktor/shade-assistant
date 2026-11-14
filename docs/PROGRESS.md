@@ -1,23 +1,21 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-13. **Marco:** M8 — T048 BLOCKED por lançamento do Electron no sandbox.
+**Atualizado:** 2026-11-13. **Marco:** M8 — T048 DONE.
 
 ## Snapshot
 
-- T046 DONE: painel compacto, validado pelo usuário e por testes offline. [TEST-T046.md](TEST-T046.md).
-- T047 DONE: quatro seções de Preferências; fonte persistida, migração v1/v2 e aplicação na próxima sessão, sem interromper a atual. Um problema de Escape após salvar foi corrigido. Verify passou (866 TS, 18 skipped, 19 runner, lint/formato/tipos/build); smoke Electron offline 24/24. Imagens inspecionadas. [TEST-T047.md](TEST-T047.md), [ADR 0024](adr/0024-audio-source-preference-v3.md).
-- Controles separados de transcrição e sugestões registrados em T051; T045, T049 e T050 permanecem futuros.
+- T046 e T047 DONE: painel compacto e Preferências organizadas, com fonte persistida para a próxima sessão. [TEST-T046.md](TEST-T046.md), [TEST-T047.md](TEST-T047.md).
+- T048 DONE: revisão integrada executada no Electron/macOS fora do sandbox, autorizada pelo usuário e aprovada pela revisão automática. Smoke completo 26/26; reteste dos dois cenários novos 2/2 após sincronizar a captura de imagens com a pintura. Verify final: 866 TS aprovados, 18 skipped, 19 runner, lint, formatação, tipos e build. [TEST-T048.md](TEST-T048.md).
+- Preferências acessível durante sessão ativa em 960×720, 640×480 e zoom 200%; navegação preserva a sessão. Conteúdo longo, teclado, consentimento, pausa/retomada/parada, erros e DEMO verificados. 25 imagens sintéticas inspecionadas e preservadas em [evidence/T048](evidence/T048/).
+- Não foi reproduzida regressão que exigisse mudança no produto. Entrega restrita a dois testes e2e e documentação/evidências; nenhum código Swift ou de produção alterado.
 
-## Resultado T048
+## Limites e encerramento
 
-- Dependência T047 satisfeita, árvore inicial limpa, plano registrado antes da execução. Build passou; smoke offline teve 24 falhas de lançamento (`Process failed to launch!`), sem chegar à UI. Nenhuma alteração de código/testes ou nova inspeção visual. [Plano, evidência e limites](TEST-T048.md).
-- Nenhuma execução fora do sandbox foi tentada; não houve recusa de auto-review para Electron. Sessão encerrada por bloqueio de ambiente conforme instrução do usuário.
+Somente T048 executada. O bloqueio anterior de lançamento no sandbox foi superado pela execução gráfica aprovada; não houve recusa contornada. Testes com perfis temporários, helpers/transportes sintéticos e rede bloqueada, sem áudio real, credenciais pessoais, API paga, push ou deploy.
 
-## Próximo passo
-
-Retomar somente T048 em nova sessão com Electron/ambiente gráfico disponível e autorizado. Executar smoke offline, complementar cobertura de Preferências durante sessão ativa e alcance do conteúdo em zoom; inspecionar o fluxo completo, corrigir problemas reproduzidos e executar os gates antes de DONE. Não avançar para outra tarefa enquanto bloqueada.
+Zoom extremo exige rolagem e colunas verticais; imagens mostram partes alcançáveis da viewport. Não houve ensaio manual de VoiceOver, múltiplos monitores, captura real, sessão prolongada ou nova validação de Spaces/tela cheia. T045, T049, T050, T051 e Windows permanecem fora desta sessão. Nenhuma próxima tarefa iniciada.
 
 ## Ambiente
 
 - Node >=26: `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run verify`.
-- Testes com perfil temporário, fixtures sintéticas e rede bloqueada; sem captura real, credenciais pessoais, envio à API, custos, push ou deploy.
+- Smoke Electron exige ambiente gráfico disponível; neste sandbox, solicitar execução externa pela revisão normal, preservando fixtures e bloqueios offline. Não contornar recusas.
