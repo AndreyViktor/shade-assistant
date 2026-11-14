@@ -167,6 +167,16 @@ describe('OpenAI suggestion adapter with synthetic HTTP only', () => {
     expect(body).not.toHaveProperty('previous_response_id');
     expect(init.body).toContain('Resumo sintético');
     expect(init.body).toContain('untrusted meeting data');
+    expect(init.body).toContain('automatic speech-to-text transcription');
+    expect(init.body).toContain(
+      'do not silently rewrite or correct the transcription',
+    );
+    expect(init.body).toContain(
+      'Proactively infer what help would be useful from the conversation',
+    );
+    expect(init.body).toContain(
+      'do not require the user to provide more context or ask the user questions',
+    );
   });
   it('supports distinct configured models, output limits and English without fixed defaults', async () => {
     const { options, transport } = setup();
