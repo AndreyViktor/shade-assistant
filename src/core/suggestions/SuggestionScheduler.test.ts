@@ -17,7 +17,7 @@ const content = {
 const success: SuggestionResult = { ok: true, suggestions: [content] };
 const context: MeetingContext = { recent: [], summary: [] };
 
-function setup(policy: Partial<SuggestionPolicy> = {}) {
+function setup(policy: Partial<SuggestionPolicy> = {}, continuous = false) {
   const generate = vi
     .fn<SuggestionProvider['generate']>()
     .mockResolvedValue(success);
@@ -26,7 +26,8 @@ function setup(policy: Partial<SuggestionPolicy> = {}) {
     { generate },
     authorized,
     'pt-BR',
-    policy,
+    { debounceMs: 500, ...policy },
+    continuous,
   );
   const session = new AbortController();
   scheduler.start(session.signal);
@@ -53,6 +54,17 @@ afterEach(() => {
 });
 
 describe('suggestion scheduling', () => {
+  it('restarts the continuous debounce after each new context and waits two seconds', async () => {
+    const { scheduler, generate } = setup({ debounceMs: 2_000 }, true);
+    scheduler.submit(context, 1, 'automatic');
+    await vi.advanceTimersByTimeAsync(1_500);
+    scheduler.submit(context, 2, 'automatic');
+    await vi.advanceTimersByTimeAsync(1_999);
+    expect(generate).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(generate).toHaveBeenCalledOnce();
+  });
+
   it('debounces a burst to the latest context at the exact boundary', async () => {
     const { scheduler, generate } = setup();
     scheduler.submit(context, 1, 'question');
@@ -337,7 +349,7 @@ describe('suggestion scheduling', () => {
     scheduler.submit(input, 1, 'question');
     // Arrays are independently owned even when the caller reuses its snapshot.
     expect(input).toEqual(context);
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     expect(generate.mock.calls[0]?.[0].context.recent).not.toBe(input.recent);
     expect(generate.mock.calls[0]?.[0].context.summary).not.toBe(input.summary);
     expect(generate.mock.calls[0]?.[0].language).toBe('en-US');

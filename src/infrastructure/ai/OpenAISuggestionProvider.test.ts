@@ -192,6 +192,12 @@ describe('OpenAI suggestion adapter with synthetic HTTP only', () => {
       'Never use a question card to ask about speech recognition or transcript quality',
     );
     expect(body.instructions).toContain(
+      'let the application evaluate later transcript updates',
+    );
+    expect(body.instructions).toContain(
+      'A nearby topic does not make an unclear phrase worth asking about',
+    );
+    expect(body.instructions).toContain(
       '<assistant_response>{"suggestions":[]}</assistant_response>',
     );
     expect(body.instructions).toContain('Definir responsável');

@@ -69,6 +69,41 @@ afterEach(() => {
 });
 
 describe('session suggestion integration with synthetic speech', () => {
+  it('waits after the latest speech fragment and reevaluates empty results with more context', async () => {
+    const { pipeline, generate } = setup(true, 2);
+    generate.mockResolvedValueOnce({ ok: true, suggestions: [] });
+
+    pipeline.receive(speech(1, 'A equipe precisa analisar o trecho final.'));
+    await vi.advanceTimersByTimeAsync(1_500);
+    pipeline.receive(speech(2, 'O prazo da revisão ficou para sexta-feira.'));
+    await vi.advanceTimersByTimeAsync(1_999);
+    expect(generate).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(
+      generate.mock.calls[0]?.[0].context.recent.map(({ text }) => text),
+    ).toEqual([
+      'A equipe precisa analisar o trecho final.',
+      'O prazo da revisão ficou para sexta-feira.',
+    ]);
+    expect(pipeline.snapshot().items).toEqual([]);
+
+    pipeline.receive(speech(3, 'Ainda falta definir quem fará a revisão.'));
+    await vi.advanceTimersByTimeAsync(1_999);
+    expect(generate).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(8_001);
+
+    expect(generate).toHaveBeenCalledTimes(2);
+    expect(
+      generate.mock.calls[1]?.[0].context.recent.map(({ text }) => text),
+    ).toEqual([
+      'A equipe precisa analisar o trecho final.',
+      'O prazo da revisão ficou para sexta-feira.',
+      'Ainda falta definir quem fará a revisão.',
+    ]);
+  });
+
   it('distinguishes final/trigger/debounce/preparation/transport and clears payload on pause', async () => {
     const { pipeline, generate, session } = setup();
     expect(pipeline.snapshot().diagnostics?.activity).toBe('waiting-final');
@@ -89,7 +124,7 @@ describe('session suggestion integration with synthetic speech', () => {
       lastTrigger: 'question',
       lastAttempt: null,
     });
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     expect(pipeline.snapshot().diagnostics).toMatchObject({
       activity: 'preparing',
       lastAttempt: { number: 1, result: 'pending', requestBody: null },
@@ -131,14 +166,14 @@ describe('session suggestion integration with synthetic speech', () => {
       return Promise.resolve({ ok: false, code: 'authentication' });
     });
     pipeline.receive(speech());
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     expect(pipeline.snapshot().diagnostics?.lastAttempt).toMatchObject({
       number: 1,
       result: 'authentication',
       httpStatus: 401,
     });
     pipeline.receive(speech(2));
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     expect(pipeline.snapshot().diagnostics?.activity).toBe('cooldown');
     await vi.advanceTimersByTimeAsync(9500);
     expect(pipeline.snapshot().diagnostics?.lastAttempt?.number).toBe(2);
@@ -155,7 +190,7 @@ describe('session suggestion integration with synthetic speech', () => {
         }),
     );
     pipeline.receive(speech());
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     const input = generate.mock.calls[0]?.[0];
     input?.onDispatch?.('synthetic-old-body');
     pipeline.receive(speech(2, 'Obrigado.'));
@@ -184,7 +219,7 @@ describe('session suggestion integration with synthetic speech', () => {
     );
     pipeline.receive(speech(1, 'Bom dia a todos.'));
     pipeline.receive(speech(2, 'Estamos começando a reunião.'));
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     expect(generate).toHaveBeenCalledOnce();
     const first = generate.mock.calls[0]?.[0];
     expect(first?.context.recent).toHaveLength(2);
@@ -220,10 +255,10 @@ describe('session suggestion integration with synthetic speech', () => {
   it('debounces finals, excludes partials and publishes dismissible retained cards', async () => {
     const { pipeline, generate } = setup();
     pipeline.receive({ ...speech(), type: 'partial' });
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     expect(generate).not.toHaveBeenCalled();
     pipeline.receive({ ...speech(), seq: 2 });
-    await vi.advanceTimersByTimeAsync(499);
+    await vi.advanceTimersByTimeAsync(1_999);
     expect(generate).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(1);
     expect(generate).toHaveBeenCalledOnce();
@@ -247,7 +282,7 @@ describe('session suggestion integration with synthetic speech', () => {
   it('keeps the last authorized response visible and enforces the attempt budget across pause', async () => {
     const { pipeline, session, generate } = setup(true, 1);
     pipeline.receive(speech());
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     expect(pipeline.snapshot()).toMatchObject({
       status: 'exhausted',
       remainingRequests: 0,
@@ -275,7 +310,7 @@ describe('session suggestion integration with synthetic speech', () => {
           }),
       );
       pipeline.receive(speech());
-      await vi.advanceTimersByTimeAsync(500);
+      await vi.advanceTimersByTimeAsync(2_000);
       const signal = generate.mock.calls[0]?.[0].signal;
       if (action === 'pause') {
         session.pause();
@@ -307,12 +342,12 @@ describe('session suggestion integration with synthetic speech', () => {
         }),
     );
     pipeline.receive(speech());
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     session.stop();
     pipeline.stop();
     start();
     pipeline.receive(speech(2, 'Como podemos validar o protótipo fictício?'));
-    await vi.advanceTimersByTimeAsync(1000);
+    await vi.advanceTimersByTimeAsync(2_000);
     expect(generate).toHaveBeenCalledOnce();
     resolve({ ok: true, suggestions: [card] });
     await vi.advanceTimersByTimeAsync(0);
@@ -326,7 +361,7 @@ describe('session suggestion integration with synthetic speech', () => {
   it('keeps cards for changed content and ignores a duplicate final and foreign session', async () => {
     const { pipeline, generate } = setup();
     pipeline.receive(speech());
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     pipeline.receive({ ...speech(), seq: 2 });
     pipeline.receive({ ...speech(3), sessionId: 'foreign' });
     expect(pipeline.snapshot().items).toHaveLength(1);
@@ -353,7 +388,7 @@ describe('session suggestion integration with synthetic speech', () => {
       startMs: 279000,
       endMs: 280000,
     });
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     expect(generate.mock.calls[1]?.[0].context.recent).toHaveLength(1);
     expect(generate.mock.calls[1]?.[0].context.summary).toHaveLength(1);
   });
@@ -362,7 +397,7 @@ describe('session suggestion integration with synthetic speech', () => {
     const { pipeline, generate } = setup(true, 1);
     generate.mockResolvedValue({ ok: false, code: 'credentials-unavailable' });
     pipeline.receive(speech());
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     expect(pipeline.snapshot()).toMatchObject({
       items: [],
       remainingRequests: 0,
@@ -381,11 +416,11 @@ describe('session suggestion integration with synthetic speech', () => {
 it('retains every distinct card after budget exhaustion without a session TTL', async () => {
   const { pipeline, generate } = setup(true, 4);
   pipeline.receive(speech());
-  await vi.advanceTimersByTimeAsync(500);
+  await vi.advanceTimersByTimeAsync(2_000);
   const first = pipeline.snapshot().items[0];
   await vi.advanceTimersByTimeAsync(60000);
   pipeline.receive(speech(2, 'Outro assunto sintético.'));
-  await vi.advanceTimersByTimeAsync(500);
+  await vi.advanceTimersByTimeAsync(2_000);
   expect(pipeline.snapshot().items).toEqual([first]);
   for (const seq of [3, 4]) {
     generate.mockResolvedValueOnce({
@@ -409,7 +444,7 @@ it.each(['pause', 'stop', 'revoke', 'restart'] as const)(
   async (action) => {
     const { pipeline, session, start } = setup(true, 3);
     pipeline.receive(speech());
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     const oldId = pipeline.snapshot().items[0]?.id ?? '';
     expect(oldId).not.toBe('');
     if (action === 'pause') {
@@ -435,7 +470,7 @@ it.each(['pause', 'stop', 'revoke', 'restart'] as const)(
     }
     expect(pipeline.snapshot().items).toEqual([]);
     pipeline.receive(speech(2, 'Nova pergunta sintética?'));
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     expect(pipeline.snapshot().items).toHaveLength(1);
     expect(pipeline.snapshot().items[0]?.id).not.toBe(oldId);
     pipeline.dismiss(oldId);
@@ -452,7 +487,7 @@ it.each(['stop', 'revoke'] as const)(
     await vi.advanceTimersByTimeAsync(10000);
     expect(generate).not.toHaveBeenCalled();
     pipeline.receive(speech());
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     expect(generate.mock.calls[0]?.[0].userContext).toBe(userContext);
     expect(JSON.stringify(generate.mock.calls[0]?.[0].context)).not.toContain(
       userContext,
@@ -480,7 +515,7 @@ it.each(['stop', 'revoke'] as const)(
     });
     pipeline.start(config, authorization);
     pipeline.receive(speech());
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     expect(generate).toHaveBeenCalledTimes(3);
     expect(generate.mock.calls[2]?.[0]).not.toHaveProperty('userContext');
     pipeline.stop();

@@ -12,7 +12,7 @@ export type SuggestionPolicy = {
 
 export const DEFAULT_SUGGESTION_POLICY: Readonly<SuggestionPolicy> =
   Object.freeze({
-    debounceMs: 500,
+    debounceMs: 2_000,
     cooldownMs: 10_000,
     ttlMs: 30_000,
     maxResponseAgeMs: 15_000,
@@ -86,7 +86,6 @@ export class SuggestionScheduler {
     if (revision < this.revision) return;
     if (revision === this.revision && trigger !== 'manual') return;
     this.revision = revision;
-    const previousDueAt = this.pending?.dueAt;
     if (!this.continuous) this.invalidate();
     if (trigger === 'none') return;
     this.pending = {
@@ -95,10 +94,7 @@ export class SuggestionScheduler {
         summary: context.summary.map((excerpt) => ({ ...excerpt })),
       },
       manual: trigger === 'manual',
-      dueAt:
-        this.continuous && previousDueAt !== undefined
-          ? previousDueAt
-          : Date.now() + (trigger === 'manual' ? 0 : this.policy.debounceMs),
+      dueAt: Date.now() + (trigger === 'manual' ? 0 : this.policy.debounceMs),
     };
     this.arm();
   }

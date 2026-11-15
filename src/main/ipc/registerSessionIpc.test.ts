@@ -506,7 +506,7 @@ it('connects native events to real Responses serialization with synthetic creden
   await call({ version: 8, action: 'stop' });
   await call(withSuggestions);
   emitQuestion();
-  await vi.advanceTimersByTimeAsync(500);
+  await vi.advanceTimersByTimeAsync(2_000);
   expect(transport).toHaveBeenCalledOnce();
   expect(transport.mock.calls[0]?.[0]).toBe(
     'https://api.openai.com/v1/responses',
@@ -562,7 +562,7 @@ it.each(['pause', 'stop', 'revoke-suggestions', 'reload', 'failure'] as const)(
     );
     await call(withSuggestions);
     emitQuestion();
-    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(2_000);
     expect(getApiKey).toHaveBeenCalledOnce();
     if (action === 'reload')
       window.webContents.on.mock.calls.find(

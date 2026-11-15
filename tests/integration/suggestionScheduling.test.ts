@@ -69,7 +69,7 @@ it('replays synthetic finals through context, trigger, scheduling and card DTOs 
   speech(3, 'Quais riscos temos ao migrar?');
   await vi.advanceTimersByTimeAsync(300);
   speech(4, 'Não concordo com esse prazo.');
-  await vi.advanceTimersByTimeAsync(499);
+  await vi.advanceTimersByTimeAsync(1_999);
   expect(generate).not.toHaveBeenCalled();
   await vi.advanceTimersByTimeAsync(1);
   expect(generate).toHaveBeenCalledTimes(1);
