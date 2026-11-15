@@ -69,7 +69,7 @@ export function SessionControls({
   function confirmLocalConsent(authorization?: SuggestionAuthorization): void {
     setConfirming(false);
     void command({
-      version: 7,
+      version: 8,
       action: 'start',
       options: {
         mode: 'apple-local',
@@ -101,7 +101,7 @@ export function SessionControls({
         <button
           disabled={busy}
           onClick={() => {
-            void command({ version: 7, action: 'stop' });
+            void command({ version: 8, action: 'stop' });
           }}
         >
           Parar DEMO
@@ -134,7 +134,7 @@ export function SessionControls({
             <button
               disabled={busy}
               onClick={() => {
-                void command({ version: 7, action: 'pause' });
+                void command({ version: 8, action: 'pause' });
               }}
             >
               Pausar
@@ -144,7 +144,7 @@ export function SessionControls({
             <button
               disabled={busy}
               onClick={() => {
-                void command({ version: 7, action: 'resume' });
+                void command({ version: 8, action: 'resume' });
               }}
             >
               Retomar
@@ -156,7 +156,7 @@ export function SessionControls({
             <button
               disabled={busy}
               onClick={() => {
-                void command({ version: 7, action: 'stop' });
+                void command({ version: 8, action: 'stop' });
               }}
             >
               Parar
@@ -202,7 +202,7 @@ export function SessionControls({
                 busy={busy}
                 onDismiss={(id) => {
                   void command({
-                    version: 7,
+                    version: 8,
                     action: 'dismiss-suggestion',
                     id,
                   });
@@ -216,7 +216,7 @@ export function SessionControls({
               <button
                 disabled={busy}
                 onClick={() => {
-                  void command({ version: 7, action: 'revoke-suggestions' });
+                  void command({ version: 8, action: 'revoke-suggestions' });
                 }}
               >
                 Desativar sugestões

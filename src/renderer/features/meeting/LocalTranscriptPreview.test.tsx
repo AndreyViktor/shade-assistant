@@ -18,7 +18,7 @@ const base = {
   timestampMs: 100,
 };
 const reply = (): SessionResult => ({
-  version: 7,
+  version: 8,
   ok: true,
   demo: emptyDemo(),
   session: {

@@ -12,7 +12,7 @@ const card = {
   expiresAt: null,
 };
 const reply = {
-  version: 7,
+  version: 8,
   ok: true,
   session: {
     phase: 'running',
@@ -38,17 +38,36 @@ const reply = {
 it('carries retained cards through the versioned parser and preload without loss', async () => {
   expect(parseSessionResult(reply)).toEqual(reply);
   const api = createMeetingCopilotApi(() => Promise.resolve(reply));
-  expect(await api.session({ version: 7, action: 'read' })).toEqual(reply);
+  expect(await api.session({ version: 8, action: 'read' })).toEqual(reply);
   expect(parseSessionResult({ ...reply, version: 5 })).toEqual({
-    version: 7,
+    version: 8,
     ok: false,
     code: 'INVALID_RESPONSE',
   });
 });
 
+it('carries the full session card ceiling through IPC and preload without eviction', async () => {
+  const items = Array.from({ length: 800 }, (_, index) => ({
+    ...card,
+    id: `suggestion-${index + 1}`,
+    body: `Distinct synthetic card ${index + 1}`,
+  }));
+  const fullReply = {
+    ...reply,
+    suggestions: { ...reply.suggestions, items },
+  };
+  expect(parseSessionResult(fullReply)).toEqual(fullReply);
+  const api = createMeetingCopilotApi(() => Promise.resolve(fullReply));
+  expect(await api.session({ version: 8, action: 'read' })).toEqual(fullReply);
+});
+
 it.each(
   [
-    [card, { ...card, id: 'second' }, { ...card, id: 'third' }],
+    Array.from({ length: 801 }, (_, index) => ({
+      ...card,
+      id: `suggestion-${index + 1}`,
+      body: `Distinct synthetic card ${index + 1}`,
+    })),
     [card, card],
     [{ ...card, expiresAt: 30000 }],
     [{ ...card, expiresAt: undefined }],
@@ -61,10 +80,10 @@ it.each(
   ].map((items) => ({ items })),
 )('rejects invalid retained cards at IPC and preload %#', async ({ items }) => {
   const invalid = { ...reply, suggestions: { ...reply.suggestions, items } };
-  const failure = { version: 7, ok: false, code: 'INVALID_RESPONSE' };
+  const failure = { version: 8, ok: false, code: 'INVALID_RESPONSE' };
   expect(parseSessionResult(invalid)).toEqual(failure);
   const api = createMeetingCopilotApi(() => Promise.resolve(invalid));
-  expect(await api.session({ version: 7, action: 'read' })).toEqual(failure);
+  expect(await api.session({ version: 8, action: 'read' })).toEqual(failure);
 });
 
 it('rejects content or remaining budget in a disabled suggestion snapshot', () => {
@@ -77,6 +96,6 @@ it('rejects content or remaining budget in a disabled suggestion snapshot', () =
         ...reply,
         suggestions: { ...patch, status: 'disabled', diagnostics: null },
       }),
-    ).toEqual({ version: 7, ok: false, code: 'INVALID_RESPONSE' });
+    ).toEqual({ version: 8, ok: false, code: 'INVALID_RESPONSE' });
   }
 });

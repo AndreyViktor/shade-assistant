@@ -378,7 +378,7 @@ describe('session suggestion integration with synthetic speech', () => {
   });
 });
 
-it('retains cards after budget exhaustion, deduplicates after 30 s and replaces the oldest at capacity', async () => {
+it('retains every distinct card after budget exhaustion without a session TTL', async () => {
   const { pipeline, generate } = setup(true, 4);
   pipeline.receive(speech());
   await vi.advanceTimersByTimeAsync(500);
@@ -397,10 +397,10 @@ it('retains cards after budget exhaustion, deduplicates after 30 s and replaces 
   }
   expect(pipeline.snapshot()).toMatchObject({
     status: 'exhausted',
-    items: [{ body: 'Body 3' }, { body: 'Body 4' }],
+    items: [first, { body: 'Body 3' }, { body: 'Body 4' }],
   });
   await vi.advanceTimersByTimeAsync(3600000);
-  expect(pipeline.snapshot().items).toHaveLength(2);
+  expect(pipeline.snapshot().items).toHaveLength(3);
   expect(generate).toHaveBeenCalledTimes(4);
 });
 

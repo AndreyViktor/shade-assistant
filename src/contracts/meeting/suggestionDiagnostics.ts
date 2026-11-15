@@ -1,4 +1,8 @@
 import { hasExactKeys } from '../validation';
+import {
+  SUGGESTION_BATCH_LIMIT,
+  SUGGESTION_SESSION_REQUEST_LIMIT,
+} from './suggestion';
 
 export const SUGGESTION_FAILURES = [
   'not-authorized',
@@ -88,7 +92,7 @@ export function parseSuggestionDiagnostics(
     ]) ||
     typeof value.model !== 'string' ||
     !/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,199}$/.test(value.model) ||
-    !integer(value.maxRequests, 1, 100) ||
+    !integer(value.maxRequests, 1, SUGGESTION_SESSION_REQUEST_LIMIT) ||
     !member(ACTIVITIES, value.activity) ||
     !member(TRIGGERS, value.lastTrigger)
   )
@@ -115,7 +119,7 @@ export function parseSuggestionDiagnostics(
       (attempt.httpStatus !== null && !integer(attempt.httpStatus, 100, 599)) ||
       !member(RESULTS, attempt.result) ||
       (attempt.suggestionCount !== null &&
-        !integer(attempt.suggestionCount, 0, 2))
+        !integer(attempt.suggestionCount, 0, SUGGESTION_BATCH_LIMIT))
     )
       return null;
     lastAttempt = {

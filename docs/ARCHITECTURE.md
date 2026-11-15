@@ -20,8 +20,8 @@ Microfone / áudio do sistema (fontes autorizadas)
   -> TranscriptBuffer + ContextManager (janela recente + resumo compacto)
   -> TriggerEngine (pergunta, objeção, compromisso, manual, silêncio)
   -> SuggestionProvider (OpenAI Responses API, modelo configurável)
-  -> SuggestionStore (dedupe, expiração, invalidação)
-  -> Overlay React (até 2 cartões)
+  -> SuggestionStore (dedupe, expiração DEMO, invalidação)
+  -> Overlay React (lista rolável de cartões reais, mais recentes primeiro)
 
 Screenshot: atalho -> seleção/PRÉVIA -> confirmação explícita
   -> ScreenshotProvider -> OpenAI Responses API (modelo com visão configurável)
@@ -38,7 +38,7 @@ Screenshot: atalho -> seleção/PRÉVIA -> confirmação explícita
 - **Protocolo próprio (esboço; validar):** eventos `{version:1,sessionId,seq,type,source,locale,timestamp,text?,isFinal?,errorCode?}`. Fonte em `mic|system`, `seq` monotônico por canal (identificar relógio/canal ao ordenar), timestamps normalizados, tamanho máximo por linha, validação estrita, stdout somente JSONL, stderr sem falas, backpressure/encerramento. Comunicação de comandos (`start/pause/resume/stop`) via stdin JSONL ou outro canal explícito; não misturar comandos com saída de eventos nem usar shell.
 - **`ContextManager`:** conserva falas finais com origem/ordem, resumo e janela limitada de tokens; descarta conteúdos conforme opção; origem não identifica pessoa.
 - **`TriggerEngine`:** regras/heurísticas + IA quando necessário. `none` em conversa trivial, cooldown e comando manual independente.
-- **`SuggestionProvider`:** modelo OpenAI configurável com saída estruturada, 0–2 cartões; dedupe, cancelamento, timeouts e orçamento. Consultar modelos disponíveis na conta no momento da implementação.
+- **`SuggestionProvider`:** modelo OpenAI configurável com saída estruturada, 0–8 cartões por resposta; dedupe, cancelamento, timeouts e orçamento. Consultar modelos disponíveis na conta no momento da implementação.
 - **`ScreenshotProvider`:** apenas solicitação manual + prévia/cancelamento + autorização; enviar imagem mínima ao modelo com visão configurável, jamais captura automática em background.
 - **`UsageBudget`:** STT Apple local **não gera custo OpenAI de transcrição**, mas pode consumir CPU/bateria; contabilizar tokens/imagens e fallback remoto quando autorizado. Estimativas não são faturas.
 - **`SecretStore`:** cofre OS/variável ambiente só para desenvolvimento; nunca localStorage/renderer/IPC genérico/Git/logs.
@@ -54,15 +54,14 @@ type Suggestion = {
   groundedIn: 'meeting' | 'inference';
   expiresAt: string;
 };
-type SuggestionBatch = {
-  trigger: 'question' | 'objection' | 'commitment' | 'manual' | 'none';
-  suggestions: Suggestion[]; // 0..2, vazio em 'none'
-};
+type SuggestionContent = Omit<Suggestion, 'id' | 'expiresAt'>;
+type SuggestionBatch = { suggestions: SuggestionContent[] }; // 0..8; pode ser vazio
+type SuggestionSession = { items: Suggestion[] }; // até 800, sem descarte por contagem
 ```
 Validar schema e limitações ao implementar; IDs e expiração podem ser adicionados localmente, se simplificar o output do modelo. Nenhuma confiança numérica inventada.
 
 ## Engenharia de prompts
-Prompt do provider deve instruir: sugerir apenas quando relevante; não inventar fatos, números ou compromissos; apontar lacunas; evitar repetir cartões, priorizar 1–2 sugestões curtas em português; diferenciar fato observado vs inferência; usar screenshot **somente se aprovada**; nunca enviar mensagens por conta do usuário. Criar casos de avaliação sintéticos e registrar métricas.
+Prompt do provider deve instruir: sugerir apenas quando relevante; não inventar fatos, números ou compromissos; apontar lacunas; evitar repetir cartões, sem meta fixa de quantidade; diferenciar fato observado vs inferência; usar screenshot **somente se aprovada**; nunca enviar mensagens por conta do usuário. Criar casos de avaliação sintéticos e registrar métricas.
 
 ## Modelos e transporte (defaults propostos)
 | Função | Tecnologia | Critérios de validação |

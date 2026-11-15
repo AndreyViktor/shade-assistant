@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { OpenAISuggestionProvider } from './OpenAISuggestionProvider';
 import { MockSuggestionProvider } from './MockSuggestionProvider';
 import { suggestionFormat } from './suggestionFormat';
+import { SUGGESTION_BATCH_LIMIT } from '../../contracts/meeting/suggestion';
 import type { SuggestionRequest } from '../../core/suggestions/SuggestionProvider';
 
 const card = {
@@ -323,7 +324,7 @@ describe('OpenAI suggestion adapter with synthetic HTTP only', () => {
     {},
     { status: 'queued', output: [] },
     { status: 'completed', output: [] },
-    envelope([card, card, card]),
+    envelope(Array.from({ length: SUGGESTION_BATCH_LIMIT + 1 }, () => card)),
     envelope([{ ...card, id: 'remote-id' }]),
     { status: 'completed', output: [{ type: 'function_call' }] },
     {
@@ -508,7 +509,10 @@ describe('offline mock uses the same contract', () => {
     });
     expect(
       await new MockSuggestionProvider({
-        suggestions: [card, card, card],
+        suggestions: Array.from(
+          { length: SUGGESTION_BATCH_LIMIT + 1 },
+          () => card,
+        ),
       }).generate(request()),
     ).toEqual({ ok: false, code: 'invalid-response' });
     const controller = new AbortController();

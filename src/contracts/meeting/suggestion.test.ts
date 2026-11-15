@@ -4,6 +4,7 @@ import {
   parseSuggestion,
   parseSuggestionContent,
   SUGGESTION_CATEGORIES,
+  SUGGESTION_BATCH_LIMIT,
 } from './suggestion';
 
 const card = {
@@ -14,7 +15,7 @@ const card = {
 };
 
 describe('suggestion content and batches', () => {
-  it.each([0, 1, 2])(
+  it.each([0, 1, 2, SUGGESTION_BATCH_LIMIT])(
     'accepts %i contents without model-controlled IDs/expiry',
     (count) => {
       const batch = {
@@ -38,7 +39,12 @@ describe('suggestion content and batches', () => {
     [],
     {},
     { suggestions: null },
-    { suggestions: [card, card, card] },
+    {
+      suggestions: Array.from(
+        { length: SUGGESTION_BATCH_LIMIT + 1 },
+        () => card,
+      ),
+    },
     { suggestions: [], extra: true },
     ...[
       { ...card, id: 'remote' },

@@ -2,6 +2,8 @@
 
 Data: 2026-11-12. Base: `3e0ba1e`, `main`, árvore inicialmente limpa. Dependência T023 concluída. Plano registrado em `PROGRESS.md` e T040 marcada `IN_PROGRESS` antes das mudanças de código/testes. Política em [ADR 0022](adr/0022-retained-live-suggestions.md).
 
+**Atualização:** a capacidade de dois cartões descrita neste registro foi substituída em 15/11 pela T054/ADR 0026. As evidências abaixo registram o comportamento daquela versão.
+
 ## Implementação e aceite
 
 - Cartões reais usam `expiresAt: null`, permanecem durante silêncio e após esgotar orçamento, sem expiração de 30 s. Alterações do relógio não removem cartões. Avanço/arquivo de contexto continua independente da retenção.

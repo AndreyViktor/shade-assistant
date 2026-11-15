@@ -1,5 +1,9 @@
 import { hasExactKeys } from '../validation';
-import { parseSuggestions } from './suggestion';
+import {
+  parseSuggestions,
+  SUGGESTION_SESSION_CARD_LIMIT,
+  SUGGESTION_SESSION_REQUEST_LIMIT,
+} from './suggestion';
 import type { Suggestion } from './suggestion';
 import { parseSuggestionDiagnostics } from './suggestionDiagnostics';
 import type { SuggestionDiagnostics } from './suggestionDiagnostics';
@@ -45,7 +49,7 @@ export function parseSuggestionAuthorization(
     typeof value.maxRequests !== 'number' ||
     !Number.isSafeInteger(value.maxRequests) ||
     value.maxRequests < 1 ||
-    value.maxRequests > 100
+    value.maxRequests > SUGGESTION_SESSION_REQUEST_LIMIT
   )
     return null;
   const userContext =
@@ -71,14 +75,14 @@ export function parseSuggestionSession(
     typeof value.remainingRequests !== 'number' ||
     !Number.isSafeInteger(value.remainingRequests) ||
     value.remainingRequests < 0 ||
-    value.remainingRequests > 100 ||
+    value.remainingRequests > SUGGESTION_SESSION_REQUEST_LIMIT ||
     (value.status !== 'disabled' &&
       value.status !== 'ready' &&
       value.status !== 'exhausted' &&
       value.status !== 'unavailable')
   )
     return null;
-  const items = parseSuggestions(value.items);
+  const items = parseSuggestions(value.items, SUGGESTION_SESSION_CARD_LIMIT);
   if (!items || items.some((card) => card.expiresAt !== null)) return null;
   if (
     value.status === 'disabled' &&

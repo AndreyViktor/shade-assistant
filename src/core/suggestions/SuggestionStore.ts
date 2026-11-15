@@ -2,6 +2,7 @@ import type {
   Suggestion,
   SuggestionContent,
 } from '../../contracts/meeting/suggestion';
+import { SUGGESTION_SESSION_CARD_LIMIT } from '../../contracts/meeting/suggestion';
 
 // Cosmetic differences are duplicates; semantic similarity is deliberately not inferred.
 function fingerprint(content: SuggestionContent): string {
@@ -32,12 +33,16 @@ export class SuggestionStore {
   add(id: string, content: SuggestionContent): boolean {
     this.prune();
     const key = fingerprint(content);
-    if (this.recent.some((item) => item.id === id || item.fingerprint === key))
+    if (
+      this.cards.some((card) => card.id === id || fingerprint(card) === key) ||
+      this.recent.some((item) => item.id === id || item.fingerprint === key) ||
+      this.cards.length >= SUGGESTION_SESSION_CARD_LIMIT
+    )
       return false;
     const expiresAt = this.ttlMs === null ? null : this.now() + this.ttlMs;
-    this.cards = [...this.cards, { ...content, id, expiresAt }].slice(-2);
-    // Suppress the last 100 insertions, including dismissed/evicted cards.
-    // Timed cards leave suppression at their deadline; retained cards at cleanup.
+    this.cards = [...this.cards, { ...content, id, expiresAt }];
+    // The bounded history covers recently dismissed cards. Visible cards stay
+    // deduplicated independently for as long as they remain in this.cards.
     this.recent = [...this.recent, { id, fingerprint: key, expiresAt }].slice(
       -100,
     );
@@ -54,7 +59,7 @@ export class SuggestionStore {
     return this.cards.map((card) => ({ ...card }));
   }
 
-  /** New information hides stale cards without allowing them to reappear. */
+  /** Explicit invalidation hides cards while preserving recent deduplication. */
   invalidate(): void {
     this.prune();
     this.cards = [];

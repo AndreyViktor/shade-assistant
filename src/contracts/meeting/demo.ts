@@ -3,6 +3,8 @@ import type { Suggestion } from './suggestion';
 import { hasExactKeys } from '../validation';
 
 // Synthetic DEMO data only; this is not the native STT protocol (T012).
+export const DEMO_SUGGESTION_LIMIT = 2;
+
 export type DemoTranscript = {
   sequence: number;
   source: 'mic' | 'system';
@@ -36,7 +38,10 @@ export function parseDemoSnapshot(value: unknown): DemoSnapshot | null {
   )
     return null;
   const transcript = value.transcript;
-  const suggestions = parseSuggestions(value.suggestions);
+  const suggestions = parseSuggestions(
+    value.suggestions,
+    DEMO_SUGGESTION_LIMIT,
+  );
   if (!suggestions || suggestions.some((card) => card.expiresAt === null))
     return null;
   let parsedTranscript: DemoTranscript | null = null;

@@ -221,8 +221,8 @@ export function StartSessionDialog({
                   }
                 />
                 <p id="suggestion-limit-help" className="field-help">
-                  De 1 a 100 nesta sessão. Cada pedido pode gerar até dois
-                  cartões. Falhas também contam.
+                  De 1 a 100 nesta sessão. Cada pedido pode gerar até oito
+                  sugestões. Falhas também contam.
                 </p>
                 <p className="cloud-consent">
                   Ao iniciar com sugestões, você autoriza o envio da transcrição

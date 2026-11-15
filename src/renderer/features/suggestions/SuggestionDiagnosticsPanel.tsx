@@ -139,10 +139,9 @@ export function SuggestionDiagnosticsPanel({
             </p>
             {attempt?.result === 'success' && (
               <p>
-                Cartões não expiram por tempo. Podem ser substituídos por
-                cartões novos, descartados ou limpos ao pausar, parar, desativar
-                sugestões ou encerrar a transcrição. Conteúdo repetido pode ser
-                suprimido.
+                Todos os cartões recebidos permanecem até descarte ou limpeza ao
+                pausar, parar, desativar sugestões ou encerrar a transcrição.
+                Conteúdo repetido pode ser suprimido.
               </p>
             )}
             <details>

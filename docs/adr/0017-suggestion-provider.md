@@ -2,6 +2,8 @@
 
 Data: 2026-11-06. Escopo: T021.
 
+**Atualização:** o limite histórico de dois itens por resposta foi ampliado para oito pela [ADR 0026](0026-all-live-suggestion-cards.md); o transporte, o parser compartilhado e as demais regras continuam aplicáveis.
+
 ## Contexto
 
 T020 fornece contexto limitado; T004 mantém credenciais no processo privilegiado. Os cartões T010 já definem conteúdo, IDs locais e expiração. Precisamos de um adapter testável sem ativar envio de texto ou adiantar a integração T024.

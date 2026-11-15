@@ -205,12 +205,31 @@ summary {
 }
 
 .suggestion-card {
-  margin: 12px 0;
+  margin: 0;
   padding: 14px;
   border: 1px solid #607b9f;
   border-radius: 9px;
   background: #101827;
   overflow-wrap: anywhere;
+}
+
+.suggestion-card-list {
+  max-height: min(45dvh, 460px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  list-style: none;
+  padding: 0 4px 0 0;
+  margin: 12px 0;
+}
+
+.suggestion-card-list li + li {
+  margin-top: 10px;
+}
+
+.suggestion-card-list:focus-visible {
+  outline: 2px solid #91c4ff;
+  outline-offset: 3px;
 }
 
 .suggestion-card h4 {
@@ -476,7 +495,7 @@ button {
   user-select: text;
 }
 
-/* Fixed two-card capacity uses scrolling, never viewport-driven deletion. */
+/* Suggestion cards scroll inside their panel; resizing never deletes them. */
 .meeting-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);

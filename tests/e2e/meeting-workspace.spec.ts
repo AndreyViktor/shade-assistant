@@ -28,8 +28,11 @@ for (const empty of [false, true]) {
         name: 'Assistência da reunião',
       });
       const cards = assistance.getByRole('article');
+      const cardList = assistance.getByRole('list', {
+        name: 'Lista rolável de cartões da reunião',
+      });
       await expect(log).toBeVisible();
-      await expect(cards).toHaveCount(empty ? 0 : 2);
+      await expect(cards).toHaveCount(empty ? 0 : 8);
       if (empty) {
         await expect(
           page.getByText('Nenhuma fala exibida nesta sessão.'),
@@ -40,7 +43,7 @@ for (const empty of [false, true]) {
       } else await expect(log.locator('.transcript-segment')).toHaveCount(8);
       const read = () =>
         page.evaluate(() =>
-          window.meetingCopilot.session({ version: 7, action: 'read' }),
+          window.meetingCopilot.session({ version: 8, action: 'read' }),
         );
       const before = await read();
       for (const [width, height] of [
@@ -78,9 +81,31 @@ for (const empty of [false, true]) {
           await pane.focus();
           await expect(pane).toBeFocused();
         }
-        await expect(cards).toHaveCount(empty ? 0 : 2);
+        await expect(cards).toHaveCount(empty ? 0 : 8);
         expect(await read()).toEqual(before);
         if (!empty) {
+          await expect(cardList.locator('article').first()).toHaveAttribute(
+            'aria-label',
+            'Sugestão sintética 08',
+          );
+          await expect(cardList.locator('article').last()).toHaveAttribute(
+            'aria-label',
+            'Sugestão sintética 01',
+          );
+          expect(
+            await cardList.evaluate(
+              (element) => element.scrollHeight > element.clientHeight,
+            ),
+          ).toBe(true);
+          await cardList.focus();
+          await cardList.press('End');
+          await expect
+            .poll(() => cardList.evaluate((element) => element.scrollTop))
+            .toBeGreaterThan(0);
+          await cardList.press('Home');
+          await expect
+            .poll(() => cardList.evaluate((element) => element.scrollTop))
+            .toBe(0);
           await log.evaluate((element) => {
             element.scrollTop = 0;
           });
@@ -130,7 +155,7 @@ for (const empty of [false, true]) {
           () => document.documentElement.scrollWidth <= window.innerWidth,
         ),
       ).toBe(true);
-      await expect(cards).toHaveCount(empty ? 0 : 2);
+      await expect(cards).toHaveCount(empty ? 0 : 8);
       await assistance.focus();
       await expect(assistance).toBeFocused();
       const revoke = page.getByRole('button', { name: 'Desativar sugestões' });
@@ -162,7 +187,7 @@ for (const empty of [false, true]) {
           .getByRole('button', { name: /Descartar/ })
           .focus();
         await page.keyboard.press('Enter');
-        await expect(cards).toHaveCount(1);
+        await expect(cards).toHaveCount(7);
       }
       await page.getByRole('button', { name: 'Pausar', exact: true }).click();
       await expect(cards).toHaveCount(0);

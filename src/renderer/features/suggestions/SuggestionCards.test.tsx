@@ -92,14 +92,41 @@ it('explains retention and cleanup for real cards and dismisses by ID', () => {
     />,
   );
   const region = screen.getByRole('region', { name: 'Sugestões da reunião' });
-  expect(region).toHaveTextContent('sem expiração por tempo');
-  expect(region).toHaveTextContent('Novos substituem os mais antigos');
+  expect(region).toHaveTextContent('Todos os cards da sessão');
+  expect(region).toHaveTextContent('Os mais recentes aparecem primeiro');
+  expect(
+    screen.getByRole('list', {
+      name: 'Lista rolável de cartões da reunião',
+    }),
+  ).toBeVisible();
   expect(region).toHaveTextContent(
-    'pausar, parar ou desativar sugestões limpa os cartões',
+    'pausar, parar ou desativar sugestões limpa os cards',
   );
   expect(region).not.toHaveTextContent('30 segundos');
   fireEvent.click(
     screen.getByRole('button', { name: `Descartar: ${card.title}` }),
   );
   expect(onDismiss).toHaveBeenCalledExactlyOnceWith(card.id);
+});
+
+it('shows real cards newest-first in one keyboard-focusable scroll list', () => {
+  const older = { ...card, id: 'old', title: 'Mais antiga' };
+  const newer = { ...card, id: 'new', title: 'Mais recente' };
+  render(
+    <SuggestionCards
+      suggestions={[older, newer]}
+      demo={false}
+      busy={false}
+      onDismiss={vi.fn()}
+    />,
+  );
+  const list = screen.getByRole('list', {
+    name: 'Lista rolável de cartões da reunião',
+  });
+  expect(list).toHaveAttribute('tabindex', '0');
+  expect(
+    [...list.querySelectorAll('article')].map((article) =>
+      article.getAttribute('aria-label'),
+    ),
+  ).toEqual(['Mais recente', 'Mais antiga']);
 });

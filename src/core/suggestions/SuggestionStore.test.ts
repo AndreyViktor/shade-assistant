@@ -19,19 +19,28 @@ function setup(ttl = 30000) {
   };
 }
 describe('session suggestion policy', () => {
-  it('starts silent and retains only the two newest cards, with all four categories', () => {
+  it('starts silent and retains every card, with all four categories', () => {
     const { store } = setup();
     expect(store.snapshot()).toEqual([]);
     for (const category of SUGGESTION_CATEGORIES) {
       expect(
         store.add(category, { ...content, category, body: category }),
       ).toBe(true);
-      expect(store.snapshot().length).toBeLessThanOrEqual(2);
+      expect(store.snapshot().length).toBeLessThanOrEqual(4);
       expect(store.snapshot().at(-1)?.category).toBe(category);
     }
-    expect(store.snapshot().map(({ id }) => id)).toEqual(['warning', 'action']);
+    expect(store.snapshot().map(({ id }) => id)).toEqual([
+      'answer',
+      'question',
+      'warning',
+      'action',
+    ]);
     store.dismiss('action');
-    expect(store.snapshot().map(({ id }) => id)).toEqual(['warning']);
+    expect(store.snapshot().map(({ id }) => id)).toEqual([
+      'answer',
+      'question',
+      'warning',
+    ]);
   });
   it('rejects duplicate IDs and normalized content without extending expiry or relabeling it', () => {
     const { store, advance } = setup();
@@ -53,7 +62,7 @@ describe('session suggestion policy', () => {
     expect(store.snapshot()).toEqual([]);
     expect(store.add('two', content)).toBe(true);
   });
-  it('keeps dismissed and evicted duplicates suppressed for their original lifetime', () => {
+  it('keeps dismissed duplicates suppressed for their original lifetime', () => {
     const { store, advance } = setup();
     store.add('one', content);
     store.dismiss('one');
@@ -117,7 +126,7 @@ describe('session suggestion policy', () => {
 });
 
 describe('retained real session cards', () => {
-  it('ignores elapsed time and clock changes, deduplicates and dismisses without restoring evicted cards', () => {
+  it('ignores elapsed time and clock changes, deduplicates and dismisses without evicting other cards', () => {
     let now = 1000;
     const store = new SuggestionStore(() => now, null);
     store.add('one', content);
@@ -132,10 +141,14 @@ describe('retained real session cards', () => {
     }
     store.add('two', { ...content, body: 'Second' });
     store.add('three', { ...content, body: 'Third' });
-    expect(store.snapshot().map(({ id }) => id)).toEqual(['two', 'three']);
+    expect(store.snapshot().map(({ id }) => id)).toEqual([
+      'one',
+      'two',
+      'three',
+    ]);
     store.dismiss('missing');
     store.dismiss('three');
-    expect(store.snapshot().map(({ id }) => id)).toEqual(['two']);
+    expect(store.snapshot().map(({ id }) => id)).toEqual(['one', 'two']);
     expect(store.add('repeated', content)).toBe(false);
     expect(store.add('repeated', { ...content, body: 'Third' })).toBe(false);
     store.clear();
@@ -146,7 +159,7 @@ describe('retained real session cards', () => {
     ]);
   });
 
-  it('bounds suppression to the last 100 insertions and keeps only two cards without a hidden queue', () => {
+  it('retains all cards while bounding duplicate suppression to the last 100 insertions', () => {
     const store = new SuggestionStore(Date.now, null);
     for (let i = 0; i < 100; i++)
       expect(store.add(`id-${i}`, { ...content, body: `Body ${i}` })).toBe(
@@ -155,10 +168,25 @@ describe('retained real session cards', () => {
     expect(store.add('repeat', { ...content, body: 'Body 0' })).toBe(false);
     expect(store.add('id-100', { ...content, body: 'Body 100' })).toBe(true);
     expect(store.add('repeat', { ...content, body: 'Body 1' })).toBe(false);
-    expect(store.add('id-0', { ...content, body: 'Body 0' })).toBe(true);
-    expect(store.snapshot().map(({ id }) => id)).toEqual(['id-100', 'id-0']);
-    store.dismiss('id-100');
+    expect(store.add('id-0', { ...content, body: 'Body 0' })).toBe(false);
+    expect(store.snapshot()).toHaveLength(101);
+    expect(store.snapshot()[0]?.id).toBe('id-0');
+    expect(store.snapshot().at(-1)?.id).toBe('id-100');
     store.dismiss('id-0');
-    expect(store.snapshot()).toEqual([]);
+    expect(store.add('repeat-old', { ...content, body: 'Body 0' })).toBe(true);
+    expect(store.snapshot()).toHaveLength(101);
+  });
+
+  it('retains the full budget-derived session ceiling and never evicts within it', () => {
+    const store = new SuggestionStore(Date.now, null);
+    for (let i = 0; i < 800; i++)
+      expect(store.add(`id-${i}`, { ...content, body: `Body ${i}` })).toBe(
+        true,
+      );
+    expect(store.snapshot()).toHaveLength(800);
+    expect(store.add('beyond-budget', { ...content, body: 'Body 800' })).toBe(
+      false,
+    );
+    expect(store.snapshot()).toHaveLength(800);
   });
 });

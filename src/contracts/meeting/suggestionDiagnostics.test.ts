@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { SUGGESTION_BATCH_LIMIT } from './suggestion';
 import { parseSuggestionDiagnostics } from './suggestionDiagnostics';
 import { parseSuggestionSession } from './suggestionSession';
 
@@ -47,7 +48,7 @@ describe('bounded diagnostic IPC', () => {
     { durationMs: -1 },
     { startedAt: Infinity },
     { number: 2 },
-    { suggestionCount: 3 },
+    { suggestionCount: SUGGESTION_BATCH_LIMIT + 1 },
     { result: 'raw-private-error' },
   ])('rejects malformed attempt %#', (invalid) => {
     expect(
@@ -56,6 +57,18 @@ describe('bounded diagnostic IPC', () => {
         lastAttempt: { ...attempt, ...invalid },
       }),
     ).toBeNull();
+  });
+  it('accepts diagnostics for the full batch limit', () => {
+    expect(
+      parseSuggestionDiagnostics({
+        ...diagnostic,
+        lastAttempt: {
+          ...attempt,
+          result: 'success',
+          suggestionCount: SUGGESTION_BATCH_LIMIT,
+        },
+      })?.lastAttempt?.suggestionCount,
+    ).toBe(SUGGESTION_BATCH_LIMIT);
   });
   it('requires active diagnostics and prevents retention after disabled/revoked state', () => {
     expect(

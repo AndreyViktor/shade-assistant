@@ -20,7 +20,10 @@ export type Suggestion = SuggestionContent & {
 };
 export const SUGGESTION_TITLE_LIMIT = 80;
 export const SUGGESTION_BODY_LIMIT = 300;
-export const SUGGESTION_BATCH_LIMIT = 2;
+export const SUGGESTION_BATCH_LIMIT = 8;
+export const SUGGESTION_SESSION_REQUEST_LIMIT = 100;
+export const SUGGESTION_SESSION_CARD_LIMIT =
+  SUGGESTION_BATCH_LIMIT * SUGGESTION_SESSION_REQUEST_LIMIT;
 
 export function parseSuggestionContent(
   value: unknown,
@@ -99,8 +102,16 @@ export function parseSuggestion(value: unknown): Suggestion | null {
   };
 }
 
-export function parseSuggestions(value: unknown): Suggestion[] | null {
-  if (!Array.isArray(value) || value.length > SUGGESTION_BATCH_LIMIT)
+export function parseSuggestions(
+  value: unknown,
+  maxItems = SUGGESTION_BATCH_LIMIT,
+): Suggestion[] | null {
+  if (
+    !Number.isSafeInteger(maxItems) ||
+    maxItems < 0 ||
+    !Array.isArray(value) ||
+    value.length > maxItems
+  )
     return null;
   const result: Suggestion[] = [];
   for (const item of value) {

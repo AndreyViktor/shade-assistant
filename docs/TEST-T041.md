@@ -2,6 +2,8 @@
 
 Data: 2026-11-12. Base `0bc1e63`, `main` inicialmente limpa. Dependências T040/T017 concluídas. Plano e `IN_PROGRESS` registrados antes de código/testes. **Aceite concluído**: usuário confirmou o ensaio com um monitor em 13/11 e autorizou adiar múltiplos monitores para T045. O foco nativo e a suíte completa passaram na retomada.
 
+**Atualização:** a regra de retenção de dois cartões e o texto correspondente, descritos abaixo como estado histórico de T041, foram substituídos pela T054/ADR 0026. A rolagem interna mantém os cards acessíveis e resize continua sem descartar itens.
+
 ## Implementação e política de espaço
 
 - Janela inicial 960×720, mínimo 640×480, moldura/controles nativos e `alwaysOnTop` preservados. Transcrição e assistência em colunas adjacentes nas duas dimensões. Log e assistência recebem foco por teclado e têm rolagem independente; textos longos e palavras sem espaços quebram dentro da coluna.

@@ -20,13 +20,15 @@ Decisões confirmadas pelo usuário prevalecem sobre propostas e hipóteses anti
 
 - **D020 (2026-11-13):** usuário confirmou validação do painel em um monitor, incluindo Spaces, tela cheia, interação e arraste/redimensionamento, e decidiu concluir T041 deixando o ensaio de dois monitores para T045. Isso não comprova comportamento com múltiplos monitores nem elimina a possibilidade de falha intermitente de foco.
 
+- **D021 (2026-11-15):** a pedido do usuário, remover a retenção de apenas dois cartões reais. Mostrar todos os cards recebidos até descarte/limpeza, numa lista rolável com os mais recentes primeiro. O contrato limita cada resposta a oito cards e mantém o teto atual de 100 pedidos por sessão; o protocolo comporta até 800 e não descarta itens dentro desse orçamento. A DEMO continua com dois cards e expiração de 30 s. Ver [ADR 0026](adr/0026-all-live-suggestion-cards.md).
+
 ## Propostas técnicas reversíveis
 
 Defaults sujeitos a validação de implementação; detalhes do fluxo e fronteiras estão em [ARCHITECTURE.md](ARCHITECTURE.md).
 
 - **P001:** helper Swift próprio `MeetingCopilotTranscriber`, protocolo JSONL versionado do projeto, `spawn` sem shell e IPC restrito.
 - **P002–P003:** Responses API para sugestões e visão, com modelos configuráveis e verificados quanto à disponibilidade, custo, latência e qualidade antes da integração.
-- **P004–P006:** zero a duas sugestões; gatilhos relevantes e silêncio deliberado; janela curta de contexto e cooldown inicial; DEMO offline com expiração e dados em memória por padrão. T040 remove expiração por tempo dos cartões reais, mantendo dois cartões e limpeza ao pausar/parar/revogar/reiniciar, conforme [ADR 0022](adr/0022-retained-live-suggestions.md).
+- **P004–P006:** quantidade variável de sugestões úteis, sem preencher uma cota (até oito por resposta); gatilhos relevantes e silêncio deliberado; janela curta de contexto e cooldown inicial; DEMO offline com expiração e dados em memória por padrão. Cards reais não expiram nem são substituídos por contagem; descarte e limpeza do ciclo permanecem conforme [ADR 0026](adr/0026-all-live-suggestion-cards.md).
 - **P007–P008:** chave do usuário protegida pelo cofre do sistema; limites de custo; providers selecionáveis. Áudio só sai do Mac no fallback remoto opt-in.
 - **P009:** usar os padrões de engenharia existentes, com boundaries testados, testes e gates reproduzíveis; evitar camadas ou frameworks sem necessidade demonstrada.
 

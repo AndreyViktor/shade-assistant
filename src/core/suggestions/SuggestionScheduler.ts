@@ -103,7 +103,7 @@ export class SuggestionScheduler {
     this.arm();
   }
 
-  /** Explicit topic/context invalidation; bounded suppression survives. */
+  /** Hides current cards and cancels work; bounded duplicate suppression survives. */
   invalidate(): void {
     clearTimeout(this.timer);
     this.timer = undefined;

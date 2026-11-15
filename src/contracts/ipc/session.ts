@@ -14,49 +14,49 @@ import type { IpcErrorCode } from './appStatus';
 export const SESSION_CHANNEL = 'meeting-copilot:session';
 export type SessionRequest =
   | {
-      version: 7;
+      version: 8;
       action: 'read' | 'pause' | 'resume' | 'stop' | 'revoke-suggestions';
     }
-  | { version: 7; action: 'start'; options: SessionStart }
-  | { version: 7; action: 'dismiss-suggestion'; id: string };
+  | { version: 8; action: 'start'; options: SessionStart }
+  | { version: 8; action: 'dismiss-suggestion'; id: string };
 export type SessionResult =
   | {
-      version: 7;
+      version: 8;
       ok: true;
       session: SessionSnapshot;
       demo: DemoSnapshot;
       local: LocalTranscriptSnapshot | null;
       suggestions: SuggestionSessionSnapshot;
     }
-  | { version: 7; ok: false; code: IpcErrorCode };
+  | { version: 8; ok: false; code: IpcErrorCode };
 
 export function parseSessionRequest(value: unknown): SessionRequest | null {
   if (
     hasExactKeys(value, ['version', 'action']) &&
-    value.version === 7 &&
+    value.version === 8 &&
     (value.action === 'read' ||
       value.action === 'pause' ||
       value.action === 'resume' ||
       value.action === 'stop' ||
       value.action === 'revoke-suggestions')
   ) {
-    return { version: 7, action: value.action };
+    return { version: 8, action: value.action };
   }
   if (
     hasExactKeys(value, ['version', 'action', 'options']) &&
-    value.version === 7 &&
+    value.version === 8 &&
     value.action === 'start'
   ) {
     const options = parseSessionStart(value.options);
-    if (options) return { version: 7, action: 'start', options };
+    if (options) return { version: 8, action: 'start', options };
   }
   if (
     hasExactKeys(value, ['version', 'action', 'id']) &&
-    value.version === 7 &&
+    value.version === 8 &&
     value.action === 'dismiss-suggestion' &&
     isSuggestionId(value.id)
   ) {
-    return { version: 7, action: 'dismiss-suggestion', id: value.id };
+    return { version: 8, action: 'dismiss-suggestion', id: value.id };
   }
   return null;
 }
@@ -71,7 +71,7 @@ export function parseSessionResult(value: unknown): SessionResult {
       'local',
       'suggestions',
     ]) &&
-    value.version === 7 &&
+    value.version === 8 &&
     value.ok === true
   ) {
     const session = parseSessionSnapshot(value.session);
@@ -89,17 +89,17 @@ export function parseSessionResult(value: unknown): SessionResult {
             suggestions.items.length === 0 &&
             suggestions.remainingRequests === 0))
       )
-        return { version: 7, ok: true, session, demo, local, suggestions };
+        return { version: 8, ok: true, session, demo, local, suggestions };
     } catch {
-      return { version: 7, ok: false, code: 'INVALID_RESPONSE' };
+      return { version: 8, ok: false, code: 'INVALID_RESPONSE' };
     }
   }
   const failure = parseStatusResult(
-    hasExactKeys(value, ['version', 'ok', 'code']) && value.version === 7
+    hasExactKeys(value, ['version', 'ok', 'code']) && value.version === 8
       ? { ...value, version: 1 }
       : null,
   );
   return failure.ok
-    ? { version: 7, ok: false, code: 'INVALID_RESPONSE' }
-    : { ...failure, version: 7 };
+    ? { version: 8, ok: false, code: 'INVALID_RESPONSE' }
+    : { ...failure, version: 8 };
 }

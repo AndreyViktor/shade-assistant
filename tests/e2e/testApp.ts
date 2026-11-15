@@ -82,6 +82,24 @@ app.on('session-created', (session) => {
 });
 `
       : '';
+  const successCards =
+    options.syntheticNative === 'layout'
+      ? Array.from({ length: 8 }, (_, index) => ({
+          category: index % 2 === 0 ? 'question' : 'action',
+          title: `Sugestão sintética ${String(index + 1).padStart(2, '0')}`,
+          body: `Card fictício ${index + 1}: confirme o responsável, o prazo e o próximo passo acordado para este item da reunião. `.repeat(
+            2,
+          ),
+          groundedIn: index % 2 === 0 ? 'inference' : 'meeting',
+        }))
+      : [
+          {
+            category: 'question',
+            title: 'Prazo sintético Aurora',
+            body: 'Confirme a data do projeto fictício.',
+            groundedIn: 'inference',
+          },
+        ];
   // Only this test bootstrap replaces the transport; production has no mock flag.
   const suggestionBootstrap = options.syntheticSuggestions
     ? `
@@ -95,11 +113,10 @@ app.on('session-created', (session) => {
       const outcome = ${JSON.stringify(options.syntheticSuggestionOutcome ?? 'success')};
       if (outcome === 'authentication') return new Response(JSON.stringify({error:'private-error-sentinel'}), {status:401});
       if (outcome === 'empty') return new Response(JSON.stringify({status:'completed', output:[{type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:JSON.stringify({suggestions:[]})}]}]}), {status:200});
+      const suggestions = ${JSON.stringify(successCards)};
       return new Response(JSON.stringify({status:'completed', output:[{
         type:'message', role:'assistant', status:'completed', content:[{
-          type:'output_text', text:JSON.stringify({suggestions:[{
-            category:'question', title:'Prazo sintético Aurora', body:'Confirme a data do projeto fictício.', groundedIn:'inference'
-          }${options.syntheticNative === 'layout' ? ", { category:'action', title:'Ação sintética Boreal', body:'Confirmar os responsáveis e registrar o próximo passo da reunião fictícia. '.repeat(4), groundedIn:'meeting' }" : ''}]})
+          type:'output_text', text:JSON.stringify({suggestions})
         }]
       }]}), {status:200});
     };

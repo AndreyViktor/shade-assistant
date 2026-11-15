@@ -1,0 +1,27 @@
+# T054 — Retenção e rolagem de todos os cartões reais
+
+Data: 2026-11-15. Tarefa registrada como `IN_PROGRESS` em `TASKS.md` e plano em `PROGRESS.md` antes das alterações.
+
+## Implementação
+
+- Respostas reais aceitam de zero a oito sugestões; o prompt pede somente itens distintos e relevantes, sem completar uma cota. As respostas reais já não são limitadas a dois cards.
+- O store não remove cards por contagem. O teto protocolar deriva do orçamento vigente: 8 cards por resposta × até 100 pedidos = 800 por sessão. Os cards continuam deduplicados, descartáveis por ID e limpos pelo ciclo da sessão. DEMO conserva dois cards e expiração de 30 s.
+- IPC de sessão migrou de v7 para v8. Parser, main, preload, renderer e fixtures foram atualizados; v7 é rejeitada. O parser aceita 800 cards e rejeita 801.
+- O painel apresenta os cards reais em ordem do mais novo para o mais antigo, dentro de uma lista de altura limitada, rolável e focável por teclado. Redimensionamento não altera o snapshot. Os textos de operação e diagnóstico refletem retenção e limpeza.
+- O estado atual e a decisão foram registrados em [ADR 0026](adr/0026-all-live-suggestion-cards.md); ADR 0022 e evidências antigas de T040/T041 foram marcadas como históricas quanto à capacidade.
+
+## Validação
+
+- Testes focados: **224/224 passaram** em 11 arquivos, incluindo resposta 0/8/9, store até o teto, deduplicação, parser IPC v8, snapshot de 800 cards, acessibilidade e limpeza.
+- `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npm run verify`: **aprovado** — lint, Prettier, tipos, **884 testes aprovados / 18 skipped** (48 arquivos aprovados / 3 skipped), **19 testes do runner**, build Electron.
+- `env PATH=/opt/homebrew/opt/node@26/bin:$PATH npx playwright test tests/e2e/meeting-workspace.spec.ts --max-failures=1`: **2/2 passaram**. Smoke fora do sandbox com helper e respostas sintéticos, perfil temporário e bloqueio de rede. Verificou oito cards, ordem, foco/rolagem por Home/End, resize em 960×720 e 640×480, zoom, descarte, limpeza por pausa/parada e estado vazio.
+- Inspecionei as capturas sintéticas de 960×720 e 640×480. A lista interna limita sua altura, mostra o card mais recente no topo e mantém os demais acessíveis por rolagem.
+- `git diff --check`: aprovado.
+
+## Correção observada durante os gates
+
+A primeira execução completa do `verify` identificou que o parser compartilhado havia ampliado acidentalmente a capacidade da DEMO. O parser agora passa explicitamente o limite de dois da DEMO; a execução completa final acima passou depois dessa correção.
+
+## Limites
+
+Todos os dados e credenciais do smoke foram sintéticos. Nenhuma chave do usuário, fala real, captura, chamada paga, custo ou envio de rede foi usado. A tarefa não avalia qualidade/relevância do modelo real. O teto de 800 corresponde ao limite atual de 100 pedidos e oito itens por resposta; não descarta cards dentro desse teto. A pausa continua limpando cards conforme a política existente.

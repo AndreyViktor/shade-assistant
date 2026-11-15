@@ -2,6 +2,8 @@
 
 Data: 2026-11-12. Escopo: T040.
 
+**Status:** decisões de capacidade e apresentação foram substituídas pela [ADR 0026](0026-all-live-suggestion-cards.md). Retenção sem TTL, deduplicação, descarte explícito e limpeza pelo ciclo de vida continuam válidos.
+
 ## Contexto
 
 O fluxo real contínuo (ADR 0021) preservava cartões após novas falas, mas o TTL de 30 segundos ainda os removia durante a leitura. T040 exige permanência sem expiração arbitrária, descarte explícito, capacidade e memória limitadas, sem alterar a DEMO.

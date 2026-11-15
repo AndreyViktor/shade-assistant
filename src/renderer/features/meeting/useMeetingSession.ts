@@ -27,7 +27,7 @@ export function useMeetingSession() {
       const [result, settings] = await Promise.all([
         Promise.resolve()
           .then(() =>
-            window.meetingCopilot.session({ version: 7, action: 'read' }),
+            window.meetingCopilot.session({ version: 8, action: 'read' }),
           )
           .catch(() => null),
         Promise.resolve()
@@ -70,7 +70,7 @@ export function useMeetingSession() {
         setSuggestions(emptySuggestionSession());
         try {
           const current = await window.meetingCopilot.session({
-            version: 7,
+            version: 8,
             action: 'read',
           });
           if (!mounted.current) return;
@@ -109,7 +109,7 @@ export function useMeetingSession() {
     async function poll() {
       try {
         const result = await window.meetingCopilot.session({
-          version: 7,
+          version: 8,
           action: 'read',
         });
         if (!active || revision.current !== currentRevision) return;
