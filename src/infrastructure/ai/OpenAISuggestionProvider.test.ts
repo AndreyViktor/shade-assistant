@@ -168,15 +168,35 @@ describe('OpenAI suggestion adapter with synthetic HTTP only', () => {
     expect(body).not.toHaveProperty('previous_response_id');
     expect(init.body).toContain('Resumo sintético');
     expect(init.body).toContain('untrusted meeting data');
-    expect(init.body).toContain('automatic speech-to-text transcription');
+    expect(init.body).toContain('automatic speech-to-text');
     expect(init.body).toContain(
-      'do not silently rewrite or correct the transcription',
+      'never present a reconstructed phrase as certain',
     );
     expect(init.body).toContain(
       'Proactively infer what help would be useful from the conversation',
     );
     expect(init.body).toContain(
-      'do not require the user to provide more context or ask the user questions',
+      'Do not require the user to provide more context or answer the assistant',
+    );
+    if (
+      typeof body !== 'object' ||
+      body === null ||
+      !('instructions' in body) ||
+      typeof body.instructions !== 'string'
+    )
+      throw new Error('instructions absent');
+    expect(body.instructions).toContain(
+      'Unclear wording by itself is not a useful contribution',
+    );
+    expect(body.instructions).toContain(
+      'Never use a question card to ask about speech recognition or transcript quality',
+    );
+    expect(body.instructions).toContain(
+      '<assistant_response>{"suggestions":[]}</assistant_response>',
+    );
+    expect(body.instructions).toContain('Definir responsável');
+    expect(body.instructions).not.toContain(
+      'question the user could raise with meeting participants',
     );
   });
   it('supports distinct configured models, output limits and English without fixed defaults', async () => {
