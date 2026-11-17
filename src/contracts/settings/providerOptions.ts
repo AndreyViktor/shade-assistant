@@ -1,6 +1,6 @@
 /** Curated UI choices, checked against official model pages on 2026-11-12.
  * Both support Responses + Structured Outputs; this is not an account-access check.
- * Sources and maintenance notes: docs/TEST-T024.md (model selection).
+ * Sources and maintenance notes: docs/evidence/tasks/T024.md (model selection).
  */
 export const SUGGESTION_MODELS = [
   {

@@ -22,4 +22,4 @@ HTTP 429 permanece categoria ampla: pode representar frequência, créditos ou l
 
 Não há histórico de todas as tentativas nem captura de resposta bruta. O diagnóstico não altera a política conservadora que cancela requisições ao mudar o contexto; cancelamento pode acontecer depois do envio e não elimina possíveis custos. Uma resposta válida também não garante um cartão ainda visível, devido a invalidação/dedup/TTL.
 
-Evidências e limites de validação em [TEST-T024.md](../TEST-T024.md).
+Evidências e limites de validação em [T024.md](../evidence/tasks/T024.md).

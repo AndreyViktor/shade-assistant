@@ -4,7 +4,7 @@ Assistente desktop de reuniões em tempo real, feito com Electron, React e TypeS
 
 ## Status
 
-O scaffold desktop, a demonstração offline e a integração do helper Swift ao Electron estão implementados. Apple Local agora exibe falas recentes no overlay (T017), com fonte, idioma e estado; o ensaio manual está em [docs/TEST-T017.md](docs/TEST-T017.md). A T016, fallback OpenAI STT, está adiada. O app não está pronto para distribuição. Windows (T036–T039) permanece adiado.
+O scaffold desktop, a demonstração offline e a integração do helper Swift ao Electron estão implementados. Apple Local agora exibe falas recentes no overlay (T017), com fonte, idioma e estado; o ensaio manual está em [docs/evidence/tasks/T017.md](docs/evidence/tasks/T017.md). A T016, fallback OpenAI STT, está adiada. O app não está pronto para distribuição. Windows (T036–T039) permanece adiado.
 
 ## Executar
 
@@ -24,7 +24,7 @@ npm run build
 npm start
 ```
 
-Instruções adicionais de instalação, testes e gates Swift estão em [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). O roteiro de demonstração está em [docs/DEMO.md](docs/DEMO.md). O ensaio real da transcrição no overlay está em [docs/TEST-T017.md](docs/TEST-T017.md).
+Instruções adicionais de instalação, testes e gates Swift estão em [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). O roteiro de demonstração está em [docs/DEMO.md](docs/DEMO.md). O ensaio real da transcrição no overlay está em [docs/evidence/tasks/T017.md](docs/evidence/tasks/T017.md).
 
 ## Preferências e início da sessão
 

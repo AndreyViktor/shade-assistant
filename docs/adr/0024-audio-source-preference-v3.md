@@ -22,4 +22,4 @@ Persistir sem nova versão tornaria o contrato ambíguo e a migração silencios
 
 ## Validação
 
-Contratos, migração de v1/v2, persistência e sessão ativa/pausada offline são registrados em [TEST-T047.md](../TEST-T047.md), com resultados reais e limites de ambiente.
+Contratos, migração de v1/v2, persistência e sessão ativa/pausada offline são registrados em [T047.md](../evidence/tasks/T047.md), com resultados reais e limites de ambiente.

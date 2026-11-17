@@ -1,6 +1,6 @@
 # ADR 0023 — Tela de preferências e migração v2
 
-Data: 2026-11-13. Tarefa: T042. Estado: implementado; validação em [TEST-T042.md](../TEST-T042.md).
+Data: 2026-11-13. Tarefa: T042. Estado: implementado; validação em [T042.md](../evidence/tasks/T042.md).
 
 ## Contexto
 
@@ -24,4 +24,4 @@ Manter modelo no diálogo criaria duas fontes de configuração. Migrar na borda
 
 ## Validação
 
-Testes de contrato/preload recusam payloads antigos, campos extras, modelos desconhecidos e consentimentos persistidos. Testes de disco cobrem migração, releitura, conteúdo inválido e permissões. RTL e Electron offline cobrem navegação/foco, persistência com reinício, sessão em andamento/pausada, consentimento renovado e fluxo seguro da chave. Resultados e limites em [TEST-T042.md](../TEST-T042.md).
+Testes de contrato/preload recusam payloads antigos, campos extras, modelos desconhecidos e consentimentos persistidos. Testes de disco cobrem migração, releitura, conteúdo inválido e permissões. RTL e Electron offline cobrem navegação/foco, persistência com reinício, sessão em andamento/pausada, consentimento renovado e fluxo seguro da chave. Resultados e limites em [T042.md](../evidence/tasks/T042.md).

@@ -21,4 +21,4 @@ O fluxo real contínuo (ADR 0021) preservava cartões após novas falas, mas o T
 
 Aumentar o TTL continuaria causando desaparecimento por tempo. Histórico ilimitado ou dedup de toda a sessão sem limite aumentaria memória; arquivamento em disco mudaria a política de privacidade. Preservar cartões na pausa exigiria separar autorização de geração e visibilidade, além de mudar a limpeza existente; optou-se por mantê-la explícita e testada.
 
-Cartões podem permanecer pouco relevantes até serem descartados, substituídos ou limpos; não há inferência semântica de validade. Não se afirma melhoria de qualidade da IA, validação em reunião real ou visibilidade em Spaces/tela cheia. Testes e limites em [TEST-T040.md](../TEST-T040.md).
+Cartões podem permanecer pouco relevantes até serem descartados, substituídos ou limpos; não há inferência semântica de validade. Não se afirma melhoria de qualidade da IA, validação em reunião real ou visibilidade em Spaces/tela cheia. Testes e limites em [T040.md](../evidence/tasks/T040.md).

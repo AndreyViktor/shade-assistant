@@ -1,14 +1,21 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-17. **Marco:** M10 — T059 DONE.
+**Atualizado:** 2026-11-17. **Marco:** M10 — T062 DONE.
 
 ## Snapshot
 
-- T053 DONE no commit `3f7ad82`, com contexto opcional e envio explícito. [Evidências T053](TEST-T053.md).
+- T053 DONE no commit `3f7ad82`, com contexto opcional e envio explícito. [Evidências T053](evidence/tasks/T053.md).
 - T054 removeu o limite de dois cards reais, ampliou a resposta para até oito e a capacidade derivada da sessão para 800 (100 pedidos). A lista mostra primeiro os cards mais novos e permite rolar por toda a sessão; DEMO permanece em dois cards/30 s.
-- T055 concluiu ajustes do prompt para descartar cartões sobre ruído de ASR e inferir ajuda apenas do contexto confiável. [Evidências e limites](TEST-T055.md).
-- T058 agrupa fragmentos finais com debounce trailing de 2 s e permite reavaliar contexto maior após uma resposta vazia. [Evidências e limites](TEST-T058.md).
+- T055 concluiu ajustes do prompt para descartar cartões sobre ruído de ASR e inferir ajuda apenas do contexto confiável. [Evidências e limites](evidence/tasks/T055.md).
+- T058 agrupa fragmentos finais com debounce trailing de 2 s e permite reavaliar contexto maior após uma resposta vazia. [Evidências e limites](evidence/tasks/T058.md).
 - T059 tornou executável a prioridade atual: T056→T057→T027, depois resultados estruturados ao vivo (T060) e perfis reutilizáveis (T061). Frentes secundárias ficaram `DEFERRED` e resumidas no roadmap.
+- T062 moveu os relatórios de tarefa para `docs/evidence/tasks/` e reservou os diretórios de teste para testes executáveis, sem remover evidências.
+
+## Resultado T062
+
+- Os 19 relatórios legados agora usam `docs/evidence/tasks/Txxx.md`; README, backlog, handoff, histórico, ADRs, comentário de manutenção e links internos foram atualizados.
+- A convenção está em `docs/evidence/README.md`. A verificação global não encontrou nomes antigos nem links Markdown locais quebrados; `format:check`, `git diff --check` e os 19 testes do runner passaram.
+- Nenhum código de produto, teste executável, captura, API ou custo foi envolvido. Próxima tarefa: T056.
 
 ## Resultado T059
 
@@ -27,7 +34,7 @@
 
 - Teste focado: 59/59; `npm run verify`: 884 testes TS aprovados, 18 skipped, 19 testes do runner; lint, formato, tipos e build aprovados.
 - Transporte HTTP sintético. Nenhuma chave, chamada paga, áudio ou transcrição real usado.
-- Evidências e limites em [TEST-T055.md](TEST-T055.md).
+- Evidências e limites em [T055.md](evidence/tasks/T055.md).
 
 ## Ambiente
 

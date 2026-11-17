@@ -20,4 +20,4 @@ O usuário pode informar tema, objetivo ou papel antes de iniciar sugestões. Es
 
 Persistir um perfil de reunião foi descartado por fugir do aceite e ampliar retenção. Misturar o campo na transcrição criaria falsa atribuição à conversa; inseri-lo nas instruções elevaria dados do usuário a regras do modelo. Aumentar o teto do payload não é necessário para esta entrega.
 
-Testes sintéticos verificam contrato, corpo enviado, consumo de pedidos, silêncio e limpeza. Não medem qualidade de relevância de um modelo real, nem garantem resistência universal a instruções maliciosas. Evidências em [TEST-T053.md](../TEST-T053.md).
+Testes sintéticos verificam contrato, corpo enviado, consumo de pedidos, silêncio e limpeza. Não medem qualidade de relevância de um modelo real, nem garantem resistência universal a instruções maliciosas. Evidências em [T053.md](../evidence/tasks/T053.md).

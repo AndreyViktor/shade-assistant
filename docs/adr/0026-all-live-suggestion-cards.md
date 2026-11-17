@@ -21,4 +21,4 @@ Manter só dois itens ou substituir os antigos foi rejeitado por apagar contexto
 
 O limite de oito por resposta é protocolar e não uma promessa de que cada pedido gere oito sugestões; o modelo pode retornar qualquer quantidade de zero a oito. Deduplicação continua sem análise semântica e pausa continua limpando cards conforme a política confirmada. Nenhum teste desta tarefa usa fala real, credencial real ou chamada paga.
 
-Testes cobrem resposta 0/8/9, retenção até 800, contrato v8, ordem visual, rolagem por teclado, resize, descarte e limpeza. Evidências em [TEST-T054.md](../TEST-T054.md).
+Testes cobrem resposta 0/8/9, retenção até 800, contrato v8, ordem visual, rolagem por teclado, resize, descarte e limpeza. Evidências em [T054.md](../evidence/tasks/T054.md).
