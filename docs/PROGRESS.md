@@ -1,6 +1,13 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-17. **Marco:** M10 — T062 DONE.
+**Atualizado:** 2026-11-18. **Marco:** M11 — T063 DONE.
+
+## Resultado T063
+
+- `ROADMAP.md` agora mostra oito áreas evolutivas, funcionalidades, tarefas relacionadas, estado e percentuais calculados sobre escopo ativo; as 72 tarefas aparecem exatamente uma vez.
+- T064–T072 transformam as descobertas em entregas para feedback de IA, permissões, resultados revisáveis, modos/atalhos do overlay, exportação, diagnóstico, atualizações e hardening do artefato.
+- T032/T035 deixaram de depender de funcionalidades remotas ou visuais adiadas. T036–T039 continuam `DEFERRED`, e a sequência T056→T057→T027→T060→T061 foi preservada.
+- IDs, estados, dependências, ciclos e links locais foram validados; `format:check`, `git diff --check` e os 19 testes do runner passaram. Nenhum código de produto, captura, API, custo, push ou deploy. Próxima tarefa: T056.
 
 ## Snapshot
 
