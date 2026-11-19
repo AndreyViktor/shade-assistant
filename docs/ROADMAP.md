@@ -19,17 +19,17 @@ O produto evolui de uma base local e segura para transcrição confiável, assis
 | --- | ---: | ---: | ---: | ---: |
 | Fundação e arquitetura | 6 | 0 | 0 | **100%** |
 | Ferramentas e documentação | 5 | 0 | 0 | **100%** |
-| Transcrição e áudio | 8 | 2 | 2 | **80%** |
+| Transcrição e áudio | 9 | 1 | 2 | **90%** |
 | Sugestões de IA e qualidade | 11 | 3 | 0 | **79%** |
 | UI/UX e overlay | 8 | 2 | 4 | **80%** |
 | Resultados e fluxo da reunião | 0 | 4 | 0 | **0%** |
 | Segurança, privacidade e distribuição | 1 | 8 | 4 | **11%** |
 | Windows futuro | 0 | 0 | 4 | **—** |
-| **Total ativo** | **39** | **19** | **14** | **67%** |
+| **Total ativo** | **40** | **18** | **14** | **69%** |
 
 ## Fase atual e sequência protegida
 
-1. **Qualidade do sinal — T056 → T057.** Remover eco/duplicação e medir o STT Apple com corpus autorizado/sintético e referência reproduzível.
+1. **Qualidade do sinal — T057.** Com T056 concluída, medir o STT Apple com corpus autorizado/sintético e referência reproduzível.
 2. **Qualidade da assistência — T027.** Medir latência, utilidade, irrelevância, repetição, silêncio adequado e aderência às evidências antes de ampliar o produto.
 3. **Resultados estruturados — T060.** Manter tópico, decisões, ações, perguntas e riscos com fala/horário de suporte e distinção entre fato e inferência.
 4. **Perfis reutilizáveis — T061.** Adaptar prioridades a descoberta, status, entrevista, negociação e revisão técnica sem transformar perfil em evidência.
@@ -54,13 +54,13 @@ Próxima evolução arquitetural ocorre apenas quando uma tarefa concreta exigir
 | Runner com tarefas/sessões isoladas | T044 | DONE | 100% | Uma tarefa por sessão e commit local verificável. |
 | Roadmap e evidências rastreáveis | T059, T062, T063 | DONE | 100% | Manter áreas e percentuais derivados do backlog em cada mudança de estado/escopo. |
 
-## 3. Transcrição e áudio — 80%
+## 3. Transcrição e áudio — 90%
 
 | Funcionalidade | Tarefas | Estado | Progresso | Próximo resultado |
 | --- | --- | --- | ---: | --- |
 | Viabilidade Apple e captura mic/system | T005, T006 | DONE | 100% | Evidência real já registrada; hardware/rota continuam variáveis. |
 | Helper Swift, provider e ciclo local | T013–T019 | DONE | 100% | Captura/transcrição local integrada ao Electron e exibida ao vivo. |
-| Remover eco/duplicação | T056 | BLOCKED | 0% | Implementação/gates aprovados; falta conectar um input de áudio padrão e concluir o ensaio físico mic/system. |
+| Remover eco/duplicação | T056 | DONE | 100% | Ensaio físico mic/system reduziu dois finais brutos para um no transcript local e no contexto IA, sem registrar fala. |
 | Avaliar e melhorar STT | T057 | TODO | 0% | Métrica, corpus, referência e comparação antes/depois em áudio/vídeos autorizados. |
 | STT remoto e troca de idiomas | T016, T026 | DEFERRED | — | Só reativar com decisão de produto, custo e consentimento. |
 
@@ -119,7 +119,7 @@ A antiga dependência de T032 em fallback remoto e screenshot foi removida: o ba
 
 ## Ordem posterior à fase atual
 
-Após T056→T057→T027→T060→T061, o trabalho pode seguir em trilhas dependentes:
+Após T057→T027→T060→T061, o trabalho pode seguir em trilhas dependentes:
 
 1. **Segurança/distribuição:** T032 → T033 → T034; T065 → T070; depois T072 → T035. T071 pode vir após o pacote endurecido sem bloquear o primeiro aceite local.
 2. **Qualidade orientada pelo usuário:** T064, alimentando métricas locais e a revisão dos resultados.

@@ -27,6 +27,12 @@ it.skipIf(!enabled)(
       ['mic', 0],
       ['system', 0],
     ]);
+    const finalMetadata: Array<{
+      source: AudioSource;
+      startMs: number;
+      endMs: number;
+      wordCount: number;
+    }> = [];
     const local = new LocalTranscript();
     const context = new ContextManager();
     local.start(config);
@@ -40,8 +46,15 @@ it.skipIf(!enabled)(
         (event: TranscriptionEvent) => {
           local.receive(event, true);
           context.receive(event);
-          if (event.type === 'final')
+          if (event.type === 'final') {
             counts.set(event.source, (counts.get(event.source) ?? 0) + 1);
+            finalMetadata.push({
+              source: event.source,
+              startMs: event.startMs,
+              endMs: event.endMs,
+              wordCount: event.text.trim().split(/\s+/u).filter(Boolean).length,
+            });
+          }
         },
         new AbortController().signal,
       );
@@ -68,7 +81,13 @@ it.skipIf(!enabled)(
         context.snapshot()?.recent.filter((segment) => segment.type === 'final')
           .length ?? 0;
       process.stdout.write(
-        `${JSON.stringify({ rawFinals, localFinals, contextFinals })}\n`,
+        `${JSON.stringify({
+          rawFinals,
+          localFinals,
+          contextFinals,
+          sourceFinals: Object.fromEntries(counts),
+          finalMetadata,
+        })}\n`,
       );
       expect(localFinals, 'reconciled local final count').toBeLessThan(
         rawFinals,
