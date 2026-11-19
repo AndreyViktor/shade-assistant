@@ -142,6 +142,90 @@ describe('temporal transcript reconciliation', () => {
     },
   );
 
+  it('suppresses one mic final represented by consecutive system finals', () => {
+    const mic = speech({
+      startMs: 1200,
+      endMs: 7200,
+      text: 'Precisamos revisar nosso plano para entrega amanhã antes da reunião.',
+    });
+    const first = speech({
+      source: 'system',
+      startMs: 1000,
+      endMs: 3900,
+      text: 'Precisamos revisar o plano de entrega amanhã.',
+    });
+    const second = speech({
+      source: 'system',
+      seq: 2,
+      segmentId: 'system-second',
+      startMs: 4000,
+      endMs: 7000,
+      text: 'Isso deve acontecer antes da reunião.',
+    });
+    expect(reconcile(mic, first, second)).toEqual([first, second]);
+    expect(reconcile(second, mic, first)).toEqual([first, second]);
+  });
+
+  it('suppresses consecutive mic fragments contained in one system final', () => {
+    const system = speech({
+      source: 'system',
+      startMs: 1000,
+      endMs: 7000,
+      text: 'Precisamos revisar o plano de entrega amanhã antes da reunião.',
+    });
+    const first = speech({
+      startMs: 1200,
+      endMs: 3900,
+      text: 'Precisamos revisar o plano de entrega.',
+    });
+    const second = speech({
+      seq: 2,
+      segmentId: 'mic-second',
+      startMs: 4000,
+      endMs: 6800,
+      text: 'Entrega amanhã antes da reunião.',
+    });
+    expect(reconcile(first, system, second)).toEqual([system]);
+  });
+
+  it('keeps partials even when their text and timing match system playback', () => {
+    const partial = speech({ type: 'partial' });
+    const system = speech({ source: 'system' });
+    expect(reconcile(partial, system)).toEqual([partial, system]);
+  });
+
+  it.each([
+    {
+      text: 'Entrega plano o revisar precisamos amanhã de.',
+    },
+    {
+      startMs: 5000,
+      endMs: 8000,
+    },
+    {
+      text: 'Precisamos revisar o plano e confirmar riscos adicionais importantes.',
+    },
+  ])(
+    'preserves a mic final without ordered text and timing support: %j',
+    (changes) => {
+      const mic = speech({
+        startMs: 1000,
+        endMs: 4000,
+        text: 'Precisamos revisar o plano de entrega amanhã.',
+        ...changes,
+      });
+      const system = speech({
+        source: 'system',
+        startMs: 1000,
+        endMs: 4000,
+        text: 'Precisamos revisar o plano de entrega amanhã.',
+      });
+      const result = reconcile(mic, system);
+      expect(result).toHaveLength(2);
+      expect(result).toEqual(expect.arrayContaining([mic, system]));
+    },
+  );
+
   it.each([
     { type: 'partial' as const },
     { locale: 'en-US' as const },

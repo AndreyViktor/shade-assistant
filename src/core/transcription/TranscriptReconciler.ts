@@ -5,8 +5,9 @@ import type { AudioSource } from '../../contracts/native/protocol';
 // Keep both sources behind the grouped display, with a fixed memory ceiling.
 export const MAX_RETAINED_SEGMENTS = MAX_VISIBLE_SEGMENTS * 2;
 const REVISION_TOLERANCE_MS = 250;
-const ECHO_BOUNDARY_TOLERANCE_MS = 1_500;
-const ECHO_MIN_OVERLAP_RATIO = 0.6;
+const ECHO_MAX_SYSTEM_SEGMENTS = 4;
+const ECHO_MAX_SYSTEM_GAP_MS = 1_500;
+const ECHO_MIN_MIC_OVERLAP_RATIO = 0.6;
 const ECHO_MIN_WORDS = 4;
 const ECHO_MIN_MATCHED_WORDS = 4;
 const ECHO_MIN_WORD_SIMILARITY = 0.7;
@@ -55,49 +56,90 @@ function normalizedText(text: string): string {
     .trim();
 }
 
-function matchingWordCount(a: string[], b: string[]): number {
-  const available = new Map<string, number>();
-  for (const word of b) available.set(word, (available.get(word) ?? 0) + 1);
-  let matched = 0;
-  for (const word of a) {
-    const count = available.get(word) ?? 0;
-    if (count === 0) continue;
-    matched += 1;
-    if (count === 1) available.delete(word);
-    else available.set(word, count - 1);
+function orderedMatchingWordCount(a: string[], b: string[]): number {
+  const previous = new Array<number>(b.length + 1).fill(0);
+  for (const left of a) {
+    let diagonal = 0;
+    for (let index = 1; index <= b.length; index++) {
+      const above = previous[index] ?? 0;
+      previous[index] =
+        left === b[index - 1]
+          ? diagonal + 1
+          : Math.max(above, previous[index - 1] ?? 0);
+      diagonal = above;
+    }
   }
-  return matched;
+  return previous[b.length] ?? 0;
 }
 
 /** A conservative textual hint, never acoustic echo cancellation or speaker identification. */
-function possibleEcho(a: EchoCandidate, b: EchoCandidate): boolean {
+function possibleEcho(mic: EchoCandidate, system: EchoCandidate): boolean {
+  const micDuration = mic.endMs - mic.startMs;
   if (
-    a.source === b.source ||
-    a.locale !== b.locale ||
-    Math.abs(a.startMs - b.startMs) > ECHO_BOUNDARY_TOLERANCE_MS ||
-    Math.abs(a.endMs - b.endMs) > ECHO_BOUNDARY_TOLERANCE_MS ||
-    overlap(a, b) <= 0 ||
-    overlap(a, b) <
-      ECHO_MIN_OVERLAP_RATIO *
-        Math.max(a.endMs - a.startMs, b.endMs - b.startMs)
+    mic.source !== 'mic' ||
+    system.source !== 'system' ||
+    mic.locale !== system.locale ||
+    micDuration <= 0 ||
+    overlap(mic, system) < ECHO_MIN_MIC_OVERLAP_RATIO * micDuration
   )
     return false;
-  const left = normalizedText(a.text);
-  const right = normalizedText(b.text);
-  const leftWords = left.split(' ').filter(Boolean);
-  const rightWords = right.split(' ').filter(Boolean);
+  const micText = normalizedText(mic.text);
+  const systemText = normalizedText(system.text);
+  const micWords = micText.split(' ').filter(Boolean);
+  const systemWords = systemText.split(' ').filter(Boolean);
   if (
-    left.length < 20 ||
-    right.length < 20 ||
-    Math.min(leftWords.length, rightWords.length) < ECHO_MIN_WORDS
+    micText.length < 20 ||
+    systemText.length < 20 ||
+    micWords.length < ECHO_MIN_WORDS ||
+    systemWords.length < ECHO_MIN_WORDS
   )
     return false;
-  const matched = matchingWordCount(leftWords, rightWords);
+  const matched = orderedMatchingWordCount(micWords, systemWords);
   return (
     matched >= ECHO_MIN_MATCHED_WORDS &&
-    matched / Math.max(leftWords.length, rightWords.length) >=
-      ECHO_MIN_WORD_SIMILARITY
+    matched / micWords.length >= ECHO_MIN_WORD_SIMILARITY
   );
+}
+
+function systemEchoWindows(
+  finals: readonly EchoCandidate[],
+  mic: EchoCandidate,
+): EchoCandidate[] {
+  const systems = finals
+    .filter(
+      (segment) =>
+        segment.source === 'system' &&
+        segment.locale === mic.locale &&
+        overlap(segment, mic) > 0,
+    )
+    .sort((a, b) => a.startMs - b.startMs || a.endMs - b.endMs);
+  const windows: EchoCandidate[] = [];
+  for (let start = 0; start < systems.length; start++) {
+    const first = systems[start];
+    if (!first) continue;
+    let endMs = first.endMs;
+    let text = '';
+    for (
+      let end = start;
+      end < Math.min(systems.length, start + ECHO_MAX_SYSTEM_SEGMENTS);
+      end++
+    ) {
+      const segment = systems[end];
+      if (!segment || segment.locale !== first.locale) break;
+      if (end > start && segment.startMs - endMs > ECHO_MAX_SYSTEM_GAP_MS)
+        break;
+      endMs = Math.max(endMs, segment.endMs);
+      text = `${text} ${segment.text}`.trim();
+      windows.push({
+        source: 'system',
+        locale: first.locale,
+        startMs: first.startMs,
+        endMs,
+        text,
+      });
+    }
+  }
+  return windows;
 }
 
 /** Keeps system audio when a final from each source is probably the same playback. */
@@ -107,8 +149,8 @@ export function suppressPossibleEchoes<T extends EchoCandidate>(
   return finals.filter(
     (segment) =>
       segment.source !== 'mic' ||
-      !finals.some(
-        (other) => other.source === 'system' && possibleEcho(segment, other),
+      !systemEchoWindows(finals, segment).some((window) =>
+        possibleEcho(segment, window),
       ),
   );
 }

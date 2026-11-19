@@ -57,7 +57,7 @@ it.each(['pt-BR', 'en-US'] as const)(
       },
       false,
     );
-    expect(transcript.snapshot()?.segments).toHaveLength(6);
+    expect(transcript.snapshot()?.segments).toHaveLength(7);
     transcript.clear();
     expect(transcript.snapshot()).toBeNull();
   },

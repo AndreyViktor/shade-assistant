@@ -1,16 +1,14 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-19. **Marco:** M10 — T058 DONE.
+**Atualizado:** 2026-11-19. **Marco:** M10 — T056 DONE.
 
-## Resultado T058
+## Resultado T056
 
-- Fala final neutra agora permanece no contexto sem agendar chamada nem consumir orçamento. Pergunta, objeção ou compromisso reconhecido em pt-BR/en-US agenda o contexto acumulado; finais posteriores atualizam a pendência e reiniciam o debounce trailing.
-- O default de 2 s passou a ter uma fonte compartilhada pelo scheduler e pelo diagnóstico. Pedido manual imediato, consentimento, orçamento, execução serial e lifecycle permaneceram inalterados.
-- O prompt exige contribuição acionável e proíbe mera reformulação ou variantes equivalentes na mesma resposta. Similaridade entre respostas e utilidade real continuam como avaliação de T027, sem alegação de solução semântica.
-- Testes focados: 202/202. `npm run verify`: lint/formato, três typechecks, 897 testes TS aprovados, 18 skipped, 19 testes do runner e build main/preload/renderer. Fixtures e providers sintéticos; nenhuma rede, API paga, credencial ou captura.
+- A política compartilhada agora compara finais `mic` com até quatro finais consecutivos e temporalmente sobrepostos de `system`, usando palavras em ordem e cobertura do trecho removido. `system` continua representante; parciais, texto reordenado, fala adicional distinta e eventos sem suporte temporal permanecem.
+- O ensaio físico autorizado reproduziu a frase sintética nos alto-falantes e obteve `mic=1`, `system=1`, `rawFinals=2`, `localFinals=1` e `contextFinals=1`. A saída trouxe somente contagens, tempos e número de palavras; não houve texto transcrito, OpenAI ou rede.
+- Testes focados: 72/72. `verify:swift`: 50 testes e build release. `npm run verify`: lint, formato, três typechecks, 904 testes TypeScript aprovados (18 skipped), 19 testes do runner e os builds main/preload/renderer. `git diff --check` aprovado.
 
-## Handoff
+## Handoff e limites
 
-- T058 concluiu a política local de prontidão sem chamada real à OpenAI. As heurísticas podem ter falsos positivos/negativos e não comprovam qualidade de cartões; T027 mede relevância, novidade, repetição e abstenção com corpus autorizado/sintético.
-- `en-US` está coberto como sessão monolíngue, sem alegação de detecção bilíngue simultânea; esse escopo permanece em T026. Pedido manual continua comprovado no scheduler, sem nova UI/IPC nesta fatia.
-- T056 permanece `TODO`, pausada anteriormente pelo usuário; nenhuma outra tarefa foi iniciada nesta sessão. Encerrar após o commit local da T058, sem push.
+- T056 está concluída para o cenário comprovado. A solução é supressão textual pós-STT, não cancelamento acústico; diferenças maiores de timing/texto ou segmentação podem preservar duplicatas, e falas muito parecidas/sincronizadas podem ser agrupadas.
+- Nenhuma outra tarefa foi iniciada. Encerrar esta sessão após o commit local T056, sem push ou deploy.

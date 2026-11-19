@@ -44,7 +44,24 @@ export function transcriptReplay(
       'Depois conferimos o resultado.',
     ),
     event('mic', 1, 'partial', 'draft', 1900, 4800, 'Precisamos revisar'),
-    event('system', 2, 'final', 'early', 1000, 4000, systemPhrase),
+    event(
+      'system',
+      2,
+      'final',
+      'early-first',
+      1000,
+      2500,
+      systemPhrase.split(' ').slice(0, 4).join(' '),
+    ),
+    event(
+      'system',
+      3,
+      'final',
+      'early-second',
+      2500,
+      4000,
+      systemPhrase.split(' ').slice(4).join(' '),
+    ),
     event('mic', 2, 'final', 'corrected', 1900, 5000, microphoneEcho),
     event('mic', 3, 'partial', 'stale', 1950, 4950, 'Hipótese atrasada'),
     event(
@@ -57,7 +74,7 @@ export function transcriptReplay(
       'O deployment precisa de revisão.',
     ),
     event('mic', 5, 'final', 'short', 6800, 7000, 'Sim.'),
-    event('system', 3, 'final', 'short', 6800, 7000, 'Sim.'),
+    event('system', 4, 'final', 'short', 6800, 7000, 'Sim.'),
     event('mic', 6, 'final', 'repeat', 8000, 9000, systemPhrase),
     event(
       'mic',
@@ -72,8 +89,9 @@ export function transcriptReplay(
 }
 
 export const reconciledReplayIds = [
-  'early',
+  'early-first',
   'overlap',
+  'early-second',
   'later',
   'short',
   'short',

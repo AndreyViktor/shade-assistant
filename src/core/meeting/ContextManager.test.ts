@@ -145,6 +145,34 @@ describe('meeting context', () => {
     }
   });
 
+  it('suppresses a mic final matched by split system context while retaining both system finals', () => {
+    const manager = create();
+    const mic = speech(1, {
+      startMs: 1200,
+      endMs: 7200,
+      timestampMs: 7300,
+      text: 'Precisamos revisar nosso plano para entrega amanhã antes da reunião.',
+    });
+    const first = speech(1, {
+      source: 'system',
+      seq: 2,
+      startMs: 1000,
+      endMs: 3900,
+      timestampMs: 4000,
+      text: 'Precisamos revisar o plano de entrega amanhã.',
+    });
+    const second = speech(2, {
+      source: 'system',
+      seq: 1,
+      startMs: 4000,
+      endMs: 7000,
+      timestampMs: 7100,
+      text: 'Isso deve acontecer antes da reunião.',
+    });
+    for (const event of [mic, second, first]) manager.receive(event);
+    expect(snapshot(manager).recent).toEqual([first, second]);
+  });
+
   it('suppresses echo across archived and recent context while preserving distinct simultaneous speech', () => {
     const manager = create({ maxSegments: 1 });
     manager.receive(

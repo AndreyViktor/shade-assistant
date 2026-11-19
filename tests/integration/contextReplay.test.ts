@@ -51,8 +51,9 @@ it.each(['pt-BR', 'en-US'] as const)(
     for (const event of transcriptReplay(locale))
       feed({ ...event, seq: event.seq + 2 });
     expect(context.snapshot()?.recent.map((event) => event.segmentId)).toEqual([
-      'early',
+      'early-first',
       'overlap',
+      'early-second',
       'later',
       'short',
       'short',
@@ -63,7 +64,15 @@ it.each(['pt-BR', 'en-US'] as const)(
     context.advanceTo(300_000);
     expect(context.snapshot()?.recent).toEqual([]);
     expect(context.snapshot()?.summary.map((entry) => entry.segmentId)).toEqual(
-      ['early', 'overlap', 'later', 'short', 'short', 'repeat'],
+      [
+        'early-first',
+        'overlap',
+        'early-second',
+        'later',
+        'short',
+        'short',
+        'repeat',
+      ],
     );
     expect(context.snapshot()?.estimatedTokens).toBeLessThanOrEqual(12_000);
     for (const source of config.sources)
@@ -72,7 +81,7 @@ it.each(['pt-BR', 'en-US'] as const)(
         sessionId: config.sessionId,
         locale,
         source,
-        seq: source === 'mic' ? 10 : 6,
+        seq: source === 'mic' ? 10 : 7,
         timestampMs: 300_000,
         type: 'stopped',
         reason: 'completed',
