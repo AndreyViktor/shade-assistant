@@ -1,6 +1,6 @@
 # Roadmap por áreas — Meeting Copilot
 
-**Atualizado:** 2026-11-18. **Fonte de verdade:** [TASKS.md](TASKS.md).
+**Atualizado:** 2026-11-19. **Fonte de verdade:** [TASKS.md](TASKS.md).
 
 O produto evolui de uma base local e segura para transcrição confiável, assistência avaliada, resultados estruturados, fluxos de reunião reutilizáveis e distribuição macOS endurecida. Marcos e percentuais representam escopo verificável, não estimativas de data.
 
@@ -9,23 +9,25 @@ O produto evolui de uma base local e segura para transcrição confiável, assis
 ## Como o progresso é calculado
 
 - A tarefa é atômica: `DONE` vale 100%; `TODO`, `IN_PROGRESS` e `BLOCKED` ainda valem 0% até cumprir todo o aceite. Isso evita inventar avanço parcial sem evidência.
-- Progresso da funcionalidade/área = tarefas `DONE` ÷ escopo ativo (`DONE` + `IN_PROGRESS` + `TODO` + `BLOCKED`), arredondado ao inteiro mais próximo.
+- **Escopo ativo** inclui toda tarefa comprometida na fase atual: `DONE`, `TODO`, `IN_PROGRESS` ou `BLOCKED`. É mais amplo que o estado `IN_PROGRESS`, que identifica somente uma tarefa em execução agora.
+- **Ativas não concluídas** soma `TODO` + `IN_PROGRESS` + `BLOCKED`. As tarefas `DONE` aparecem separadamente, mas continuam no denominador do progresso ativo.
+- Progresso da funcionalidade/área = tarefas `DONE` ÷ escopo ativo, arredondado ao inteiro mais próximo.
 - `DEFERRED` permanece visível, mas é excluído do denominador porque não está comprometido na fase atual.
 - Alterar o estado em [TASKS.md](TASKS.md) exige atualizar os percentuais afetados aqui. Critérios e dependências sempre prevalecem sobre a porcentagem resumida.
 
 ## Painel geral
 
-| Área evolutiva | DONE | Ativas não concluídas | DEFERRED | Progresso ativo |
+| Área evolutiva | Progresso ativo | DONE | Ativas não concluídas | DEFERRED |
 | --- | ---: | ---: | ---: | ---: |
-| Fundação e arquitetura | 6 | 0 | 0 | **100%** |
-| Ferramentas e documentação | 5 | 0 | 0 | **100%** |
-| Transcrição e áudio | 9 | 1 | 2 | **90%** |
-| Sugestões de IA e qualidade | 11 | 3 | 0 | **79%** |
-| UI/UX e overlay | 8 | 2 | 4 | **80%** |
-| Resultados e fluxo da reunião | 0 | 4 | 0 | **0%** |
-| Segurança, privacidade e distribuição | 1 | 8 | 4 | **11%** |
-| Windows futuro | 0 | 0 | 4 | **—** |
-| **Total ativo** | **40** | **18** | **14** | **69%** |
+| Fundação e arquitetura | **100%** | 6 | 0 | 0 |
+| Ferramentas e documentação | **100%** | 6 | 0 | 0 |
+| Transcrição e áudio | **90%** | 9 | 1 | 2 |
+| Sugestões de IA e qualidade | **79%** | 11 | 3 | 0 |
+| UI/UX e overlay | **80%** | 8 | 2 | 4 |
+| Resultados e fluxo da reunião | **0%** | 0 | 4 | 0 |
+| Segurança, privacidade e distribuição | **11%** | 1 | 8 | 4 |
+| Windows futuro | **—** | 0 | 0 | 4 |
+| **Total ativo** | **69%** | **41** | **18** | **14** |
 
 ## Fase atual e sequência protegida
 
@@ -52,7 +54,7 @@ Próxima evolução arquitetural ocorre apenas quando uma tarefa concreta exigir
 | --- | --- | --- | ---: | --- |
 | Gates locais e CI básico | T002 | DONE | 100% | Manter lint, formato, tipos, testes e build. |
 | Runner com tarefas/sessões isoladas | T044 | DONE | 100% | Uma tarefa por sessão e commit local verificável. |
-| Roadmap e evidências rastreáveis | T059, T062, T063 | DONE | 100% | Manter áreas e percentuais derivados do backlog em cada mudança de estado/escopo. |
+| Roadmap e evidências rastreáveis | T059, T062, T063, T073 | DONE | 100% | Manter áreas, definições e percentuais derivados do backlog em cada mudança de estado/escopo. |
 
 ## 3. Transcrição e áudio — 90%
 
