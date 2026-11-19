@@ -114,21 +114,28 @@ describe('temporal transcript reconciliation', () => {
   });
 
   it.each(['pt-BR', 'en-US'] as const)(
-    'groups only final possible echoes in %s, independent of arrival order',
+    'groups final possible echoes in %s despite timing and word differences',
     (locale) => {
       const mic = speech({
         locale,
+        startMs: 1000,
+        endMs: 4000,
         text:
           locale === 'pt-BR'
-            ? 'A revisão está pronta para entrega.'
-            : 'The review is ready for delivery.',
+            ? 'Precisamos revisar o plano de entrega amanhã.'
+            : 'We need to review the delivery plan tomorrow.',
       });
       const system = {
         ...mic,
         source: 'system' as const,
-        startMs: 1100,
-        endMs: 2100,
-        text: mic.text.toUpperCase().normalize('NFD'),
+        startMs: 2100,
+        endMs: 5000,
+        text:
+          locale === 'pt-BR'
+            ? 'PRECISAMOS REVISAR NOSSO PLANO PARA ENTREGA AMANHÃ!'.normalize(
+                'NFD',
+              )
+            : 'We need to review our delivery plan tomorrow!',
       };
       expect(reconcile(mic, system)).toEqual([system]);
       expect(reconcile(system, mic)).toEqual([system]);
@@ -138,10 +145,10 @@ describe('temporal transcript reconciliation', () => {
   it.each([
     { type: 'partial' as const },
     { locale: 'en-US' as const },
-    { startMs: 1300, endMs: 2300 },
-    { startMs: 2000, endMs: 3000 },
+    { startMs: 2600, endMs: 3600 },
+    { startMs: 2400, endMs: 3400 },
     { startMs: 1000, endMs: 1500 },
-    { text: 'Precisamos revisar outro plano de entrega.' },
+    { text: 'Precisamos avaliar riscos financeiros desta proposta.' },
   ])(
     'preserves both sources when echo evidence is insufficient: %j',
     (changes) => {
@@ -171,6 +178,24 @@ describe('temporal transcript reconciliation', () => {
         speech({ seq: 2, segmentId: 'repeat', startMs: 3000, endMs: 4000 }),
       ),
     ).toHaveLength(3);
+  });
+
+  it('preserves distinct simultaneous speech even with matching generic words', () => {
+    expect(
+      reconcile(
+        speech({
+          startMs: 1000,
+          endMs: 4000,
+          text: 'Precisamos revisar o plano de entrega amanhã.',
+        }),
+        speech({
+          source: 'system',
+          startMs: 1800,
+          endMs: 4500,
+          text: 'Precisamos avaliar os riscos financeiros desta proposta.',
+        }),
+      ),
+    ).toHaveLength(2);
   });
 
   it('keeps original timestamps/text/source and returns defensive copies', () => {

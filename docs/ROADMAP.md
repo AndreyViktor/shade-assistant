@@ -60,7 +60,7 @@ Próxima evolução arquitetural ocorre apenas quando uma tarefa concreta exigir
 | --- | --- | --- | ---: | --- |
 | Viabilidade Apple e captura mic/system | T005, T006 | DONE | 100% | Evidência real já registrada; hardware/rota continuam variáveis. |
 | Helper Swift, provider e ciclo local | T013–T019 | DONE | 100% | Captura/transcrição local integrada ao Electron e exibida ao vivo. |
-| Remover eco/duplicação | T056 | TODO | 0% | Preservar falas distintas enquanto elimina reprodução duplicada entre canais. |
+| Remover eco/duplicação | T056 | BLOCKED | 0% | Implementação/gates aprovados; falta conectar um input de áudio padrão e concluir o ensaio físico mic/system. |
 | Avaliar e melhorar STT | T057 | TODO | 0% | Métrica, corpus, referência e comparação antes/depois em áudio/vídeos autorizados. |
 | STT remoto e troca de idiomas | T016, T026 | DEFERRED | — | Só reativar com decisão de produto, custo e consentimento. |
 

@@ -1,7 +1,11 @@
 // @vitest-environment node
 import { randomUUID } from 'node:crypto';
+import { execFile } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
+import { promisify } from 'node:util';
 import { expect, it } from 'vitest';
+import { ContextManager } from '../../src/core/meeting/ContextManager';
+import { LocalTranscript } from '../../src/core/transcription/LocalTranscript';
 import { AppleNativeTranscriptionProvider } from '../../src/infrastructure/transcription/apple/AppleNativeTranscriptionProvider';
 import type {
   AudioSource,
@@ -11,48 +15,70 @@ import type {
 const enabled = process.env['MEETING_COPILOT_CAPTURE_TEST'] === '1';
 const helper = process.env['MEETING_COPILOT_HELPER'];
 const sources: AudioSource[] = ['mic', 'system'];
+const run = promisify(execFile);
 
 it.skipIf(!enabled)(
-  'captures synthetic speech from both authorized sources without logging transcript text',
+  'reconciles synthetic system playback recaptured by an authorized microphone',
   async () => {
     if (!helper) throw new Error('Missing native helper executable');
+    const sessionId = `capture-${randomUUID().replaceAll('-', '')}`;
+    const config = { sessionId, sources, locale: 'pt-BR' as const };
     const counts = new Map<AudioSource, number>([
       ['mic', 0],
       ['system', 0],
     ]);
-    const listening = new Set<AudioSource>();
+    const local = new LocalTranscript();
+    const context = new ContextManager();
+    local.start(config);
+    context.start(config);
     const provider = new AppleNativeTranscriptionProvider({
       resolveExecutable: () => Promise.resolve(helper),
     });
     try {
       await provider.start(
-        {
-          sessionId: `capture-${randomUUID().replaceAll('-', '')}`,
-          sources,
-          locale: 'pt-BR',
-        },
+        config,
         (event: TranscriptionEvent) => {
-          if (event.type === 'status' && event.state === 'listening') {
-            listening.add(event.source);
-            if (listening.size === sources.length)
-              process.stdout.write(
-                '\nCAPTURE_ACTIVE_SPEAK_SYNTHETIC_PHRASES_NOW\n',
-              );
-          }
+          local.receive(event, true);
+          context.receive(event);
           if (event.type === 'final')
             counts.set(event.source, (counts.get(event.source) ?? 0) + 1);
         },
         new AbortController().signal,
       );
-      await delay(45_000);
+      process.stdout.write('\nCAPTURE_ACTIVE_PLAYING_SYNTHETIC_AUDIO\n');
+      await run('/usr/bin/say', [
+        '-v',
+        'Luciana',
+        'Precisamos revisar o plano de entrega amanhã antes da reunião da equipe.',
+      ]);
+      await delay(15_000);
       for (const source of sources)
         expect(
           counts.get(source),
           `${source} final transcription count`,
         ).toBeGreaterThan(0);
+      const rawFinals = [...counts.values()].reduce(
+        (total, count) => total + count,
+        0,
+      );
+      const localFinals =
+        local.snapshot()?.segments.filter((segment) => segment.type === 'final')
+          .length ?? 0;
+      const contextFinals =
+        context.snapshot()?.recent.filter((segment) => segment.type === 'final')
+          .length ?? 0;
+      process.stdout.write(
+        `${JSON.stringify({ rawFinals, localFinals, contextFinals })}\n`,
+      );
+      expect(localFinals, 'reconciled local final count').toBeLessThan(
+        rawFinals,
+      );
+      expect(contextFinals, 'reconciled context final count').toBeLessThan(
+        rawFinals,
+      );
     } finally {
       await provider.stop();
     }
   },
-  60_000,
+  45_000,
 );

@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreAudio
 import CoreMedia
 import Foundation
 import ScreenCaptureKit
@@ -17,24 +18,61 @@ public func makeMicrophoneTap(ingress: AudioIngress)
   { @Sendable buffer, _ in ingress.receive(buffer) }
 }
 
+/// AVAudioNode supports tap buffers between 100 and 400 ms. Keep the request
+/// route-independent so low-rate devices (including Bluetooth inputs) remain valid.
+public func microphoneTapBufferSize(sampleRate: Double) -> AVAudioFrameCount? {
+  guard sampleRate.isFinite, sampleRate > 0 else { return nil }
+  let frames = (sampleRate * 0.2).rounded()
+  guard frames >= 1, frames <= Double(AVAudioFrameCount.max) else { return nil }
+  return AVAudioFrameCount(frames)
+}
+
+func defaultAudioInputAvailable() -> Bool {
+  var address = AudioObjectPropertyAddress(
+    mSelector: kAudioHardwarePropertyDefaultInputDevice,
+    mScope: kAudioObjectPropertyScopeGlobal,
+    mElement: kAudioObjectPropertyElementMain)
+  var device = AudioDeviceID(kAudioObjectUnknown)
+  var size = UInt32(MemoryLayout.size(ofValue: device))
+  let status = AudioObjectGetPropertyData(
+    AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size, &device)
+  return status == noErr && device != kAudioObjectUnknown
+}
+
 @available(macOS 26.0, *)
 @MainActor
 public final class MicrophoneCapture: AudioCapture {
   private let engine = AVAudioEngine()
   private let ingress: AudioIngress
+  private let defaultInputAvailable: () -> Bool
   private var tapped = false
 
-  public init(ingress: AudioIngress) { self.ingress = ingress }
+  public convenience init(ingress: AudioIngress) {
+    self.init(
+      ingress: ingress,
+      defaultInputAvailable: defaultAudioInputAvailable)
+  }
+
+  init(ingress: AudioIngress, defaultInputAvailable: @escaping () -> Bool) {
+    self.ingress = ingress
+    self.defaultInputAvailable = defaultInputAvailable
+  }
 
   public func start() async throws {
+    // AVAudioEngine raises an Objective-C exception (not a Swift Error) when a tap is
+    // installed without an active input device, so fail before touching inputNode.
+    guard defaultInputAvailable() else { throw AudioFailure.audioFormat }
     guard AVCaptureDevice.authorizationStatus(for: .audio) == .authorized else {
       throw AudioFailure.microphoneDenied
     }
     let input = engine.inputNode
     let format = input.outputFormat(forBus: 0)
-    guard format.sampleRate > 0, format.channelCount > 0 else { throw AudioFailure.audioFormat }
+    guard format.channelCount > 0,
+      let bufferSize = microphoneTapBufferSize(sampleRate: format.sampleRate)
+    else { throw AudioFailure.audioFormat }
     input.installTap(
-      onBus: 0, bufferSize: 1024, format: format, block: makeMicrophoneTap(ingress: ingress))
+      onBus: 0, bufferSize: bufferSize, format: format,
+      block: makeMicrophoneTap(ingress: ingress))
     tapped = true
     do {
       try engine.start()

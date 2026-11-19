@@ -4,7 +4,10 @@ import {
   parseNativeCommand,
   parseTranscriptionEvent,
 } from '../../contracts/native/protocol';
-import { reconcileSpeech } from '../transcription/TranscriptReconciler';
+import {
+  reconcileSpeech,
+  suppressPossibleEchoes,
+} from '../transcription/TranscriptReconciler';
 import { estimateContextTokens, summarizeFinal } from './contextSummary';
 import type { ContextExcerpt } from './contextSummary';
 import type { SpeechSegment } from '../../contracts/meeting/localTranscript';
@@ -133,9 +136,20 @@ export class ContextManager {
 
   snapshot(): ContextSnapshot | null {
     if (!this.config) return null;
+    const finals = [
+      ...this.summary,
+      ...this.recent.filter((segment) => segment.type === 'final'),
+    ];
+    const visibleFinals = new Set(suppressPossibleEchoes(finals));
     const context: MeetingContext = {
-      recent: this.recent.map((segment) => ({ ...segment })),
-      summary: this.summary.map((excerpt) => ({ ...excerpt })),
+      recent: this.recent
+        .filter(
+          (segment) => segment.type === 'partial' || visibleFinals.has(segment),
+        )
+        .map((segment) => ({ ...segment })),
+      summary: this.summary
+        .filter((excerpt) => visibleFinals.has(excerpt))
+        .map((excerpt) => ({ ...excerpt })),
     };
     return { ...context, estimatedTokens: estimateContextTokens(context) };
   }

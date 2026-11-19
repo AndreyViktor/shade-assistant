@@ -57,6 +57,7 @@ describe('meeting context', () => {
       startMs: 1000,
       endMs: 1500,
       timestampMs: 5000,
+      text: 'Outra fala sintética simultânea.',
     });
     for (const event of [later, tied, early]) manager.receive(event);
     expect(snapshot(manager).recent).toEqual([early, tied, later]);
@@ -120,6 +121,62 @@ describe('meeting context', () => {
     expect(snapshot(manager).recent).toEqual([final, system, distinct]);
   });
 
+  it('suppresses approximate cross-source echo from recent AI context in either arrival order', () => {
+    const mic = speech(1, {
+      startMs: 1000,
+      endMs: 4000,
+      timestampMs: 5200,
+      text: 'Precisamos revisar o plano de entrega amanhã.',
+    });
+    const system = speech(1, {
+      source: 'system',
+      startMs: 2100,
+      endMs: 5000,
+      timestampMs: 5100,
+      text: 'Precisamos revisar nosso plano para entrega amanhã.',
+    });
+    for (const events of [
+      [mic, system],
+      [system, mic],
+    ]) {
+      const manager = create();
+      for (const event of events) manager.receive(event);
+      expect(snapshot(manager).recent).toEqual([system]);
+    }
+  });
+
+  it('suppresses echo across archived and recent context while preserving distinct simultaneous speech', () => {
+    const manager = create({ maxSegments: 1 });
+    manager.receive(
+      speech(1, {
+        startMs: 1000,
+        endMs: 4000,
+        timestampMs: 5200,
+        text: 'Precisamos revisar o plano de entrega amanhã.',
+      }),
+    );
+    const system = speech(1, {
+      source: 'system',
+      startMs: 2100,
+      endMs: 5000,
+      timestampMs: 5300,
+      text: 'Precisamos revisar nosso plano para entrega amanhã.',
+    });
+    manager.receive(system);
+    expect(snapshot(manager)).toMatchObject({ summary: [], recent: [system] });
+    const distinct = speech(2, {
+      startMs: 2200,
+      endMs: 4900,
+      timestampMs: 5400,
+      text: 'Precisamos avaliar os riscos financeiros desta proposta.',
+    });
+    manager.receive(distinct);
+    expect(snapshot(manager).recent).toEqual([distinct]);
+    expect(snapshot(manager).summary).toEqual([
+      expect.objectContaining({ source: 'system' }),
+    ]);
+  });
+
   it('expires on the explicit session clock during silence, preserving the exact boundary', () => {
     const manager = create({ windowMs: 1000 });
     manager.receive(speech(1));
@@ -164,7 +221,12 @@ describe('meeting context', () => {
   it('closes all tied sources on pressure and rejects late history without growing a seen-ID set', () => {
     const manager = create({ maxSegments: 2 });
     manager.receive(speech(1));
-    manager.receive(speech(1, { source: 'system' }));
+    manager.receive(
+      speech(1, {
+        source: 'system',
+        text: 'Outra fala sintética simultânea.',
+      }),
+    );
     manager.receive(speech(2));
     expect(snapshot(manager).recent).toEqual([speech(2)]);
     expect(snapshot(manager).summary).toHaveLength(2);

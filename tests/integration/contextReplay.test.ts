@@ -51,7 +51,6 @@ it.each(['pt-BR', 'en-US'] as const)(
     for (const event of transcriptReplay(locale))
       feed({ ...event, seq: event.seq + 2 });
     expect(context.snapshot()?.recent.map((event) => event.segmentId)).toEqual([
-      'corrected',
       'early',
       'overlap',
       'later',
@@ -64,7 +63,7 @@ it.each(['pt-BR', 'en-US'] as const)(
     context.advanceTo(300_000);
     expect(context.snapshot()?.recent).toEqual([]);
     expect(context.snapshot()?.summary.map((entry) => entry.segmentId)).toEqual(
-      ['corrected', 'early', 'overlap', 'later', 'short', 'short', 'repeat'],
+      ['early', 'overlap', 'later', 'short', 'short', 'repeat'],
     );
     expect(context.snapshot()?.estimatedTokens).toBeLessThanOrEqual(12_000);
     for (const source of config.sources)

@@ -5,9 +5,18 @@ import type { AudioSource } from '../../contracts/native/protocol';
 // Keep both sources behind the grouped display, with a fixed memory ceiling.
 export const MAX_RETAINED_SEGMENTS = MAX_VISIBLE_SEGMENTS * 2;
 const REVISION_TOLERANCE_MS = 250;
+const ECHO_BOUNDARY_TOLERANCE_MS = 1_500;
+const ECHO_MIN_OVERLAP_RATIO = 0.6;
+const ECHO_MIN_WORDS = 4;
+const ECHO_MIN_MATCHED_WORDS = 4;
+const ECHO_MIN_WORD_SIMILARITY = 0.7;
 export type SpeechPosition = Pick<
   SpeechSegment,
   'startMs' | 'endMs' | 'source' | 'seq'
+>;
+type EchoCandidate = Pick<
+  SpeechSegment,
+  'source' | 'locale' | 'startMs' | 'endMs' | 'text'
 >;
 
 export function compareSpeech(a: SpeechPosition, b: SpeechPosition): number {
@@ -19,7 +28,7 @@ export function compareSpeech(a: SpeechPosition, b: SpeechPosition): number {
   );
 }
 
-function overlap(a: SpeechSegment, b: SpeechSegment): number {
+function overlap(a: EchoCandidate, b: EchoCandidate): number {
   return Math.max(
     0,
     Math.min(a.endMs, b.endMs) - Math.max(a.startMs, b.startMs),
@@ -46,24 +55,61 @@ function normalizedText(text: string): string {
     .trim();
 }
 
-/** A textual hint, never acoustic echo cancellation or speaker identification. */
-function possibleEcho(a: SpeechSegment, b: SpeechSegment): boolean {
+function matchingWordCount(a: string[], b: string[]): number {
+  const available = new Map<string, number>();
+  for (const word of b) available.set(word, (available.get(word) ?? 0) + 1);
+  let matched = 0;
+  for (const word of a) {
+    const count = available.get(word) ?? 0;
+    if (count === 0) continue;
+    matched += 1;
+    if (count === 1) available.delete(word);
+    else available.set(word, count - 1);
+  }
+  return matched;
+}
+
+/** A conservative textual hint, never acoustic echo cancellation or speaker identification. */
+function possibleEcho(a: EchoCandidate, b: EchoCandidate): boolean {
   if (
     a.source === b.source ||
     a.locale !== b.locale ||
-    a.type !== 'final' ||
-    b.type !== 'final' ||
-    Math.abs(a.startMs - b.startMs) > REVISION_TOLERANCE_MS ||
-    Math.abs(a.endMs - b.endMs) > REVISION_TOLERANCE_MS ||
+    Math.abs(a.startMs - b.startMs) > ECHO_BOUNDARY_TOLERANCE_MS ||
+    Math.abs(a.endMs - b.endMs) > ECHO_BOUNDARY_TOLERANCE_MS ||
     overlap(a, b) <= 0 ||
-    overlap(a, b) < 0.8 * Math.max(a.endMs - a.startMs, b.endMs - b.startMs)
+    overlap(a, b) <
+      ECHO_MIN_OVERLAP_RATIO *
+        Math.max(a.endMs - a.startMs, b.endMs - b.startMs)
   )
     return false;
-  const text = normalizedText(a.text);
+  const left = normalizedText(a.text);
+  const right = normalizedText(b.text);
+  const leftWords = left.split(' ').filter(Boolean);
+  const rightWords = right.split(' ').filter(Boolean);
+  if (
+    left.length < 20 ||
+    right.length < 20 ||
+    Math.min(leftWords.length, rightWords.length) < ECHO_MIN_WORDS
+  )
+    return false;
+  const matched = matchingWordCount(leftWords, rightWords);
   return (
-    text.length >= 20 &&
-    text.split(' ').length >= 4 &&
-    text === normalizedText(b.text)
+    matched >= ECHO_MIN_MATCHED_WORDS &&
+    matched / Math.max(leftWords.length, rightWords.length) >=
+      ECHO_MIN_WORD_SIMILARITY
+  );
+}
+
+/** Keeps system audio when a final from each source is probably the same playback. */
+export function suppressPossibleEchoes<T extends EchoCandidate>(
+  finals: readonly T[],
+): T[] {
+  return finals.filter(
+    (segment) =>
+      segment.source !== 'mic' ||
+      !finals.some(
+        (other) => other.source === 'system' && possibleEcho(segment, other),
+      ),
   );
 }
 
@@ -130,11 +176,14 @@ export class TranscriptReconciler {
   snapshot(): SpeechSegment[] {
     // Prefer the original system event as the representative, regardless of arrival order.
     // Keep both originals internally so pruning/reconciliation can undo the grouping.
+    const visibleFinals = new Set(
+      suppressPossibleEchoes(
+        this.segments.filter((segment) => segment.type === 'final'),
+      ),
+    );
     return this.segments
       .filter(
-        (segment) =>
-          segment.source !== 'mic' ||
-          !this.segments.some((other) => possibleEcho(segment, other)),
+        (segment) => segment.type === 'partial' || visibleFinals.has(segment),
       )
       .slice(-MAX_VISIBLE_SEGMENTS)
       .map((segment) => ({ ...segment }));

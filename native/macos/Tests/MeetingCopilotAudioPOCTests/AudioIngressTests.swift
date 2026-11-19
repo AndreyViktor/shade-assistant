@@ -34,6 +34,33 @@ func microphoneTapAcceptsAudioFromBackgroundQueue() async throws {
   #expect(errors.withLock { $0.isEmpty })
 }
 
+@Test(arguments: [8_000.0, 16_000.0, 44_100.0, 48_000.0, 96_000.0])
+func microphoneTapRequestsSupportedDuration(sampleRate: Double) throws {
+  let frames = try #require(microphoneTapBufferSize(sampleRate: sampleRate))
+  #expect(Double(frames) / sampleRate == 0.2)
+}
+
+@Test(arguments: [0.0, -1.0, .nan, .infinity, -.infinity, .greatestFiniteMagnitude])
+func microphoneTapRejectsInvalidSampleRate(sampleRate: Double) {
+  #expect(microphoneTapBufferSize(sampleRate: sampleRate) == nil)
+}
+
+@Test @MainActor @available(macOS 26.0, *)
+func microphoneCaptureRejectsMissingDefaultInputBeforeInstallingTap() async throws {
+  let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1))
+  let ingress = AudioIngress(format: format) { _ in Issue.record("Unexpected ingress failure") }
+  let capture = MicrophoneCapture(ingress: ingress, defaultInputAvailable: { false })
+  do {
+    try await capture.start()
+    Issue.record("Expected missing input to fail before tap installation")
+  } catch AudioFailure.audioFormat {
+    // Expected safe failure: AVAudioEngine installTap is never called.
+  } catch {
+    Issue.record("Unexpected failure: \(type(of: error))")
+  }
+  ingress.finish()
+}
+
 @Test @available(macOS 26.0, *)
 func conversionOwnsBuffersAndFinishRejectsLateAudio() async throws {
   let errors = Mutex<[AudioFailure]>([])
