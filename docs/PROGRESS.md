@@ -11,7 +11,7 @@
 
 ## Handoff
 
-- T056 foi reaberta (`IN_PROGRESS`) após relato de finais duplicados ao usar alto-falantes externos com `mic + system`. A evidência anterior de T056 continua válida para o cenário ensaiado, mas não cobre esta reprodução.
-- Plano em [TASKS.md](TASKS.md): ampliar a supressão textual pós-STT, preservar falas distintas e parciais, e exigir ensaio Mac autorizado com fala sintética e contagens sem conteúdo antes de concluir. Nenhum código ou teste físico foi executado nesta atualização documental.
-- T057 continua não iniciada e não elegível enquanto sua dependência T056 estiver `IN_PROGRESS`.
-- O `.env` ausente é estado local esperado: o caminho é ignorado e nunca foi rastreado/removido em commit. Para sugestões, importar a chave em Preferências → Chave OpenAI; a sessão ainda exige autorização explícita. Não há chave para usar na sessão atual.
+- T058 é a tarefa corrente (`IN_PROGRESS`). A inspeção confirmou que o debounce do scheduler é 2 s após a última fala final, enquanto o diagnóstico exibe 0,5 s; ambos referem-se à mesma espera, mas a interface está desatualizada. O período é temporal, não uma verificação de contexto suficiente.
+- A chamada automática é submetida após cada fala final, mesmo quando o `TriggerEngine` retorna `none`; o contexto de até quatro minutos limita o que pode ser enviado, mas não faz o app esperar por esse contexto. T058 e T027 foram ampliadas para registrar política geral de prontidão e avaliação de valor incremental, sem regras por exemplo.
+- T056 foi pausada em `TODO` para priorizar T058. T057 continua não iniciada e depende da conclusão de T056; T027 permanece `TODO` e depende de T057/T058.
+- Esta atualização foi documental: nenhum código, teste de áudio físico ou chamada OpenAI foi executado.
