@@ -11,4 +11,7 @@
 
 ## Handoff
 
-- T057 permanece a próxima tarefa de produto e não foi iniciada nesta sessão documental.
+- T056 foi reaberta (`IN_PROGRESS`) após relato de finais duplicados ao usar alto-falantes externos com `mic + system`. A evidência anterior de T056 continua válida para o cenário ensaiado, mas não cobre esta reprodução.
+- Plano em [TASKS.md](TASKS.md): ampliar a supressão textual pós-STT, preservar falas distintas e parciais, e exigir ensaio Mac autorizado com fala sintética e contagens sem conteúdo antes de concluir. Nenhum código ou teste físico foi executado nesta atualização documental.
+- T057 continua não iniciada e não elegível enquanto sua dependência T056 estiver `IN_PROGRESS`.
+- O `.env` ausente é estado local esperado: o caminho é ignorado e nunca foi rastreado/removido em commit. Para sugestões, importar a chave em Preferências → Chave OpenAI; a sessão ainda exige autorização explícita. Não há chave para usar na sessão atual.

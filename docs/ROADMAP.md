@@ -21,20 +21,21 @@ O produto evolui de uma base local e segura para transcrição confiável, assis
 | --- | ---: | ---: | ---: | ---: |
 | Fundação e arquitetura | **100%** | 6 | 0 | 0 |
 | Ferramentas e documentação | **100%** | 6 | 0 | 0 |
-| Transcrição e áudio | **90%** | 9 | 1 | 2 |
+| Transcrição e áudio | **80%** | 8 | 2 | 2 |
 | Sugestões de IA e qualidade | **79%** | 11 | 3 | 0 |
 | UI/UX e overlay | **80%** | 8 | 2 | 4 |
 | Resultados e fluxo da reunião | **0%** | 0 | 4 | 0 |
 | Segurança, privacidade e distribuição | **11%** | 1 | 8 | 4 |
 | Windows futuro | **—** | 0 | 0 | 4 |
-| **Total ativo** | **69%** | **41** | **18** | **14** |
+| **Total ativo** | **68%** | **40** | **19** | **14** |
 
 ## Fase atual e sequência protegida
 
-1. **Qualidade do sinal — T057.** Com T056 concluída, medir o STT Apple com corpus autorizado/sintético e referência reproduzível.
-2. **Qualidade da assistência — T027.** Medir latência, utilidade, irrelevância, repetição, silêncio adequado e aderência às evidências antes de ampliar o produto.
-3. **Resultados estruturados — T060.** Manter tópico, decisões, ações, perguntas e riscos com fala/horário de suporte e distinção entre fato e inferência.
-4. **Perfis reutilizáveis — T061.** Adaptar prioridades a descoberta, status, entrevista, negociação e revisão técnica sem transformar perfil em evidência.
+1. **Confiabilidade da publicação — T056 (retomada).** Tratar finais duplicados reportados em alto-falantes externos com `mic + system`; ampliar supressão textual sem ocultar fala distinta e validar em Mac com fala sintética.
+2. **Qualidade do sinal — T057.** Depois de T056, medir o STT Apple com corpus autorizado/sintético e referência reproduzível.
+3. **Qualidade da assistência — T027.** Medir latência, utilidade, irrelevância, repetição, silêncio adequado e aderência às evidências antes de ampliar o produto.
+4. **Resultados estruturados — T060.** Manter tópico, decisões, ações, perguntas e riscos com fala/horário de suporte e distinção entre fato e inferência.
+5. **Perfis reutilizáveis — T061.** Adaptar prioridades a descoberta, status, entrevista, negociação e revisão técnica sem transformar perfil em evidência.
 
 As novas frentes não alteram essa ordem. Dependências foram escolhidas para que recursos de expansão não ultrapassem a validação do núcleo.
 
@@ -56,13 +57,13 @@ Próxima evolução arquitetural ocorre apenas quando uma tarefa concreta exigir
 | Runner com tarefas/sessões isoladas | T044 | DONE | 100% | Uma tarefa por sessão e commit local verificável. |
 | Roadmap e evidências rastreáveis | T059, T062, T063, T073 | DONE | 100% | Manter áreas, definições e percentuais derivados do backlog em cada mudança de estado/escopo. |
 
-## 3. Transcrição e áudio — 90%
+## 3. Transcrição e áudio — 80%
 
 | Funcionalidade | Tarefas | Estado | Progresso | Próximo resultado |
 | --- | --- | --- | ---: | --- |
 | Viabilidade Apple e captura mic/system | T005, T006 | DONE | 100% | Evidência real já registrada; hardware/rota continuam variáveis. |
 | Helper Swift, provider e ciclo local | T013–T019 | DONE | 100% | Captura/transcrição local integrada ao Electron e exibida ao vivo. |
-| Remover eco/duplicação | T056 | DONE | 100% | Ensaio físico mic/system reduziu dois finais brutos para um no transcript local e no contexto IA, sem registrar fala. |
+| Remover eco/duplicação | T056 | IN_PROGRESS | 0% | Retomada após finais duplicados reportados com alto-falantes externos e `mic + system`; ampliar filtro textual e validar preservação de fala distinta. |
 | Avaliar e melhorar STT | T057 | TODO | 0% | Métrica, corpus, referência e comparação antes/depois em áudio/vídeos autorizados. |
 | STT remoto e troca de idiomas | T016, T026 | DEFERRED | — | Só reativar com decisão de produto, custo e consentimento. |
 
@@ -121,7 +122,7 @@ A antiga dependência de T032 em fallback remoto e screenshot foi removida: o ba
 
 ## Ordem posterior à fase atual
 
-Após T057→T027→T060→T061, o trabalho pode seguir em trilhas dependentes:
+Após T056→T057→T027→T060→T061, o trabalho pode seguir em trilhas dependentes:
 
 1. **Segurança/distribuição:** T032 → T033 → T034; T065 → T070; depois T072 → T035. T071 pode vir após o pacote endurecido sem bloquear o primeiro aceite local.
 2. **Qualidade orientada pelo usuário:** T064, alimentando métricas locais e a revisão dos resultados.
