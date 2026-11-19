@@ -195,6 +195,12 @@ describe('OpenAI suggestion adapter with synthetic HTTP only', () => {
       'let the application evaluate later transcript updates',
     );
     expect(body.instructions).toContain(
+      'Do not merely restate, summarize, or paraphrase',
+    );
+    expect(body.instructions).toContain(
+      'Do not return semantically equivalent variants',
+    );
+    expect(body.instructions).toContain(
       'A nearby topic does not make an unclear phrase worth asking about',
     );
     expect(body.instructions).toContain(

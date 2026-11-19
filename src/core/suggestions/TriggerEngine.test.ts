@@ -164,13 +164,17 @@ describe('TriggerEngine — synthetic pt-BR utterances', () => {
     expect(event).toEqual(speech('Qual é o prazo?'));
   });
 
-  it('does not claim automatic English support', () => {
-    expect(
-      engine.evaluate({ ...speech('What is the deadline?'), locale: 'en-US' }),
-    ).toBe('none');
-    expect(
-      engine.evaluate({ ...speech('Qual é o prazo?'), locale: 'en-US' }),
-    ).toBe('none');
+  it.each([
+    ['What is the deadline?', 'question'],
+    ["We don't agree with this deadline.", 'objection'],
+    ['We need to define the owner.', 'commitment'],
+    ['We are discussing the delivery.', 'none'],
+    ['How are you?', 'none'],
+    ['Qual é o prazo?', 'none'],
+  ] as const)('classifies supported English sessions: %s', (text, expected) => {
+    expect(engine.evaluate({ ...speech(text), locale: 'en-US' })).toBe(
+      expected,
+    );
   });
 
   it('does not retain old questions or schedule automatic retries during silence', () => {

@@ -4,6 +4,8 @@ import {
   SUGGESTION_SESSION_REQUEST_LIMIT,
 } from './suggestion';
 
+export const SUGGESTION_AUTOMATIC_DEBOUNCE_MS = 2_000;
+
 export const SUGGESTION_FAILURES = [
   'not-authorized',
   'credentials-unavailable',

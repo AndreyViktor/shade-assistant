@@ -22,10 +22,11 @@ const card = {
 function speech(
   seq = 1,
   text = 'Qual é o prazo do projeto fictício?',
+  locale: 'pt-BR' | 'en-US' = 'pt-BR',
 ): SpeechSegment {
   return {
     sessionId: config.sessionId,
-    locale: config.locale,
+    locale,
     source: 'mic',
     version: 1,
     type: 'final',
@@ -37,20 +38,26 @@ function speech(
     text,
   };
 }
-function setup(consent = true, maxRequests = 2, userContext?: string) {
+function setup(
+  consent = true,
+  maxRequests = 2,
+  userContext?: string,
+  locale: 'pt-BR' | 'en-US' = 'pt-BR',
+) {
   const session = new MeetingSession();
   const generate = vi
     .fn<(request: SuggestionRequest) => Promise<SuggestionResult>>()
     .mockResolvedValue({ ok: true, suggestions: [card] });
   const create = vi.fn(() => ({ generate }));
   const pipeline = new MeetingSuggestions(session, create);
+  const sessionConfig = { ...config, locale };
   const start = () => {
     session.start({
       mode: 'apple-local',
-      ...config,
+      ...sessionConfig,
       consent: { capture: true, context: consent, remoteAudio: false },
     });
-    pipeline.start(config, {
+    pipeline.start(sessionConfig, {
       ...authorization,
       maxRequests,
       ...(userContext ? { userContext } : {}),
@@ -69,13 +76,16 @@ afterEach(() => {
 });
 
 describe('session suggestion integration with synthetic speech', () => {
-  it('waits after the latest speech fragment and reevaluates empty results with more context', async () => {
+  it('keeps an initial fragment without spending budget, then evaluates actionable accumulated context', async () => {
     const { pipeline, generate } = setup(true, 2);
     generate.mockResolvedValueOnce({ ok: true, suggestions: [] });
 
     pipeline.receive(speech(1, 'A equipe precisa analisar o trecho final.'));
-    await vi.advanceTimersByTimeAsync(1_500);
-    pipeline.receive(speech(2, 'O prazo da revisão ficou para sexta-feira.'));
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(generate).not.toHaveBeenCalled();
+    expect(pipeline.snapshot().remainingRequests).toBe(2);
+
+    pipeline.receive(speech(2, 'Precisamos definir quem fará a revisão.'));
     await vi.advanceTimersByTimeAsync(1_999);
     expect(generate).not.toHaveBeenCalled();
 
@@ -85,11 +95,11 @@ describe('session suggestion integration with synthetic speech', () => {
       generate.mock.calls[0]?.[0].context.recent.map(({ text }) => text),
     ).toEqual([
       'A equipe precisa analisar o trecho final.',
-      'O prazo da revisão ficou para sexta-feira.',
+      'Precisamos definir quem fará a revisão.',
     ]);
     expect(pipeline.snapshot().items).toEqual([]);
 
-    pipeline.receive(speech(3, 'Ainda falta definir quem fará a revisão.'));
+    pipeline.receive(speech(3, 'Quem confirmará a entrega com o cliente?'));
     await vi.advanceTimersByTimeAsync(1_999);
     expect(generate).toHaveBeenCalledTimes(1);
     await vi.advanceTimersByTimeAsync(8_001);
@@ -99,10 +109,40 @@ describe('session suggestion integration with synthetic speech', () => {
       generate.mock.calls[1]?.[0].context.recent.map(({ text }) => text),
     ).toEqual([
       'A equipe precisa analisar o trecho final.',
-      'O prazo da revisão ficou para sexta-feira.',
-      'Ainda falta definir quem fará a revisão.',
+      'Precisamos definir quem fará a revisão.',
+      'Quem confirmará a entrega com o cliente?',
     ]);
   });
+
+  it.each([
+    [
+      'pt-BR',
+      'Estamos conversando sobre a entrega.',
+      'Qual risco devemos avaliar?',
+    ],
+    [
+      'en-US',
+      'We are discussing the delivery.',
+      'Which risk should we evaluate?',
+    ],
+  ] as const)(
+    'applies automatic readiness without dropping the configured %s language',
+    async (locale, fragment, actionable) => {
+      const { pipeline, generate } = setup(true, 2, undefined, locale);
+      pipeline.receive(speech(1, fragment, locale));
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(generate).not.toHaveBeenCalled();
+      expect(pipeline.snapshot().remainingRequests).toBe(2);
+
+      pipeline.receive(speech(2, actionable, locale));
+      await vi.advanceTimersByTimeAsync(2_000);
+      expect(generate).toHaveBeenCalledOnce();
+      expect(generate.mock.calls[0]?.[0].language).toBe(locale);
+      expect(
+        generate.mock.calls[0]?.[0].context.recent.map(({ text }) => text),
+      ).toEqual([fragment, actionable]);
+    },
+  );
 
   it('distinguishes final/trigger/debounce/preparation/transport and clears payload on pause', async () => {
     const { pipeline, generate, session } = setup();
@@ -110,7 +150,10 @@ describe('session suggestion integration with synthetic speech', () => {
     pipeline.receive({ ...speech(), type: 'partial' });
     expect(pipeline.snapshot().diagnostics?.activity).toBe('waiting-final');
     pipeline.receive(speech(2, 'Obrigado.'));
-    expect(pipeline.snapshot().diagnostics?.activity).toBe('debounce');
+    expect(pipeline.snapshot().diagnostics).toMatchObject({
+      activity: 'waiting-trigger',
+      lastTrigger: 'none',
+    });
     let finish: (result: SuggestionResult) => void = () => {};
     generate.mockImplementationOnce(
       () =>
@@ -208,7 +251,7 @@ describe('session suggestion integration with synthetic speech', () => {
     expect(pipeline.snapshot().diagnostics?.lastAttempt).toBeNull();
     expect(pipeline.snapshot().items).toEqual([]);
   });
-  it('batches ordinary final speech and queues the latest context while a request is running', async () => {
+  it('does not call for ordinary finals and queues later actionable context while a request is running', async () => {
     const { pipeline, generate } = setup();
     let finish: (result: SuggestionResult) => void = () => {};
     generate.mockImplementationOnce(
@@ -220,11 +263,14 @@ describe('session suggestion integration with synthetic speech', () => {
     pipeline.receive(speech(1, 'Bom dia a todos.'));
     pipeline.receive(speech(2, 'Estamos começando a reunião.'));
     await vi.advanceTimersByTimeAsync(2_000);
+    expect(generate).not.toHaveBeenCalled();
+    pipeline.receive(speech(3, 'Qual risco devemos avaliar primeiro?'));
+    await vi.advanceTimersByTimeAsync(2_000);
     expect(generate).toHaveBeenCalledOnce();
     const first = generate.mock.calls[0]?.[0];
-    expect(first?.context.recent).toHaveLength(2);
-    pipeline.receive(speech(3, 'O projeto está em andamento.'));
-    pipeline.receive(speech(4, 'Precisamos conversar sobre isso.'));
+    expect(first?.context.recent).toHaveLength(3);
+    pipeline.receive(speech(4, 'O projeto está em andamento.'));
+    pipeline.receive(speech(5, 'Precisamos definir o próximo responsável.'));
     expect(first?.signal.aborted).toBe(false);
     expect(generate).toHaveBeenCalledOnce();
     finish({ ok: true, suggestions: [card] });
@@ -235,7 +281,7 @@ describe('session suggestion integration with synthetic speech', () => {
     ).toContain('O projeto está em andamento.');
     expect(
       generate.mock.calls[1]?.[0].context.recent.map((item) => item.text),
-    ).toContain('Precisamos conversar sobre isso.');
+    ).toContain('Precisamos definir o próximo responsável.');
   });
 
   it('requires text consent before constructing a provider or retaining context', async () => {
@@ -358,7 +404,7 @@ describe('session suggestion integration with synthetic speech', () => {
     );
   });
 
-  it('keeps cards for changed content and ignores a duplicate final and foreign session', async () => {
+  it('keeps cards while ignoring duplicate, foreign and neutral finals', async () => {
     const { pipeline, generate } = setup();
     pipeline.receive(speech());
     await vi.advanceTimersByTimeAsync(2_000);
@@ -370,7 +416,7 @@ describe('session suggestion integration with synthetic speech', () => {
     pipeline.receive(speech(3, 'Obrigado.'));
     expect(pipeline.snapshot().items).toHaveLength(1);
     await vi.advanceTimersByTimeAsync(10000);
-    expect(generate).toHaveBeenCalledTimes(2);
+    expect(generate).toHaveBeenCalledOnce();
   });
 
   it('advances context during silence, archives old speech, and retains cards without new speech', async () => {
@@ -414,7 +460,7 @@ describe('session suggestion integration with synthetic speech', () => {
 });
 
 it('retains every distinct card after budget exhaustion without a session TTL', async () => {
-  const { pipeline, generate } = setup(true, 4);
+  const { pipeline, generate } = setup(true, 3);
   pipeline.receive(speech());
   await vi.advanceTimersByTimeAsync(2_000);
   const first = pipeline.snapshot().items[0];
@@ -427,7 +473,9 @@ it('retains every distinct card after budget exhaustion without a session TTL', 
       ok: true,
       suggestions: [{ ...card, body: `Body ${seq}` }],
     });
-    pipeline.receive(speech(seq, `Nova fala sintética ${seq}.`));
+    pipeline.receive(
+      speech(seq, `Precisamos revisar a entrega sintética ${seq}.`),
+    );
     await vi.advanceTimersByTimeAsync(10000);
   }
   expect(pipeline.snapshot()).toMatchObject({
@@ -436,7 +484,7 @@ it('retains every distinct card after budget exhaustion without a session TTL', 
   });
   await vi.advanceTimersByTimeAsync(3600000);
   expect(pipeline.snapshot().items).toHaveLength(3);
-  expect(generate).toHaveBeenCalledTimes(4);
+  expect(generate).toHaveBeenCalledTimes(3);
 });
 
 it.each(['pause', 'stop', 'revoke', 'restart'] as const)(
@@ -469,7 +517,7 @@ it.each(['pause', 'stop', 'revoke', 'restart'] as const)(
       start();
     }
     expect(pipeline.snapshot().items).toEqual([]);
-    pipeline.receive(speech(2, 'Nova pergunta sintética?'));
+    pipeline.receive(speech(2, 'Qual é a nova pergunta sintética?'));
     await vi.advanceTimersByTimeAsync(2_000);
     expect(pipeline.snapshot().items).toHaveLength(1);
     expect(pipeline.snapshot().items[0]?.id).not.toBe(oldId);

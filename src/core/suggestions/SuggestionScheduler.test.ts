@@ -54,14 +54,18 @@ afterEach(() => {
 });
 
 describe('suggestion scheduling', () => {
-  it('restarts the continuous debounce after each new context and waits two seconds', async () => {
+  it('lets neutral finals extend an already actionable continuous debounce without creating work', async () => {
     const { scheduler, generate } = setup({ debounceMs: 2_000 }, true);
-    scheduler.submit(context, 1, 'automatic');
+    scheduler.submit(context, 1, 'question');
     await vi.advanceTimersByTimeAsync(1_500);
-    scheduler.submit(context, 2, 'automatic');
+    scheduler.submit(context, 2, 'none');
     await vi.advanceTimersByTimeAsync(1_999);
     expect(generate).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(1);
+    expect(generate).toHaveBeenCalledOnce();
+
+    scheduler.submit(context, 3, 'none');
+    await vi.advanceTimersByTimeAsync(20_000);
     expect(generate).toHaveBeenCalledOnce();
   });
 
@@ -335,7 +339,7 @@ describe('suggestion scheduling', () => {
     expect(scheduler.snapshot()).toEqual([]);
   });
 
-  it('copies queued context and preserves the configured language', async () => {
+  it('copies manually requested context and preserves the configured language', async () => {
     const generate = vi
       .fn<SuggestionProvider['generate']>()
       .mockResolvedValue(success);
@@ -346,10 +350,10 @@ describe('suggestion scheduling', () => {
     );
     scheduler.start(new AbortController().signal);
     const input: MeetingContext = { recent: [], summary: [] };
-    scheduler.submit(input, 1, 'question');
+    scheduler.submit(input, 1, 'manual');
     // Arrays are independently owned even when the caller reuses its snapshot.
     expect(input).toEqual(context);
-    await vi.advanceTimersByTimeAsync(2_000);
+    await vi.advanceTimersByTimeAsync(0);
     expect(generate.mock.calls[0]?.[0].context.recent).not.toBe(input.recent);
     expect(generate.mock.calls[0]?.[0].context.summary).not.toBe(input.summary);
     expect(generate.mock.calls[0]?.[0].language).toBe('en-US');

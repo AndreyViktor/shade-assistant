@@ -2,6 +2,7 @@ import { SuggestionStore } from './SuggestionStore';
 import type { MeetingContext } from '../meeting/ContextManager';
 import type { SuggestionProvider } from './SuggestionProvider';
 import type { Trigger } from './TriggerEngine';
+import { SUGGESTION_AUTOMATIC_DEBOUNCE_MS } from '../../contracts/meeting/suggestionDiagnostics';
 
 export type SuggestionPolicy = {
   debounceMs: number;
@@ -12,7 +13,7 @@ export type SuggestionPolicy = {
 
 export const DEFAULT_SUGGESTION_POLICY: Readonly<SuggestionPolicy> =
   Object.freeze({
-    debounceMs: 2_000,
+    debounceMs: SUGGESTION_AUTOMATIC_DEBOUNCE_MS,
     cooldownMs: 10_000,
     ttlMs: 30_000,
     maxResponseAgeMs: 15_000,
@@ -87,8 +88,7 @@ export class SuggestionScheduler {
     if (revision === this.revision && trigger !== 'manual') return;
     this.revision = revision;
     if (!this.continuous) this.invalidate();
-    if (trigger === 'none') return;
-    this.pending = {
+    const pending: Pending = {
       context: {
         recent: context.recent.map((segment) => ({ ...segment })),
         summary: context.summary.map((excerpt) => ({ ...excerpt })),
@@ -96,6 +96,16 @@ export class SuggestionScheduler {
       manual: trigger === 'manual',
       dueAt: Date.now() + (trigger === 'manual' ? 0 : this.policy.debounceMs),
     };
+    if (trigger === 'none') {
+      // A neutral final cannot create work. Once an actionable automatic turn
+      // is pending, however, later finals belong to that same trailing window.
+      if (this.continuous && this.pending && !this.pending.manual) {
+        this.pending = pending;
+        this.arm();
+      }
+      return;
+    }
+    this.pending = pending;
     this.arm();
   }
 

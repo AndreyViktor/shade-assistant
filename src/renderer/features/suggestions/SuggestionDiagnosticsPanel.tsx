@@ -3,11 +3,12 @@ import type {
   SuggestionDiagnostics,
   SuggestionFailure,
 } from '../../../contracts/meeting/suggestionDiagnostics';
+import { SUGGESTION_AUTOMATIC_DEBOUNCE_MS } from '../../../contracts/meeting/suggestionDiagnostics';
 
 const activities: Record<SuggestionDiagnostics['activity'], string> = {
   'waiting-final': 'Aguardando uma fala final da transcrição.',
   'waiting-trigger': 'Aguardando novos trechos finais da transcrição.',
-  debounce: 'Aguardando a fala estabilizar por 0,5 segundo.',
+  debounce: `Aguardando a fala estabilizar por ${SUGGESTION_AUTOMATIC_DEBOUNCE_MS / 1000} segundos.`,
   cooldown:
     'Aguardando o intervalo entre chamadas (10 segundos) ou a chamada anterior encerrar.',
   preparing: 'Preparando a chamada e lendo a chave no Mac.',

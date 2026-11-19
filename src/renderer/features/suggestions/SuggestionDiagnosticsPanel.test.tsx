@@ -69,3 +69,15 @@ it('keeps the last allowed request in progress instead of prematurely claiming c
   );
   expect(screen.queryByText(/Limite atingido/)).not.toBeInTheDocument();
 });
+it('describes the shared automatic debounce duration', () => {
+  const waiting = snapshot('empty');
+  waiting.status = 'ready';
+  waiting.remainingRequests = 1;
+  if (!waiting.diagnostics) throw new Error('missing synthetic diagnostics');
+  waiting.diagnostics.activity = 'debounce';
+  waiting.diagnostics.lastAttempt = null;
+  render(<SuggestionDiagnosticsPanel snapshot={waiting} />);
+  expect(screen.getByRole('status')).toHaveTextContent(
+    'fala estabilizar por 2 segundos',
+  );
+});

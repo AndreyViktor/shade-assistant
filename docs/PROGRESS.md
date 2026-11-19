@@ -1,17 +1,16 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-19. **Marco:** M11 — T073 DONE.
+**Atualizado:** 2026-11-19. **Marco:** M10 — T058 DONE.
 
-## Resultado T073
+## Resultado T058
 
-- `Progresso ativo` passou para a segunda coluna do painel geral de [ROADMAP.md](ROADMAP.md).
-- Escopo ativo agora significa `DONE` + `TODO` + `IN_PROGRESS` + `BLOCKED`; `IN_PROGRESS` sozinho identifica execução corrente, e `DEFERRED` fica fora do denominador.
-- O painel foi recalculado para 41 `DONE`, 18 ativas não concluídas, 14 `DEFERRED` e 69% no total ativo.
-- As 73 tarefas permanecem mapeadas. `format:check`, `git diff --check` e 19 testes do runner passaram; nenhum código, prioridade de produto, captura, rede ou custo mudou.
+- Fala final neutra agora permanece no contexto sem agendar chamada nem consumir orçamento. Pergunta, objeção ou compromisso reconhecido em pt-BR/en-US agenda o contexto acumulado; finais posteriores atualizam a pendência e reiniciam o debounce trailing.
+- O default de 2 s passou a ter uma fonte compartilhada pelo scheduler e pelo diagnóstico. Pedido manual imediato, consentimento, orçamento, execução serial e lifecycle permaneceram inalterados.
+- O prompt exige contribuição acionável e proíbe mera reformulação ou variantes equivalentes na mesma resposta. Similaridade entre respostas e utilidade real continuam como avaliação de T027, sem alegação de solução semântica.
+- Testes focados: 202/202. `npm run verify`: lint/formato, três typechecks, 897 testes TS aprovados, 18 skipped, 19 testes do runner e build main/preload/renderer. Fixtures e providers sintéticos; nenhuma rede, API paga, credencial ou captura.
 
 ## Handoff
 
-- T058 é a tarefa corrente (`IN_PROGRESS`). A inspeção confirmou que o debounce do scheduler é 2 s após a última fala final, enquanto o diagnóstico exibe 0,5 s; ambos referem-se à mesma espera, mas a interface está desatualizada. O período é temporal, não uma verificação de contexto suficiente.
-- A chamada automática é submetida após cada fala final, mesmo quando o `TriggerEngine` retorna `none`; o contexto de até quatro minutos limita o que pode ser enviado, mas não faz o app esperar por esse contexto. T058 e T027 foram ampliadas para registrar política geral de prontidão e avaliação de valor incremental, sem regras por exemplo.
-- T056 foi pausada em `TODO` para priorizar T058. T057 continua não iniciada e depende da conclusão de T056; T027 permanece `TODO` e depende de T057/T058.
-- Esta atualização foi documental: nenhum código, teste de áudio físico ou chamada OpenAI foi executado.
+- T058 concluiu a política local de prontidão sem chamada real à OpenAI. As heurísticas podem ter falsos positivos/negativos e não comprovam qualidade de cartões; T027 mede relevância, novidade, repetição e abstenção com corpus autorizado/sintético.
+- `en-US` está coberto como sessão monolíngue, sem alegação de detecção bilíngue simultânea; esse escopo permanece em T026. Pedido manual continua comprovado no scheduler, sem nova UI/IPC nesta fatia.
+- T056 permanece `TODO`, pausada anteriormente pelo usuário; nenhuma outra tarefa foi iniciada nesta sessão. Encerrar após o commit local da T058, sem push.

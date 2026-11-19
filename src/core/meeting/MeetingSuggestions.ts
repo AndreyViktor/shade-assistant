@@ -192,12 +192,13 @@ export class MeetingSuggestions {
     this.signature = signature;
     this.hasFinal =
       finalContext.recent.length > 0 || finalContext.summary.length > 0;
-    if (event?.type === 'final')
-      this.lastTrigger = this.trigger.evaluate(event);
+    const trigger =
+      event?.type === 'final' ? this.trigger.evaluate(event) : 'none';
+    if (event?.type === 'final') this.lastTrigger = trigger;
     this.scheduler.submit(
       finalContext,
       ++this.revision,
-      this.remaining > 0 && event?.type === 'final' ? 'automatic' : 'none',
+      this.remaining > 0 ? trigger : 'none',
     );
   }
 
