@@ -8,6 +8,7 @@ let package = Package(
     .library(name: "MeetingCopilotProtocol", targets: ["MeetingCopilotProtocol"]),
     .executable(name: "MeetingCopilotCapabilities", targets: ["MeetingCopilotCapabilities"]),
     .executable(name: "MeetingCopilotAudioPOC", targets: ["MeetingCopilotAudioPOC"]),
+    .executable(name: "MeetingCopilotSTTEvaluator", targets: ["MeetingCopilotSTTEvaluator"]),
     .executable(name: "MeetingCopilotTranscriber", targets: ["MeetingCopilotTranscriber"]),
   ],
   targets: [
@@ -19,6 +20,7 @@ let package = Package(
     .executableTarget(name: "MeetingCopilotCapabilities"),
     .target(name: "MeetingCopilotAudio"),
     .executableTarget(name: "MeetingCopilotAudioPOC", dependencies: ["MeetingCopilotAudio"]),
+    .executableTarget(name: "MeetingCopilotSTTEvaluator"),
     .executableTarget(
       name: "MeetingCopilotTranscriber",
       dependencies: ["MeetingCopilotAudio", "MeetingCopilotProtocol"]),
@@ -30,6 +32,10 @@ let package = Package(
     .testTarget(
       name: "MeetingCopilotCapabilitiesTests",
       dependencies: ["MeetingCopilotCapabilities"]
+    ),
+    .testTarget(
+      name: "MeetingCopilotSTTEvaluatorTests",
+      dependencies: ["MeetingCopilotSTTEvaluator"]
     ),
   ]
 )
