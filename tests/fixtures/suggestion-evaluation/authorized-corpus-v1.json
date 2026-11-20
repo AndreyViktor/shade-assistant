@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "id": "t027-authorized-v1",
+  "synthetic": true,
+  "cases": [
+    {
+      "id": "initial-fragment",
+      "tags": ["initial-context", "abstention"],
+      "actionableAtMs": null,
+      "turns": [
+        {
+          "id": "fragment",
+          "atMs": 0,
+          "expectAbstain": true,
+          "context": {
+            "recent": [
+              {
+                "source": "system",
+                "locale": "pt-BR",
+                "startMs": 0,
+                "endMs": 1200,
+                "text": "Sobre o projeto Horizonte, eu ainda estava pensando naquela parte..."
+              }
+            ],
+            "summary": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "uncertain-number",
+      "tags": ["false-factual-alert", "asr-uncertainty", "abstention"],
+      "actionableAtMs": null,
+      "turns": [
+        {
+          "id": "uncertain",
+          "atMs": 0,
+          "expectAbstain": true,
+          "context": {
+            "recent": [
+              {
+                "source": "system",
+                "locale": "pt-BR",
+                "startMs": 0,
+                "endMs": 1800,
+                "text": "O áudio falhou; pode ter sido quatorze ou quarenta, não tenho certeza."
+              }
+            ],
+            "summary": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "reformulation-trap",
+      "tags": ["reformulation", "incremental-value", "abstention"],
+      "actionableAtMs": null,
+      "turns": [
+        {
+          "id": "complete-statement",
+          "atMs": 0,
+          "expectAbstain": true,
+          "context": {
+            "recent": [
+              {
+                "source": "system",
+                "locale": "pt-BR",
+                "startMs": 0,
+                "endMs": 1600,
+                "text": "Ana enviará o relatório final aos revisores na sexta-feira."
+              }
+            ],
+            "summary": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "semantic-repeat",
+      "tags": ["semantic-repetition", "utility"],
+      "actionableAtMs": 0,
+      "turns": [
+        {
+          "id": "missing-owner",
+          "atMs": 0,
+          "expectAbstain": false,
+          "context": {
+            "recent": [
+              {
+                "source": "mic",
+                "locale": "pt-BR",
+                "startMs": 0,
+                "endMs": 1500,
+                "text": "Temos a ação de revisar o contrato, mas ninguém assumiu."
+              }
+            ],
+            "summary": []
+          }
+        },
+        {
+          "id": "same-issue-later",
+          "atMs": 12000,
+          "expectAbstain": false,
+          "context": {
+            "recent": [
+              {
+                "source": "mic",
+                "locale": "pt-BR",
+                "startMs": 0,
+                "endMs": 1500,
+                "text": "Temos a ação de revisar o contrato, mas ninguém assumiu."
+              },
+              {
+                "source": "system",
+                "locale": "pt-BR",
+                "startMs": 10500,
+                "endMs": 12000,
+                "text": "Vamos seguir; o responsável pela revisão continua em aberto."
+              }
+            ],
+            "summary": []
+          }
+        }
+      ]
+    }
+  ]
+}

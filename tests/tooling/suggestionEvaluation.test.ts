@@ -16,6 +16,57 @@ async function json(name: string): Promise<unknown> {
 }
 
 describe('suggestion quality evaluation', () => {
+  it('replays the sanitized authorized model comparison', async () => {
+    const metrics = await evaluateFiles(
+      fixture('authorized-corpus-v1.json').pathname,
+      [
+        fixture('authorized-gpt-5.4-mini.json').pathname,
+        fixture('authorized-gpt-5.4.json').pathname,
+      ],
+    );
+
+    expect(metrics).toEqual([
+      expect.objectContaining({
+        configuration: 'authorized-gpt-5.4-mini',
+        provenance: 'authorized-model',
+        cases: 4,
+        turns: 5,
+        cards: 3,
+        usefulCardRate: 0.3333,
+        noveltyRate: 0.6667,
+        semanticRepetitionRate: 0.3333,
+        abstentionAccuracy: 0.6667,
+        evidenceAdherenceRate: 0.3333,
+        requestLatencyMs: { p50: 1605, p95: 2438 },
+        tokens: { input: 4878, output: 222 },
+        estimatedCost: {
+          currency: 'USD',
+          amount: 0.004658,
+          pricingAsOf: '2026-11-19',
+        },
+      }),
+      expect.objectContaining({
+        configuration: 'authorized-gpt-5.4',
+        provenance: 'authorized-model',
+        cases: 4,
+        turns: 5,
+        cards: 3,
+        usefulCardRate: 0.3333,
+        noveltyRate: 0.6667,
+        semanticRepetitionRate: 0.3333,
+        abstentionAccuracy: 0.6667,
+        evidenceAdherenceRate: 1,
+        requestLatencyMs: { p50: 2025, p95: 2087 },
+        tokens: { input: 4878, output: 217 },
+        estimatedCost: {
+          currency: 'USD',
+          amount: 0.01545,
+          pricingAsOf: '2026-11-19',
+        },
+      }),
+    ]);
+  });
+
   it('compares complete synthetic controls with quality, latency, token and cost metrics', async () => {
     const metrics = await evaluateFiles(fixture('corpus-v1.json').pathname, [
       fixture('control-a.json').pathname,

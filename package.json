@@ -24,6 +24,7 @@
     "build:native-helper": "sh scripts/build-native-helper-app.sh",
     "test:native-capture": "sh scripts/test-native-provider-capture.sh",
     "evaluate:suggestions": "node scripts/evaluate-suggestions.mts",
+    "evaluate:suggestions:real": "vitest run tests/manual/suggestionModelComparison.test.ts",
     "prepare:native-assets": "sh scripts/prepare-native-assets.sh",
     "verify:swift": "sh scripts/verify-swift.sh",
     "probe:swift": "swift run --package-path native/macos MeetingCopilotCapabilities",

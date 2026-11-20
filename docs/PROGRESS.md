@@ -1,13 +1,15 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-19. **Marco:** M10 — T027 BLOCKED.
+**Atualizado:** 2026-11-19. **Marco:** M10 — T027 DONE.
 
 ## Resultado T027
 
-- O corpus pt-BR sintético cobre 8 cenários/10 pontos; o avaliador offline exige cobertura idêntica e agrega qualidade, abstenção, evidência, repetição, latência, tokens e custo sem aceitar texto de transcrição/cartão no resultado.
-- Dois controles inventados validaram todas as métricas, mas não representam modelos nem qualidade real. Não houve rede, credencial, OpenAI ou custo.
-- Gates: 4 testes focados; `verify` com 908 TS aprovados (18 skipped), 19 runner, lint/formato/tipos/build. Protocolo, rubrica e limites em [T027.md](evidence/tasks/T027.md).
+- Comparação real pareada: 5 pontos por modelo, 10 chamadas totais, 3 cartões em `gpt-5.4-mini` e 3 em `gpt-5.4`. Custo combinado US$ 0,020108, dentro do teto de US$ 0,10.
+- Ambos abstiveram nos fragmentos inicial/incerto, sugeriram no caso rotulado para abstenção e repetiram a intenção de atribuir responsável. O mini teve p50 1605 ms e primeiro cartão útil 1540 ms; o GPT-5.4 teve p50 2025 ms/2087 ms e grounding mais aderente (100% contra 33,33%).
+- Respostas brutas existiram apenas em temporário privado e foram removidas; Git guarda corpus/rótulos/tokens/tempos/custo, sem texto dos cartões nem chave. Evidências e limitações em [T027.md](evidence/tasks/T027.md).
+- Gates: runner real aprovado; `verify` com 909 TS aprovados (19 skipped), 19 runner, lint/formato/tipos/build; `git diff --check` aprovado.
 
-## Bloqueio e próximo passo
+## Handoff e limites
 
-- O aceite exige comparar modelos reais no mesmo corpus. É necessária autorização humana explícita e limitada para modelos, rede, chave e teto de custo; depois, confirmar preços/disponibilidade atuais, executar os mesmos 10 pontos, rotular sem revelar a configuração e registrar somente artefatos sanitizados. Até lá T027 permanece `BLOCKED`; não iniciar outra tarefa nesta sessão.
+- Amostra pequena, uma execução, rotulagem não cega e schema limitado a um cartão/ponto: baseline, não benchmark geral. Manter `gpt-5.4-mini` como padrão; T025 continua responsável por orçamento operacional.
+- Encerrar após commit local T027. T060 pode começar somente em uma nova sessão; T061 continua dependente de T060. Não houve push.

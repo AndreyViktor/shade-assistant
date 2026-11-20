@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "corpusId": "t027-authorized-v1",
+  "provenance": "authorized-model",
+  "authorizationRecorded": true,
+  "configuration": {
+    "id": "authorized-gpt-5.4",
+    "model": "gpt-5.4"
+  },
+  "pricing": {
+    "currency": "USD",
+    "inputPerMillion": 2.5,
+    "outputPerMillion": 15,
+    "asOf": "2026-11-19",
+    "source": "https://developers.openai.com/api/docs/pricing"
+  },
+  "cases": [
+    {
+      "id": "initial-fragment",
+      "turns": [
+        {
+          "id": "fragment",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 1139,
+          "inputTokens": 966,
+          "outputTokens": 16,
+          "cards": []
+        }
+      ]
+    },
+    {
+      "id": "uncertain-number",
+      "turns": [
+        {
+          "id": "uncertain",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 1329,
+          "inputTokens": 973,
+          "outputTokens": 16,
+          "cards": []
+        }
+      ]
+    },
+    {
+      "id": "reformulation-trap",
+      "turns": [
+        {
+          "id": "complete-statement",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 2037,
+          "inputTokens": 967,
+          "outputTokens": 61,
+          "cards": [
+            {
+              "useful": false,
+              "relevant": true,
+              "novel": true,
+              "evidenceAdherent": true,
+              "semanticGroup": "define-review-criteria",
+              "falseFactualAlert": false,
+              "reformulation": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "semantic-repeat",
+      "turns": [
+        {
+          "id": "missing-owner",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 2087,
+          "inputTokens": 968,
+          "outputTokens": 66,
+          "cards": [
+            {
+              "useful": true,
+              "relevant": true,
+              "novel": true,
+              "evidenceAdherent": true,
+              "semanticGroup": "assign-contract-owner",
+              "falseFactualAlert": false,
+              "reformulation": false
+            }
+          ]
+        },
+        {
+          "id": "same-issue-later",
+          "dispatchedAtMs": 12000,
+          "completedAtMs": 14025,
+          "inputTokens": 1004,
+          "outputTokens": 58,
+          "cards": [
+            {
+              "useful": false,
+              "relevant": true,
+              "novel": false,
+              "evidenceAdherent": true,
+              "semanticGroup": "assign-contract-owner",
+              "falseFactualAlert": false,
+              "reformulation": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
