@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "corpusId": "t027-synthetic-v1",
+  "provenance": "synthetic-control",
+  "authorizationRecorded": false,
+  "configuration": { "id": "control-a", "model": "synthetic-control-a" },
+  "pricing": {
+    "currency": "USD",
+    "inputPerMillion": 1,
+    "outputPerMillion": 2,
+    "asOf": "2026-11-19",
+    "source": "synthetic-test-rate"
+  },
+  "cases": [
+    {
+      "id": "initial-fragment",
+      "turns": [
+        {
+          "id": "fragment",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 600,
+          "inputTokens": 100,
+          "outputTokens": 5,
+          "cards": []
+        },
+        {
+          "id": "actionable",
+          "dispatchedAtMs": 5000,
+          "completedAtMs": 5500,
+          "inputTokens": 160,
+          "outputTokens": 30,
+          "cards": [
+            {
+              "useful": true,
+              "relevant": true,
+              "novel": true,
+              "evidenceAdherent": true,
+              "semanticGroup": "assign-owner",
+              "falseFactualAlert": false,
+              "reformulation": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "trivial-greeting",
+      "turns": [
+        {
+          "id": "greeting",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 300,
+          "inputTokens": 80,
+          "outputTokens": 5,
+          "cards": []
+        }
+      ]
+    },
+    {
+      "id": "uncertain-number",
+      "turns": [
+        {
+          "id": "uncertain",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 400,
+          "inputTokens": 90,
+          "outputTokens": 5,
+          "cards": []
+        }
+      ]
+    },
+    {
+      "id": "reformulation-trap",
+      "turns": [
+        {
+          "id": "complete-statement",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 500,
+          "inputTokens": 90,
+          "outputTokens": 5,
+          "cards": []
+        }
+      ]
+    },
+    {
+      "id": "corrected-deadline",
+      "turns": [
+        {
+          "id": "correction",
+          "dispatchedAtMs": 3000,
+          "completedAtMs": 3400,
+          "inputTokens": 130,
+          "outputTokens": 32,
+          "cards": [
+            {
+              "useful": true,
+              "relevant": true,
+              "novel": true,
+              "evidenceAdherent": true,
+              "semanticGroup": "assess-delay-impact",
+              "falseFactualAlert": false,
+              "reformulation": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "semantic-repeat",
+      "turns": [
+        {
+          "id": "missing-owner",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 500,
+          "inputTokens": 100,
+          "outputTokens": 28,
+          "cards": [
+            {
+              "useful": true,
+              "relevant": true,
+              "novel": true,
+              "evidenceAdherent": true,
+              "semanticGroup": "contract-owner",
+              "falseFactualAlert": false,
+              "reformulation": false
+            }
+          ]
+        },
+        {
+          "id": "same-issue-later",
+          "dispatchedAtMs": 12000,
+          "completedAtMs": 12450,
+          "inputTokens": 150,
+          "outputTokens": 5,
+          "cards": []
+        }
+      ]
+    },
+    {
+      "id": "decision-criteria",
+      "turns": [
+        {
+          "id": "choice",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 800,
+          "inputTokens": 110,
+          "outputTokens": 34,
+          "cards": [
+            {
+              "useful": true,
+              "relevant": true,
+              "novel": true,
+              "evidenceAdherent": true,
+              "semanticGroup": "decision-criteria",
+              "falseFactualAlert": false,
+              "reformulation": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "budget-absence",
+      "turns": [
+        {
+          "id": "no-budget",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 700,
+          "inputTokens": 95,
+          "outputTokens": 30,
+          "cards": [
+            {
+              "useful": true,
+              "relevant": true,
+              "novel": true,
+              "evidenceAdherent": true,
+              "semanticGroup": "define-budget",
+              "falseFactualAlert": false,
+              "reformulation": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

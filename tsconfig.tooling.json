@@ -1,9 +1,15 @@
 {
   "extends": "./tsconfig.json",
-  "compilerOptions": { "lib": ["ES2022", "DOM"], "types": ["node"] },
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"],
+    "allowImportingTsExtensions": true
+  },
   "include": [
     "*.config.ts",
     "*.config.mts",
+    "scripts/**/*.ts",
+    "scripts/**/*.mts",
     "tests/e2e/**/*.ts",
     "tests/tooling/**/*.ts",
     "tests/integration/**/*.ts",

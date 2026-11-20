@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 1,
+  "corpusId": "t027-synthetic-v1",
+  "provenance": "synthetic-control",
+  "authorizationRecorded": false,
+  "configuration": { "id": "control-b", "model": "synthetic-control-b" },
+  "pricing": {
+    "currency": "USD",
+    "inputPerMillion": 1,
+    "outputPerMillion": 2,
+    "asOf": "2026-11-19",
+    "source": "synthetic-test-rate"
+  },
+  "cases": [
+    {
+      "id": "initial-fragment",
+      "turns": [
+        {
+          "id": "fragment",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 900,
+          "inputTokens": 100,
+          "outputTokens": 24,
+          "cards": [
+            {
+              "useful": false,
+              "relevant": false,
+              "novel": false,
+              "evidenceAdherent": false,
+              "semanticGroup": "invent-project-risk",
+              "falseFactualAlert": true,
+              "reformulation": false
+            }
+          ]
+        },
+        {
+          "id": "actionable",
+          "dispatchedAtMs": 5000,
+          "completedAtMs": 5900,
+          "inputTokens": 160,
+          "outputTokens": 28,
+          "cards": [
+            {
+              "useful": false,
+              "relevant": true,
+              "novel": false,
+              "evidenceAdherent": true,
+              "semanticGroup": "repeat-deadline",
+              "falseFactualAlert": false,
+              "reformulation": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "trivial-greeting",
+      "turns": [
+        {
+          "id": "greeting",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 650,
+          "inputTokens": 80,
+          "outputTokens": 20,
+          "cards": [
+            {
+              "useful": false,
+              "relevant": false,
+              "novel": false,
+              "evidenceAdherent": true,
+              "semanticGroup": "greeting-response",
+              "falseFactualAlert": false,
+              "reformulation": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "uncertain-number",
+      "turns": [
+        {
+          "id": "uncertain",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 720,
+          "inputTokens": 90,
+          "outputTokens": 30,
+          "cards": [
+            {
+              "useful": false,
+              "relevant": false,
+              "novel": false,
+              "evidenceAdherent": false,
+              "semanticGroup": "forty-percent-alert",
+              "falseFactualAlert": true,
+              "reformulation": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reformulation-trap",
+      "turns": [
+        {
+          "id": "complete-statement",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 780,
+          "inputTokens": 90,
+          "outputTokens": 25,
+          "cards": [
+            {
+              "useful": false,
+              "relevant": true,
+              "novel": false,
+              "evidenceAdherent": true,
+              "semanticGroup": "repeat-report-plan",
+              "falseFactualAlert": false,
+              "reformulation": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "corrected-deadline",
+      "turns": [
+        {
+          "id": "correction",
+          "dispatchedAtMs": 3000,
+          "completedAtMs": 3900,
+          "inputTokens": 130,
+          "outputTokens": 26,
+          "cards": [
+            {
+              "useful": false,
+              "relevant": true,
+              "novel": false,
+              "evidenceAdherent": false,
+              "semanticGroup": "old-friday-deadline",
+              "falseFactualAlert": true,
+              "reformulation": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "semantic-repeat",
+      "turns": [
+        {
+          "id": "missing-owner",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 950,
+          "inputTokens": 100,
+          "outputTokens": 30,
+          "cards": [
+            {
+              "useful": true,
+              "relevant": true,
+              "novel": true,
+              "evidenceAdherent": true,
+              "semanticGroup": "contract-owner",
+              "falseFactualAlert": false,
+              "reformulation": false
+            }
+          ]
+        },
+        {
+          "id": "same-issue-later",
+          "dispatchedAtMs": 12000,
+          "completedAtMs": 12950,
+          "inputTokens": 150,
+          "outputTokens": 30,
+          "cards": [
+            {
+              "useful": false,
+              "relevant": true,
+              "novel": false,
+              "evidenceAdherent": true,
+              "semanticGroup": "contract-owner",
+              "falseFactualAlert": false,
+              "reformulation": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "decision-criteria",
+      "turns": [
+        {
+          "id": "choice",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 1100,
+          "inputTokens": 110,
+          "outputTokens": 36,
+          "cards": [
+            {
+              "useful": true,
+              "relevant": true,
+              "novel": true,
+              "evidenceAdherent": true,
+              "semanticGroup": "decision-criteria",
+              "falseFactualAlert": false,
+              "reformulation": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "budget-absence",
+      "turns": [
+        {
+          "id": "no-budget",
+          "dispatchedAtMs": 0,
+          "completedAtMs": 850,
+          "inputTokens": 95,
+          "outputTokens": 28,
+          "cards": [
+            {
+              "useful": false,
+              "relevant": false,
+              "novel": false,
+              "evidenceAdherent": false,
+              "semanticGroup": "budget-overrun-alert",
+              "falseFactualAlert": true,
+              "reformulation": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

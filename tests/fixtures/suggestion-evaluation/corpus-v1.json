@@ -1,0 +1,254 @@
+{
+  "schemaVersion": 1,
+  "id": "t027-synthetic-v1",
+  "synthetic": true,
+  "cases": [
+    {
+      "id": "initial-fragment",
+      "tags": ["initial-context", "abstention"],
+      "actionableAtMs": 5000,
+      "turns": [
+        {
+          "id": "fragment",
+          "atMs": 0,
+          "expectAbstain": true,
+          "context": {
+            "recent": [
+              {
+                "source": "system",
+                "locale": "pt-BR",
+                "startMs": 0,
+                "endMs": 1200,
+                "text": "Sobre o projeto Horizonte, eu ainda estava pensando naquela parte..."
+              }
+            ],
+            "summary": []
+          }
+        },
+        {
+          "id": "actionable",
+          "atMs": 5000,
+          "expectAbstain": false,
+          "context": {
+            "recent": [
+              {
+                "source": "system",
+                "locale": "pt-BR",
+                "startMs": 0,
+                "endMs": 1200,
+                "text": "Sobre o projeto Horizonte, eu ainda estava pensando naquela parte..."
+              },
+              {
+                "source": "mic",
+                "locale": "pt-BR",
+                "startMs": 3500,
+                "endMs": 5000,
+                "text": "A revisão precisa terminar sexta, mas ainda não definimos responsável."
+              }
+            ],
+            "summary": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "trivial-greeting",
+      "tags": ["abstention", "irrelevance"],
+      "actionableAtMs": null,
+      "turns": [
+        {
+          "id": "greeting",
+          "atMs": 0,
+          "expectAbstain": true,
+          "context": {
+            "recent": [
+              {
+                "source": "mic",
+                "locale": "pt-BR",
+                "startMs": 0,
+                "endMs": 900,
+                "text": "Bom dia, pessoal, tudo bem com vocês?"
+              }
+            ],
+            "summary": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "uncertain-number",
+      "tags": ["false-factual-alert", "asr-uncertainty", "abstention"],
+      "actionableAtMs": null,
+      "turns": [
+        {
+          "id": "uncertain",
+          "atMs": 0,
+          "expectAbstain": true,
+          "context": {
+            "recent": [
+              {
+                "source": "system",
+                "locale": "pt-BR",
+                "startMs": 0,
+                "endMs": 1800,
+                "text": "O áudio falhou; pode ter sido quatorze ou quarenta, não tenho certeza."
+              }
+            ],
+            "summary": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "reformulation-trap",
+      "tags": ["reformulation", "incremental-value", "abstention"],
+      "actionableAtMs": null,
+      "turns": [
+        {
+          "id": "complete-statement",
+          "atMs": 0,
+          "expectAbstain": true,
+          "context": {
+            "recent": [
+              {
+                "source": "system",
+                "locale": "pt-BR",
+                "startMs": 0,
+                "endMs": 1600,
+                "text": "Ana enviará o relatório final aos revisores na sexta-feira."
+              }
+            ],
+            "summary": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "corrected-deadline",
+      "tags": ["evidence", "correction", "utility"],
+      "actionableAtMs": 3000,
+      "turns": [
+        {
+          "id": "correction",
+          "atMs": 3000,
+          "expectAbstain": false,
+          "context": {
+            "recent": [
+              {
+                "source": "system",
+                "locale": "pt-BR",
+                "startMs": 0,
+                "endMs": 1200,
+                "text": "A entrega seria na sexta."
+              },
+              {
+                "source": "system",
+                "locale": "pt-BR",
+                "startMs": 1800,
+                "endMs": 3000,
+                "text": "Corrigindo: a entrega foi movida para segunda por causa da revisão."
+              }
+            ],
+            "summary": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "semantic-repeat",
+      "tags": ["semantic-repetition", "utility"],
+      "actionableAtMs": 0,
+      "turns": [
+        {
+          "id": "missing-owner",
+          "atMs": 0,
+          "expectAbstain": false,
+          "context": {
+            "recent": [
+              {
+                "source": "mic",
+                "locale": "pt-BR",
+                "startMs": 0,
+                "endMs": 1500,
+                "text": "Temos a ação de revisar o contrato, mas ninguém assumiu."
+              }
+            ],
+            "summary": []
+          }
+        },
+        {
+          "id": "same-issue-later",
+          "atMs": 12000,
+          "expectAbstain": false,
+          "context": {
+            "recent": [
+              {
+                "source": "mic",
+                "locale": "pt-BR",
+                "startMs": 0,
+                "endMs": 1500,
+                "text": "Temos a ação de revisar o contrato, mas ninguém assumiu."
+              },
+              {
+                "source": "system",
+                "locale": "pt-BR",
+                "startMs": 10500,
+                "endMs": 12000,
+                "text": "Vamos seguir; o responsável pela revisão continua em aberto."
+              }
+            ],
+            "summary": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "decision-criteria",
+      "tags": ["utility", "incremental-value"],
+      "actionableAtMs": 0,
+      "turns": [
+        {
+          "id": "choice",
+          "atMs": 0,
+          "expectAbstain": false,
+          "context": {
+            "recent": [
+              {
+                "source": "system",
+                "locale": "pt-BR",
+                "startMs": 0,
+                "endMs": 1900,
+                "text": "Precisamos escolher entre lançar rápido ou esperar o teste completo; qual caminho seguimos?"
+              }
+            ],
+            "summary": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "budget-absence",
+      "tags": ["false-factual-alert", "evidence", "utility"],
+      "actionableAtMs": 0,
+      "turns": [
+        {
+          "id": "no-budget",
+          "atMs": 0,
+          "expectAbstain": false,
+          "context": {
+            "recent": [
+              {
+                "source": "mic",
+                "locale": "pt-BR",
+                "startMs": 0,
+                "endMs": 1300,
+                "text": "Ainda não discutimos orçamento para essa iniciativa."
+              }
+            ],
+            "summary": []
+          }
+        }
+      ]
+    }
+  ]
+}
