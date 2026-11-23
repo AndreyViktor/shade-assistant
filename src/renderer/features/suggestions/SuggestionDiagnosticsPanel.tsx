@@ -88,6 +88,11 @@ export function SuggestionDiagnosticsPanel({
               : activities[diagnostic.activity]}
       </p>
       {diagnostic && <p>{result}</p>}
+      <p>
+        Feedback local: {snapshot.feedback.ratedCards} cartão(ões) avaliado(s).
+        O diagnóstico mostra somente totais e não inclui conteúdo ou IDs das
+        avaliações.
+      </p>
       <details>
         <summary>Diagnóstico OpenAI</summary>
         <p>

@@ -68,7 +68,7 @@ test('compact idle panel supports keyboard and resize without capture or network
     await expect(start).toBeFocused();
     expect(
       await page.evaluate(() =>
-        window.meetingCopilot.session({ version: 10, action: 'read' }),
+        window.meetingCopilot.session({ version: 11, action: 'read' }),
       ),
     ).toMatchObject({
       session: { phase: 'idle', consent: { capture: false, context: false } },

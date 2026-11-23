@@ -24,6 +24,8 @@ import type {
 import { MeetingResultStore } from './MeetingResultStore';
 import type { MeetingResultsSnapshot } from '../../contracts/meeting/meetingResult';
 import type { FocusedMeetingProfileId } from '../../contracts/meeting/meetingProfile';
+import { SuggestionFeedbackStore } from '../suggestions/SuggestionFeedbackStore';
+import type { SuggestionFeedbackValue } from '../../contracts/meeting/suggestionFeedback';
 
 export type SuggestionProviderFactory = (
   authorization: SuggestionAuthorization,
@@ -37,6 +39,7 @@ export type SuggestionProviderFactory = (
 export class MeetingSuggestions {
   private readonly context = new ContextManager();
   private readonly results = new MeetingResultStore();
+  private readonly feedback = new SuggestionFeedbackStore();
   private readonly trigger = new TriggerEngine();
   private readonly scheduler: SuggestionScheduler;
   private provider: SuggestionProvider | undefined;
@@ -265,8 +268,22 @@ export class MeetingSuggestions {
     this.scheduler.dismiss(id);
   }
 
+  rate(id: string, value: SuggestionFeedbackValue): void {
+    if (!this.scheduler.snapshot().some((suggestion) => suggestion.id === id))
+      return;
+    this.feedback.rate(id, value);
+  }
+
+  clearFeedback(): void {
+    this.feedback.clear();
+  }
+
   snapshot(): SuggestionSessionSnapshot {
-    if (!this.enabled) return emptySuggestionSession();
+    if (!this.enabled)
+      return {
+        ...emptySuggestionSession(),
+        feedback: this.feedback.snapshot(),
+      };
     const activity = this.scheduler.activity();
     const diagnostics: SuggestionDiagnostics = {
       model: this.model,
@@ -287,6 +304,7 @@ export class MeetingSuggestions {
     };
     return {
       diagnostics,
+      feedback: this.feedback.snapshot(),
       items: this.scheduler.snapshot(),
       remainingRequests: this.remaining,
       status: this.failed

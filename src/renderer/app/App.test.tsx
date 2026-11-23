@@ -4,6 +4,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { APP_STATUS, ipcFailure } from '../../contracts/ipc/appStatus';
 import { App } from './App';
+import { emptySuggestionFeedback } from '../../contracts/meeting/suggestionFeedback';
 
 describe('App shell', () => {
   const getStatus = vi.fn();
@@ -20,7 +21,7 @@ describe('App shell', () => {
         },
       }),
       session: vi.fn().mockResolvedValue({
-        version: 10,
+        version: 11,
         ok: true,
         demo: emptyDemo(),
         local: null,
@@ -29,6 +30,7 @@ describe('App shell', () => {
           remainingRequests: 0,
           status: 'disabled',
           diagnostics: null,
+          feedback: emptySuggestionFeedback(),
         },
         results: { items: [] },
         session: {
@@ -99,7 +101,7 @@ describe('App shell', () => {
       screen.queryByRole('button', { name: 'Iniciar transcrição local' }),
     ).not.toBeInTheDocument();
     expect(window.meetingCopilot.session).toHaveBeenCalledExactlyOnceWith({
-      version: 10,
+      version: 11,
       action: 'read',
     });
     fireEvent.keyDown(screen.getByRole('button', { name: 'Iniciar DEMO' }), {

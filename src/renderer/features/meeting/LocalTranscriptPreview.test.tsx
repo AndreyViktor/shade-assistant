@@ -3,6 +3,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { emptyDemo } from '../../../contracts/meeting/demo';
 import { SessionControls as Controls } from './SessionControls';
 import { useMeetingSession } from './useMeetingSession';
+import { emptySuggestionFeedback } from '../../../contracts/meeting/suggestionFeedback';
 
 function SessionControls() {
   return <Controls meeting={useMeetingSession()} />;
@@ -18,7 +19,7 @@ const base = {
   timestampMs: 100,
 };
 const reply = (): SessionResult => ({
-  version: 10,
+  version: 11,
   ok: true,
   demo: emptyDemo(),
   session: {
@@ -31,6 +32,7 @@ const reply = (): SessionResult => ({
     remainingRequests: 0,
     status: 'disabled',
     diagnostics: null,
+    feedback: emptySuggestionFeedback(),
   },
   results: { items: [] },
   local: {

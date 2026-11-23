@@ -243,6 +243,44 @@ summary {
   font-size: 12px;
 }
 
+.suggestion-feedback {
+  min-width: 0;
+  padding: 10px;
+  margin: 12px 0;
+  border: 1px solid #40516c;
+  border-radius: 8px;
+}
+
+.suggestion-feedback legend {
+  padding: 0 5px;
+  color: #c6d7ed;
+  font-size: 12px;
+}
+
+.suggestion-feedback-actions,
+.suggestion-feedback-summary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.suggestion-feedback-actions button[aria-pressed='true'] {
+  border-color: #91c4ff;
+  background: #28476e;
+}
+
+.suggestion-feedback-summary {
+  padding: 12px;
+  border: 1px solid #40516c;
+  border-radius: 10px;
+  background: #101827;
+}
+
+.suggestion-feedback-summary h3,
+.suggestion-feedback-summary p {
+  margin: 0 0 8px;
+}
+
 .consent-backdrop {
   position: fixed;
   inset: 0;

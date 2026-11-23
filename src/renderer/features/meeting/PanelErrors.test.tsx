@@ -9,6 +9,7 @@ import { SessionControls } from './SessionControls';
 import type { useMeetingSession } from './useMeetingSession';
 import { LocalTranscriptPreview } from './LocalTranscriptPreview';
 import { TranscriptionDiagnostics } from './TranscriptionDiagnostics';
+import { emptySuggestionFeedback } from '../../../contracts/meeting/suggestionFeedback';
 
 const transcript: LocalTranscriptSnapshot = {
   failed: false,
@@ -101,6 +102,7 @@ it.each<SuggestionAttempt['result']>([
             suggestionCount: null,
           },
         },
+        feedback: emptySuggestionFeedback(),
       },
     };
     const view = render(<SessionControls meeting={meeting} />);

@@ -22,7 +22,7 @@ test('reconciles synthetic revisions and echo through the provider, IPC and rend
       .click();
     const read = () =>
       page.evaluate(() =>
-        window.meetingCopilot.session({ version: 10, action: 'read' }),
+        window.meetingCopilot.session({ version: 11, action: 'read' }),
       );
     const ids = async () => {
       const snapshot = await read();
@@ -118,7 +118,7 @@ test('synthetic native subprocess → real provider → IPC → live transcript 
     ).toBeVisible();
     const read = () =>
       page.evaluate(() =>
-        window.meetingCopilot.session({ version: 10, action: 'read' }),
+        window.meetingCopilot.session({ version: 11, action: 'read' }),
       );
     const paused = await read();
     await page.waitForTimeout(1200);

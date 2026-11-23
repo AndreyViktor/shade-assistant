@@ -339,6 +339,11 @@ describe('session suggestion integration with synthetic speech', () => {
       remainingRequests: 0,
       status: 'disabled',
       diagnostics: null,
+      feedback: {
+        ratedCards: 0,
+        counts: { useful: 0, irrelevant: 0, incorrect: 0, repeated: 0 },
+        ratings: [],
+      },
     });
   });
 
@@ -529,6 +534,33 @@ it('retains every distinct card after budget exhaustion without a session TTL', 
   await vi.advanceTimersByTimeAsync(3600000);
   expect(pipeline.snapshot().items).toHaveLength(3);
   expect(generate).toHaveBeenCalledTimes(3);
+});
+
+it('rates only live cards, deduplicates changes and retains metrics after stop', async () => {
+  const { pipeline, session } = setup(true, 1);
+  pipeline.rate('foreign-id', 'useful');
+  expect(pipeline.snapshot().feedback.ratedCards).toBe(0);
+  pipeline.receive(speech());
+  await vi.advanceTimersByTimeAsync(2_000);
+  const id = pipeline.snapshot().items[0]?.id;
+  if (!id) throw new Error('Missing synthetic card');
+  pipeline.rate(id, 'useful');
+  pipeline.rate(id, 'useful');
+  pipeline.rate(id, 'incorrect');
+  expect(pipeline.snapshot().feedback).toEqual({
+    ratedCards: 1,
+    counts: { useful: 0, irrelevant: 0, incorrect: 1, repeated: 0 },
+    ratings: [{ suggestionId: id, value: 'incorrect' }],
+  });
+  session.stop();
+  pipeline.stop();
+  expect(pipeline.snapshot()).toMatchObject({
+    status: 'disabled',
+    items: [],
+    feedback: { ratedCards: 1, counts: { incorrect: 1 } },
+  });
+  pipeline.clearFeedback();
+  expect(pipeline.snapshot().feedback.ratedCards).toBe(0);
 });
 
 it.each(['pause', 'stop', 'revoke', 'restart'] as const)(

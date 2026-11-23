@@ -130,3 +130,30 @@ it('shows real cards newest-first in one keyboard-focusable scroll list', () => 
     ),
   ).toEqual(['Mais recente', 'Mais antiga']);
 });
+
+it('offers four native keyboard buttons and exposes the selected rating', () => {
+  const onRate = vi.fn();
+  render(
+    <SuggestionCards
+      suggestions={[{ ...card, expiresAt: null }]}
+      demo={false}
+      busy={false}
+      ratings={[{ suggestionId: card.id, value: 'useful' }]}
+      onRate={onRate}
+      onDismiss={vi.fn()}
+    />,
+  );
+  expect(
+    screen.getByRole('group', { name: 'Avaliar este cartão' }),
+  ).toBeVisible();
+  const useful = screen.getByRole('button', { name: `Útil: ${card.title}` });
+  expect(useful).toHaveAttribute('aria-pressed', 'true');
+  useful.focus();
+  expect(useful).toHaveFocus();
+  const repeated = screen.getByRole('button', {
+    name: `Repetido: ${card.title}`,
+  });
+  expect(repeated).toHaveAttribute('aria-pressed', 'false');
+  fireEvent.click(repeated);
+  expect(onRate).toHaveBeenCalledExactlyOnceWith(card.id, 'repeated');
+});

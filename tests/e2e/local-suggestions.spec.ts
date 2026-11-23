@@ -84,13 +84,35 @@ for (const { consent, model } of [
         await expect(cards).toContainText('Prazo sintético Aurora');
         await expect(cards).not.toContainText('DEMO');
         await expect(cards).toContainText('até descarte ou limpeza');
+        const usefulFeedback = cards.getByRole('button', {
+          name: 'Útil: Prazo sintético Aurora',
+        });
+        await usefulFeedback.focus();
+        await usefulFeedback.press('Enter');
+        await expect(usefulFeedback).toHaveAttribute('aria-pressed', 'true');
+        await expect(
+          page.getByRole('region', { name: 'Métricas locais das sugestões' }),
+        ).toContainText('1 cartão(ões) avaliado(s)');
+        expect(
+          await page.evaluate(() =>
+            window.meetingCopilot.session({ version: 11, action: 'read' }),
+          ),
+        ).toMatchObject({
+          suggestions: {
+            feedback: {
+              ratedCards: 1,
+              counts: { useful: 1 },
+              ratings: [{ suggestionId: 'suggestion-1', value: 'useful' }],
+            },
+          },
+        });
         // Advance the main clock only: no capture, network or real-time wait.
         await app.evaluate(() => {
           const now = Date.now.bind(Date);
           Date.now = () => now() + 60000;
         });
         const retained = await page.evaluate(() =>
-          window.meetingCopilot.session({ version: 10, action: 'read' }),
+          window.meetingCopilot.session({ version: 11, action: 'read' }),
         );
         expect(retained).toMatchObject({
           suggestions: {
@@ -155,7 +177,7 @@ for (const { consent, model } of [
         await expect(cards).toHaveCount(0);
         await expect(results).toHaveCount(0);
         const snapshot = await page.evaluate(() =>
-          window.meetingCopilot.session({ version: 10, action: 'read' }),
+          window.meetingCopilot.session({ version: 11, action: 'read' }),
         );
         expect(snapshot).toMatchObject({
           session: {
@@ -192,13 +214,29 @@ for (const { consent, model } of [
       await page.getByRole('button', { name: 'Parar' }).click();
       expect(
         await page.evaluate(() =>
-          window.meetingCopilot.session({ version: 10, action: 'read' }),
+          window.meetingCopilot.session({ version: 11, action: 'read' }),
         ),
       ).toMatchObject({
         local: null,
-        suggestions: { items: [], status: 'disabled' },
+        suggestions: {
+          items: [],
+          status: 'disabled',
+          feedback: { ratedCards: consent ? 1 : 0 },
+        },
         results: { items: [] },
       });
+      if (consent) {
+        const feedbackSummary = page.getByRole('region', {
+          name: 'Métricas locais das sugestões',
+        });
+        await expect(feedbackSummary).toContainText(
+          'Nenhum feedback é enviado automaticamente',
+        );
+        await feedbackSummary
+          .getByRole('button', { name: 'Limpar feedback local' })
+          .click();
+        await expect(feedbackSummary).toHaveCount(0);
+      }
       expect(
         await app.evaluate(
           () =>

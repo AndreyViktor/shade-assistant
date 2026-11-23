@@ -14,6 +14,7 @@ import { AppleNativeTranscriptionError } from '../../infrastructure/transcriptio
 import type { SpeechSegment } from '../../contracts/meeting/localTranscript';
 import type { TranscriptionProvider } from '../../core/transcription/TranscriptionProvider';
 import { registerSessionIpc } from './registerSessionIpc';
+import type { SuggestionFeedbackExport } from '../../contracts/meeting/suggestionFeedback';
 
 const mocks = vi.hoisted(() => ({
   handle:
@@ -42,8 +43,11 @@ const provider: TranscriptionProvider = {
 };
 const createAppleProvider = vi.fn(() => Promise.resolve(provider));
 const requestMicrophoneAccess = vi.fn(() => Promise.resolve(true));
+const exportSuggestionFeedback = vi.fn<
+  (feedback: SuggestionFeedbackExport) => Promise<void>
+>(() => Promise.resolve());
 const demoStart = {
-  version: 10,
+  version: 11,
   action: 'start',
   options: {
     mode: 'demo',
@@ -51,7 +55,7 @@ const demoStart = {
   },
 } satisfies SessionRequest;
 const appleStart = {
-  version: 10,
+  version: 11,
   action: 'start',
   options: {
     mode: 'apple-local',
@@ -79,6 +83,7 @@ function setup(
     createSuggestionProvider,
     createAppleProvider,
     requestMicrophoneAccess,
+    exportSuggestionFeedback,
   });
   const listener = mocks.handle.mock.calls.at(-1)?.[1];
   if (!listener) throw new Error('Missing handler');
@@ -92,7 +97,7 @@ function setup(
 }
 
 async function read(call: (request: unknown) => unknown) {
-  return parseSessionResult(await call({ version: 10, action: 'read' }));
+  return parseSessionResult(await call({ version: 11, action: 'read' }));
 }
 
 beforeEach(() => {
@@ -113,12 +118,12 @@ describe('session main boundary and provider selection', () => {
       ok: true,
       demo: { transcript: { sequence: 2, source: 'system' }, suggestions: [] },
     });
-    await call({ version: 10, action: 'pause' });
+    await call({ version: 11, action: 'pause' });
     const paused = await read(call);
     vi.advanceTimersByTime(10000);
     expect(await read(call)).toEqual(paused);
-    await call({ version: 10, action: 'resume' });
-    await call({ version: 10, action: 'stop' });
+    await call({ version: 11, action: 'resume' });
+    await call({ version: 11, action: 'stop' });
     expect(await read(call)).toMatchObject({
       ok: true,
       session: { phase: 'stopped', mode: 'demo' },
@@ -145,15 +150,15 @@ describe('session main boundary and provider selection', () => {
     expect(startCall?.[0].sessionId).toMatch(/^[a-f0-9]{32}$/);
     expect(startCall?.[1]).toEqual(expect.any(Function));
     expect(startCall?.[2]).toBeInstanceOf(AbortSignal);
-    await call({ version: 10, action: 'pause' });
+    await call({ version: 11, action: 'pause' });
     expect(pauseMock.mock.calls).toHaveLength(1);
     expect(await read(call)).toMatchObject({
       ok: true,
       session: { phase: 'paused', mode: 'apple-local' },
     });
-    await call({ version: 10, action: 'resume' });
+    await call({ version: 11, action: 'resume' });
     expect(resumeMock.mock.calls).toHaveLength(1);
-    await call({ version: 10, action: 'stop' });
+    await call({ version: 11, action: 'stop' });
     expect(stopMock.mock.calls).toHaveLength(1);
     expect(await read(call)).toMatchObject({
       ok: true,
@@ -195,7 +200,7 @@ describe('session main boundary and provider selection', () => {
     });
     expect(
       await call({
-        version: 10,
+        version: 11,
         action: 'start',
         options: {
           mode: 'openai-stt',
@@ -358,11 +363,11 @@ describe('local transcript delivery', () => {
     expect(await read(call)).toMatchObject({
       local: { segments: [speech, { ...speech, source: 'system' }] },
     });
-    await call({ version: 10, action: 'pause' });
+    await call({ version: 11, action: 'pause' });
     emit({ ...speech, seq: 2, segmentId: 'paused' });
     const paused = await read(call);
     expect(paused.ok && paused.local?.segments).toHaveLength(2);
-    await call({ version: 10, action: 'resume' });
+    await call({ version: 11, action: 'resume' });
     emit({
       version: 1,
       sessionId: config.sessionId,
@@ -382,7 +387,7 @@ describe('local transcript delivery', () => {
     });
     emit({ ...speech, seq: 4 });
     expect(await read(call)).toMatchObject({ local: { segments: [] } });
-    await call({ version: 10, action: 'stop' });
+    await call({ version: 11, action: 'stop' });
     expect(await read(call)).toMatchObject({ local: null });
     await call(appleStart);
     emit({ ...speech, seq: 5 });
@@ -415,7 +420,7 @@ it('does not revive a stopped session when provider creation completes late', as
   const { call } = setup();
   const starting = call(appleStart);
   await vi.waitFor(() => expect(createAppleProvider).toHaveBeenCalledOnce());
-  await call({ version: 10, action: 'stop' });
+  await call({ version: 11, action: 'stop' });
   resolveProvider(provider);
   expect(await starting).toMatchObject({
     ok: false,
@@ -516,7 +521,7 @@ it('connects native events to real Responses serialization with synthetic creden
   emitQuestion();
   await vi.advanceTimersByTimeAsync(1000);
   expect(getApiKey).not.toHaveBeenCalled();
-  await call({ version: 10, action: 'stop' });
+  await call({ version: 11, action: 'stop' });
   await call(withSuggestions);
   emitQuestion();
   await vi.advanceTimersByTimeAsync(2_000);
@@ -560,9 +565,40 @@ it('connects native events to real Responses serialization with synthetic creden
       items: [{ title: 'Prazo', expiresAt: null }],
     },
   });
+  await call({
+    version: 11,
+    action: 'rate-suggestion',
+    id: 'suggestion-1',
+    feedback: 'useful',
+  });
+  await call({
+    version: 11,
+    action: 'rate-suggestion',
+    id: 'suggestion-1',
+    feedback: 'incorrect',
+  });
+  expect(await read(call)).toMatchObject({
+    suggestions: {
+      feedback: {
+        ratedCards: 1,
+        counts: { useful: 0, incorrect: 1 },
+        ratings: [{ suggestionId: 'suggestion-1', value: 'incorrect' }],
+      },
+    },
+  });
+  await call({ version: 11, action: 'export-suggestion-feedback' });
+  expect(exportSuggestionFeedback).toHaveBeenCalledOnce();
+  const exported = exportSuggestionFeedback.mock.calls[0]?.[0];
+  expect(exported).toMatchObject({
+    schema: 'meeting-copilot.suggestion-feedback.v1',
+    metrics: { ratedCards: 1, counts: { incorrect: 1 } },
+  });
+  expect(JSON.stringify(exported)).not.toMatch(
+    /suggestion-1|Prazo|Confirme|Aurora|technical-review|synthetic-model/,
+  );
   expect(transport).toHaveBeenCalledOnce();
   expect(JSON.stringify(await read(call))).not.toContain('synthetic-key');
-  await call({ version: 10, action: 'revoke-suggestions' });
+  await call({ version: 11, action: 'revoke-suggestions' });
   expect(await read(call)).toMatchObject({
     session: { phase: 'running', consent: { context: false, capture: true } },
     suggestions: { status: 'disabled', items: [] },
@@ -573,6 +609,13 @@ it('connects native events to real Responses serialization with synthetic creden
     withSuggestions.options.suggestions.userContext,
   );
   expect(JSON.stringify(await read(call))).not.toContain('technical-review');
+  expect(await read(call)).toMatchObject({
+    suggestions: { feedback: { ratedCards: 1 } },
+  });
+  await call({ version: 11, action: 'clear-suggestion-feedback' });
+  expect(await read(call)).toMatchObject({
+    suggestions: { feedback: { ratedCards: 0, ratings: [] } },
+  });
 });
 
 it.each(['pause', 'stop', 'revoke-suggestions', 'reload', 'failure'] as const)(
@@ -605,7 +648,7 @@ it.each(['pause', 'stop', 'revoke-suggestions', 'reload', 'failure'] as const)(
         ([name]) => name === 'did-start-loading',
       )?.[1]();
     else if (action === 'failure') startMock.mock.calls.at(-1)?.[3]?.();
-    else await call({ version: 10, action });
+    else await call({ version: 11, action });
     resolve('synthetic-key');
     await vi.advanceTimersByTimeAsync(0);
     expect(transport).not.toHaveBeenCalled();
@@ -646,7 +689,7 @@ it('does not start capture if stop arrives during the mocked OS permission promp
   );
   const { call } = setup();
   const starting = call(appleStart);
-  await call({ version: 10, action: 'stop' });
+  await call({ version: 11, action: 'stop' });
   finish(true);
   expect(await starting).toMatchObject({ ok: false });
   expect(createAppleProvider).not.toHaveBeenCalled();

@@ -2,6 +2,11 @@ import type {
   Suggestion,
   SuggestionCategory,
 } from '../../../contracts/meeting/suggestion';
+import { SUGGESTION_FEEDBACK_VALUES } from '../../../contracts/meeting/suggestionFeedback';
+import type {
+  SuggestionFeedbackValue,
+  SuggestionRating,
+} from '../../../contracts/meeting/suggestionFeedback';
 
 const labels: Record<SuggestionCategory, string> = {
   answer: 'Resposta',
@@ -9,17 +14,27 @@ const labels: Record<SuggestionCategory, string> = {
   warning: 'Alerta',
   action: 'Ação',
 };
+const feedbackLabels: Record<SuggestionFeedbackValue, string> = {
+  useful: 'Útil',
+  irrelevant: 'Irrelevante',
+  incorrect: 'Incorreto',
+  repeated: 'Repetido',
+};
 
 export function SuggestionCards({
   suggestions,
   busy,
   onDismiss,
+  ratings = [],
+  onRate,
   demo = true,
 }: {
   suggestions: readonly Suggestion[];
   busy: boolean;
   demo?: boolean;
   onDismiss: (id: string) => void;
+  ratings?: readonly SuggestionRating[];
+  onRate?: (id: string, feedback: SuggestionFeedbackValue) => void;
 }) {
   const displayedSuggestions = demo ? suggestions : [...suggestions].reverse();
   return (
@@ -62,6 +77,32 @@ export function SuggestionCards({
                       : 'Base: fala da reunião'
                     : 'Hipótese / sugestão a confirmar'}
                 </p>
+                {!demo && onRate && (
+                  <fieldset className="suggestion-feedback">
+                    <legend>Avaliar este cartão</legend>
+                    <div className="suggestion-feedback-actions">
+                      {SUGGESTION_FEEDBACK_VALUES.map((feedback) => {
+                        const selected = ratings.some(
+                          (rating) =>
+                            rating.suggestionId === card.id &&
+                            rating.value === feedback,
+                        );
+                        return (
+                          <button
+                            key={feedback}
+                            type="button"
+                            aria-pressed={selected}
+                            aria-label={`${feedbackLabels[feedback]}: ${card.title}`}
+                            disabled={busy}
+                            onClick={() => onRate(card.id, feedback)}
+                          >
+                            {feedbackLabels[feedback]}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                )}
                 <button
                   disabled={busy}
                   aria-label={`Descartar: ${card.title}`}

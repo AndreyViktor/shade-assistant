@@ -17,12 +17,17 @@ import { AppleNativeTranscriptionError } from '../../infrastructure/transcriptio
 import type { TranscriptionProvider } from '../../core/transcription/TranscriptionProvider';
 import { MeetingSession } from '../../core/meeting/MeetingSession';
 import { isAuthorizedRenderer } from './isAuthorizedRenderer';
+import { createSuggestionFeedbackExport } from '../../contracts/meeting/suggestionFeedback';
+import type { SuggestionFeedbackExport } from '../../contracts/meeting/suggestionFeedback';
 
 type SessionIpcDependencies = {
   createSuggestionProvider?: SuggestionProviderFactory;
   platform: NodeJS.Platform;
   requestMicrophoneAccess: () => Promise<boolean>;
   createAppleProvider: () => Promise<TranscriptionProvider>;
+  exportSuggestionFeedback: (
+    feedback: SuggestionFeedbackExport,
+  ) => Promise<void>;
 };
 
 export function registerSessionIpc(
@@ -160,6 +165,7 @@ export function registerSessionIpc(
           if (generation !== lifecycle)
             return failure('TRANSCRIPTION_START_FAILED');
           if (!session.start(options)) return failure('INVALID_REQUEST');
+          suggestions.clearFeedback();
           local.clear();
           activeSessionId = undefined;
 
@@ -286,6 +292,21 @@ export function registerSessionIpc(
       if (request.action === 'dismiss-suggestion') {
         if (session.snapshot().mode === 'demo') demo.dismiss(request.id);
         else suggestions.dismiss(request.id);
+      }
+      if (request.action === 'rate-suggestion') {
+        if (session.snapshot().mode !== 'demo')
+          suggestions.rate(request.id, request.feedback);
+      }
+      if (request.action === 'clear-suggestion-feedback')
+        suggestions.clearFeedback();
+      if (request.action === 'export-suggestion-feedback') {
+        try {
+          await dependencies.exportSuggestionFeedback(
+            createSuggestionFeedbackExport(suggestions.snapshot().feedback),
+          );
+        } catch {
+          return failure('UNAVAILABLE');
+        }
       }
 
       if (!isAuthorizedRenderer(window, rendererUrl, event))

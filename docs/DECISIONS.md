@@ -31,6 +31,7 @@ Defaults sujeitos a validação de implementação; detalhes do fluxo e fronteir
 - **P004–P006:** quantidade variável de sugestões úteis, sem preencher uma cota (até oito por resposta); gatilhos relevantes e silêncio deliberado; janela curta de contexto e cooldown inicial; DEMO offline com expiração e dados em memória por padrão. Cards reais não expiram nem são substituídos por contagem; descarte e limpeza do ciclo permanecem conforme [ADR 0026](adr/0026-all-live-suggestion-cards.md).
 - **P007–P008:** chave do usuário protegida pelo cofre do sistema; limites de custo; providers selecionáveis. Áudio só sai do Mac no fallback remoto opt-in.
 - **P009:** usar os padrões de engenharia existentes, com boundaries testados, testes e gates reproduzíveis; evitar camadas ou frameworks sem necessidade demonstrada.
+- **P010:** feedback de cartões é temporário e local por sessão; diagnóstico e exportação explícita recebem somente totais anônimos, sem conteúdo da reunião ou envio automático. Ciclo, anonimização e IPC v11 em [ADR 0030](adr/0030-local-suggestion-feedback.md).
 
 ## Custos e privacidade
 

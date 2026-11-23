@@ -8,6 +8,7 @@ import { app, BrowserWindow, session, systemPreferences } from 'electron';
 import { getDevelopmentUrl } from './getDevelopmentUrl';
 import { registerAppIpc } from '../ipc/registerAppIpc';
 import { createAppleNativeTranscriptionProvider } from '../transcription/createAppleNativeTranscriptionProvider';
+import { exportSuggestionFeedback } from './exportSuggestionFeedback';
 
 export async function createMainWindow(): Promise<BrowserWindow> {
   const developmentUrl = getDevelopmentUrl(
@@ -73,6 +74,8 @@ export async function createMainWindow(): Promise<BrowserWindow> {
       requestMicrophoneAccess: () =>
         systemPreferences.askForMediaAccess('microphone'),
       createAppleProvider: createAppleNativeTranscriptionProvider,
+      exportSuggestionFeedback: (feedback) =>
+        exportSuggestionFeedback(window, feedback),
     },
   );
   registerAppIpc(window, developmentUrl ?? pathToFileURL(rendererFile).href);

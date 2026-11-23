@@ -4,6 +4,7 @@ import { SuggestionDiagnosticsPanel } from './SuggestionDiagnosticsPanel';
 import { emptySuggestionSession } from '../../../contracts/meeting/suggestionSession';
 import type { SuggestionSessionSnapshot } from '../../../contracts/meeting/suggestionSession';
 import type { SuggestionAttempt } from '../../../contracts/meeting/suggestionDiagnostics';
+import { emptySuggestionFeedback } from '../../../contracts/meeting/suggestionFeedback';
 
 function snapshot(
   result: SuggestionAttempt['result'],
@@ -13,6 +14,7 @@ function snapshot(
     items: [],
     remainingRequests: 0,
     status: 'exhausted',
+    feedback: emptySuggestionFeedback(),
     diagnostics: {
       model: 'synthetic-model',
       maxRequests: 1,

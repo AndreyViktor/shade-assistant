@@ -12,9 +12,11 @@ import { parseStatusResult } from './appStatus';
 import type { IpcErrorCode } from './appStatus';
 import { parseMeetingResults } from '../meeting/meetingResult';
 import type { MeetingResultsSnapshot } from '../meeting/meetingResult';
+import { isSuggestionFeedbackValue } from '../meeting/suggestionFeedback';
+import type { SuggestionFeedbackValue } from '../meeting/suggestionFeedback';
 
 export const SESSION_CHANNEL = 'meeting-copilot:session';
-export const SESSION_IPC_VERSION = 10;
+export const SESSION_IPC_VERSION = 11;
 export type SessionRequest =
   | {
       version: typeof SESSION_IPC_VERSION;
@@ -29,6 +31,16 @@ export type SessionRequest =
       version: typeof SESSION_IPC_VERSION;
       action: 'dismiss-suggestion';
       id: string;
+    }
+  | {
+      version: typeof SESSION_IPC_VERSION;
+      action: 'rate-suggestion';
+      id: string;
+      feedback: SuggestionFeedbackValue;
+    }
+  | {
+      version: typeof SESSION_IPC_VERSION;
+      action: 'clear-suggestion-feedback' | 'export-suggestion-feedback';
     };
 export type SessionResult =
   | {
@@ -54,7 +66,9 @@ export function parseSessionRequest(value: unknown): SessionRequest | null {
       value.action === 'pause' ||
       value.action === 'resume' ||
       value.action === 'stop' ||
-      value.action === 'revoke-suggestions')
+      value.action === 'revoke-suggestions' ||
+      value.action === 'clear-suggestion-feedback' ||
+      value.action === 'export-suggestion-feedback')
   ) {
     return { version: SESSION_IPC_VERSION, action: value.action };
   }
@@ -77,6 +91,20 @@ export function parseSessionRequest(value: unknown): SessionRequest | null {
       version: SESSION_IPC_VERSION,
       action: 'dismiss-suggestion',
       id: value.id,
+    };
+  }
+  if (
+    hasExactKeys(value, ['version', 'action', 'id', 'feedback']) &&
+    value.version === SESSION_IPC_VERSION &&
+    value.action === 'rate-suggestion' &&
+    isSuggestionId(value.id) &&
+    isSuggestionFeedbackValue(value.feedback)
+  ) {
+    return {
+      version: SESSION_IPC_VERSION,
+      action: 'rate-suggestion',
+      id: value.id,
+      feedback: value.feedback,
     };
   }
   return null;

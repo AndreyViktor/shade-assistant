@@ -117,7 +117,7 @@ function profileInput(value: unknown): unknown {
 async function sessionJson(page: Page): Promise<string> {
   return JSON.stringify(
     await page.evaluate(() =>
-      window.meetingCopilot.session({ version: 10, action: 'read' }),
+      window.meetingCopilot.session({ version: 11, action: 'read' }),
     ),
   );
 }

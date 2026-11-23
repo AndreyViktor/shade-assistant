@@ -85,9 +85,14 @@ export function createMeetingCopilotApi(invoke: Invoke): MeetingCopilotApi {
       const timeout =
         request.action === 'start'
           ? 300000
-          : request.action === 'read' || request.action === 'dismiss-suggestion'
-            ? 5000
-            : 15000;
+          : request.action === 'export-suggestion-feedback'
+            ? 300000
+            : request.action === 'read' ||
+                request.action === 'dismiss-suggestion' ||
+                request.action === 'rate-suggestion' ||
+                request.action === 'clear-suggestion-feedback'
+              ? 5000
+              : 15000;
       return parseSessionResult(await call(SESSION_CHANNEL, request, timeout));
     },
     async getStatus(...args: unknown[]) {

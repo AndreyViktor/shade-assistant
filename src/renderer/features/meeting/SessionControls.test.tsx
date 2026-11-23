@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SessionControls as Controls } from './SessionControls';
 import { useMeetingSession } from './useMeetingSession';
 import type { Preferences } from '../../../contracts/settings/preferences';
+import { emptySuggestionFeedback } from '../../../contracts/meeting/suggestionFeedback';
 
 function SessionControls({
   savedPreferences,
@@ -20,7 +21,7 @@ function SessionControls({
 }
 const consent = { capture: false, context: false, remoteAudio: false };
 const reply = (phase: string) => ({
-  version: 10,
+  version: 11,
   ok: true,
   demo: emptyDemo(),
   local: null,
@@ -29,6 +30,7 @@ const reply = (phase: string) => ({
     remainingRequests: 0,
     status: 'disabled',
     diagnostics: null,
+    feedback: emptySuggestionFeedback(),
   },
   results: { items: [] },
   session: { mode: 'demo', phase, consent },
@@ -60,7 +62,7 @@ describe('session controls', () => {
     expect(screen.getByRole('alertdialog')).toHaveTextContent('microfone');
     expect(session).toHaveBeenCalledTimes(1);
     session.mockResolvedValue({
-      version: 10,
+      version: 11,
       ok: true,
       demo: emptyDemo(),
       local: null,
@@ -69,6 +71,7 @@ describe('session controls', () => {
         remainingRequests: 0,
         status: 'disabled',
         diagnostics: null,
+        feedback: emptySuggestionFeedback(),
       },
       session: {
         phase: 'running',
@@ -81,7 +84,7 @@ describe('session controls', () => {
     );
     await screen.findByText('Em andamento');
     expect(session).toHaveBeenLastCalledWith({
-      version: 10,
+      version: 11,
       action: 'start',
       options: {
         mode: 'apple-local',
@@ -103,7 +106,7 @@ describe('session controls', () => {
     vi.stubGlobal('meetingCopilot', { session });
     render(<SessionControls />);
     await screen.findByText('Em andamento');
-    session.mockResolvedValue({ version: 10, ok: false, code: 'TIMEOUT' });
+    session.mockResolvedValue({ version: 11, ok: false, code: 'TIMEOUT' });
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     await screen.findByRole('alert');
@@ -172,7 +175,7 @@ it('requires an explicit text/cost opt-in and valid model/budget before sending 
   fireEvent.click(confirm);
   await waitFor(() =>
     expect(session).toHaveBeenLastCalledWith({
-      version: 10,
+      version: 11,
       action: 'start',
       options: {
         mode: 'apple-local',
@@ -207,6 +210,7 @@ it('renders real-session cards separately from DEMO and exposes revocation', asy
       },
       status: 'exhausted',
       remainingRequests: 0,
+      feedback: emptySuggestionFeedback(),
       items: [
         {
           id: 'suggestion-1',
@@ -227,10 +231,24 @@ it('renders real-session cards separately from DEMO and exposes revocation', asy
   expect(cards).toHaveTextContent('Prazo sintético');
   expect(cards).not.toHaveTextContent('DEMO');
   expect(screen.getByText(/Limite atingido/)).toBeVisible();
+  const useful = screen.getByRole('button', {
+    name: 'Útil: Prazo sintético',
+  });
+  useful.focus();
+  expect(useful).toHaveFocus();
+  fireEvent.click(useful);
+  await waitFor(() =>
+    expect(session).toHaveBeenLastCalledWith({
+      version: 11,
+      action: 'rate-suggestion',
+      id: 'suggestion-1',
+      feedback: 'useful',
+    }),
+  );
   fireEvent.click(screen.getByRole('button', { name: 'Desativar sugestões' }));
   await waitFor(() =>
     expect(session).toHaveBeenLastCalledWith({
-      version: 10,
+      version: 11,
       action: 'revoke-suggestions',
     }),
   );
@@ -251,7 +269,7 @@ it('loads the persisted source on startup and still requires capture confirmatio
   render(<SessionControls />);
   await screen.findByText('Pronta para iniciar');
   expect(session).toHaveBeenCalledExactlyOnceWith({
-    version: 10,
+    version: 11,
     action: 'read',
   });
   fireEvent.click(
@@ -263,7 +281,7 @@ it('loads the persisted source on startup and still requires capture confirmatio
   fireEvent.click(screen.getByRole('button', { name: 'Iniciar transcrição' }));
   await waitFor(() =>
     expect(session).toHaveBeenLastCalledWith({
-      version: 10,
+      version: 11,
       action: 'start',
       options: {
         mode: 'apple-local',

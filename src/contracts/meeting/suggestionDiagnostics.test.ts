@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { SUGGESTION_BATCH_LIMIT } from './suggestion';
 import { parseSuggestionDiagnostics } from './suggestionDiagnostics';
 import { parseSuggestionSession } from './suggestionSession';
+import { emptySuggestionFeedback } from './suggestionFeedback';
 
 const attempt = {
   number: 1,
@@ -37,6 +38,7 @@ describe('bounded diagnostic IPC', () => {
         remainingRequests: 0,
         status: 'unavailable',
         diagnostics: diagnostic,
+        feedback: emptySuggestionFeedback(),
       })?.diagnostics,
     ).toEqual(diagnostic);
   });
@@ -77,6 +79,7 @@ describe('bounded diagnostic IPC', () => {
         remainingRequests: 0,
         status: 'disabled',
         diagnostics: diagnostic,
+        feedback: emptySuggestionFeedback(),
       }),
     ).toBeNull();
     expect(
@@ -85,6 +88,7 @@ describe('bounded diagnostic IPC', () => {
         remainingRequests: 1,
         status: 'ready',
         diagnostics: null,
+        feedback: emptySuggestionFeedback(),
       }),
     ).toBeNull();
     expect(

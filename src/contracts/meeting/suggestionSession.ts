@@ -8,6 +8,11 @@ import type { Suggestion } from './suggestion';
 import { parseSuggestionDiagnostics } from './suggestionDiagnostics';
 import type { SuggestionDiagnostics } from './suggestionDiagnostics';
 import {
+  emptySuggestionFeedback,
+  parseSuggestionFeedback,
+} from './suggestionFeedback';
+import type { SuggestionFeedbackSnapshot } from './suggestionFeedback';
+import {
   parseMeetingProfileId,
   type FocusedMeetingProfileId,
 } from './meetingProfile';
@@ -32,6 +37,7 @@ export type SuggestionSessionSnapshot = {
   remainingRequests: number;
   status: 'disabled' | 'ready' | 'exhausted' | 'unavailable';
   diagnostics: SuggestionDiagnostics | null;
+  feedback: SuggestionFeedbackSnapshot;
 };
 
 export function emptySuggestionSession(): SuggestionSessionSnapshot {
@@ -40,6 +46,7 @@ export function emptySuggestionSession(): SuggestionSessionSnapshot {
     remainingRequests: 0,
     status: 'disabled',
     diagnostics: null,
+    feedback: emptySuggestionFeedback(),
   };
 }
 
@@ -90,6 +97,7 @@ export function parseSuggestionSession(
       'remainingRequests',
       'status',
       'diagnostics',
+      'feedback',
     ]) ||
     typeof value.remainingRequests !== 'number' ||
     !Number.isSafeInteger(value.remainingRequests) ||
@@ -109,12 +117,15 @@ export function parseSuggestionSession(
   )
     return null;
   const diagnostics = parseSuggestionDiagnostics(value.diagnostics);
+  const feedback = parseSuggestionFeedback(value.feedback);
   if (value.status === 'disabled' ? value.diagnostics !== null : !diagnostics)
     return null;
+  if (!feedback) return null;
   return {
     items,
     remainingRequests: value.remainingRequests,
     status: value.status,
     diagnostics,
+    feedback,
   };
 }

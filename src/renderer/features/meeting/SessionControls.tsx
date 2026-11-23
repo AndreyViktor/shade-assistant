@@ -11,6 +11,7 @@ import type {
 import type { useMeetingSession } from './useMeetingSession';
 import { StructuredMeetingResults } from './StructuredMeetingResults';
 import { SESSION_IPC_VERSION } from '../../../contracts/ipc/session';
+import { SuggestionFeedbackSummary } from '../suggestions/SuggestionFeedbackSummary';
 
 type SourceChoice = Preferences['audioSource'];
 
@@ -220,6 +221,15 @@ export function SessionControls({
                 demo={false}
                 suggestions={suggestions.items}
                 busy={busy}
+                ratings={suggestions.feedback.ratings}
+                onRate={(id, feedback) => {
+                  void command({
+                    version: SESSION_IPC_VERSION,
+                    action: 'rate-suggestion',
+                    id,
+                    feedback,
+                  });
+                }}
                 onDismiss={(id) => {
                   void command({
                     version: SESSION_IPC_VERSION,
@@ -256,6 +266,23 @@ export function SessionControls({
           )}
         </section>
       </div>
+
+      <SuggestionFeedbackSummary
+        feedback={suggestions.feedback}
+        busy={busy}
+        onExport={() => {
+          void command({
+            version: SESSION_IPC_VERSION,
+            action: 'export-suggestion-feedback',
+          });
+        }}
+        onClear={() => {
+          void command({
+            version: SESSION_IPC_VERSION,
+            action: 'clear-suggestion-feedback',
+          });
+        }}
+      />
 
       {confirming && (
         <StartSessionDialog
