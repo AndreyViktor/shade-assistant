@@ -45,7 +45,7 @@ describe('preferences on disk', () => {
   });
   it.each([
     '{',
-    JSON.stringify({ ...defaultPreferences('darwin'), version: 4 }),
+    JSON.stringify({ ...defaultPreferences('darwin'), version: 5 }),
     'x'.repeat(4097),
   ])(
     'fails closed on corruption, newer versions or oversize without overwriting',
@@ -95,6 +95,7 @@ describe('preferences on disk', () => {
           'language',
           'suggestionProvider',
           'suggestionModel',
+          'meetingProfile',
         ].sort(),
       );
     },
@@ -112,7 +113,12 @@ describe('preferences on disk', () => {
         suggestionModel: 'gpt-5.4',
       };
       await writeFile(path, JSON.stringify(legacy));
-      const expected = { ...legacy, version: 3, audioSource: 'both' };
+      const expected = {
+        ...legacy,
+        version: 4,
+        audioSource: 'both',
+        meetingProfile: 'none',
+      };
       expect(await new PreferencesStore(path, 'darwin').read()).toEqual(
         expected,
       );
@@ -125,6 +131,22 @@ describe('preferences on disk', () => {
       expect(firstWrite.mode & 0o777).toBe(0o600);
     },
   );
+  it('migrates v3 to no profile once without retaining arbitrary context', async () => {
+    const path = join(directory, 'preferences.v1.json');
+    const legacy = {
+      version: 3,
+      audioSource: 'mic',
+      mode: 'real',
+      sttProvider: 'apple-local',
+      language: 'pt-BR',
+      suggestionProvider: 'openai',
+      suggestionModel: 'gpt-5.4-mini',
+    };
+    await writeFile(path, JSON.stringify(legacy));
+    const expected = { ...legacy, version: 4, meetingProfile: 'none' };
+    expect(await new PreferencesStore(path, 'darwin').read()).toEqual(expected);
+    expect(JSON.parse(await readFile(path, 'utf8'))).toEqual(expected);
+  });
   it.each([
     { audioSource: 'mic' },
     { consent: true },

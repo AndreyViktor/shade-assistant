@@ -24,7 +24,7 @@ const snapshot = {
   segments: [event],
 };
 const reply = {
-  version: 9,
+  version: 10,
   ok: true,
   session: {
     mode: 'apple-local',
@@ -79,7 +79,7 @@ describe('local transcript IPC contract', () => {
     'rejects malformed or excessive data without echoing content %#',
     (local) => {
       expect(parseSessionResult({ ...reply, local })).toEqual({
-        version: 9,
+        version: 10,
         ok: false,
         code: 'INVALID_RESPONSE',
       });

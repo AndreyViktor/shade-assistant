@@ -7,6 +7,10 @@ import {
 import type { Suggestion } from './suggestion';
 import { parseSuggestionDiagnostics } from './suggestionDiagnostics';
 import type { SuggestionDiagnostics } from './suggestionDiagnostics';
+import {
+  parseMeetingProfileId,
+  type FocusedMeetingProfileId,
+} from './meetingProfile';
 
 export const USER_CONTEXT_LIMIT = 2000;
 
@@ -21,6 +25,7 @@ export type SuggestionAuthorization = {
   model: string;
   maxRequests: number;
   userContext?: string;
+  meetingProfile?: FocusedMeetingProfileId;
 };
 export type SuggestionSessionSnapshot = {
   items: Suggestion[];
@@ -43,7 +48,14 @@ export function parseSuggestionAuthorization(
 ): SuggestionAuthorization | null {
   if (
     (!hasExactKeys(value, ['model', 'maxRequests']) &&
-      !hasExactKeys(value, ['model', 'maxRequests', 'userContext'])) ||
+      !hasExactKeys(value, ['model', 'maxRequests', 'userContext']) &&
+      !hasExactKeys(value, ['model', 'maxRequests', 'meetingProfile']) &&
+      !hasExactKeys(value, [
+        'model',
+        'maxRequests',
+        'userContext',
+        'meetingProfile',
+      ])) ||
     typeof value.model !== 'string' ||
     !/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,199}$/.test(value.model) ||
     typeof value.maxRequests !== 'number' ||
@@ -55,10 +67,17 @@ export function parseSuggestionAuthorization(
   const userContext =
     'userContext' in value ? parseUserContext(value.userContext) : '';
   if (userContext === null) return null;
+  const meetingProfile =
+    'meetingProfile' in value
+      ? parseMeetingProfileId(value.meetingProfile)
+      : 'none';
+  if (meetingProfile === null) return null;
+  if ('meetingProfile' in value && meetingProfile === 'none') return null;
   return {
     model: value.model,
     maxRequests: value.maxRequests,
     ...(userContext ? { userContext } : {}),
+    ...(meetingProfile !== 'none' ? { meetingProfile } : {}),
   };
 }
 

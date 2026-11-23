@@ -55,7 +55,7 @@ test('loads a development .env without passing its secrets to renderer or proces
   }
 });
 
-for (const version of [1, 2]) {
+for (const version of [1, 2, 3]) {
   test(`migrates v${version} and persists preferences across Electron restarts without network or renderer secrets`, async () => {
     const fixture = await createTestApp();
     await mkdir(fixture.profile, { recursive: true });
@@ -63,9 +63,10 @@ for (const version of [1, 2]) {
       join(fixture.profile, 'preferences.v1.json'),
       JSON.stringify({
         version,
-        ...(version === 2
+        ...(version >= 2
           ? { suggestionProvider: 'openai', suggestionModel: 'gpt-5.4' }
           : {}),
+        ...(version === 3 ? { audioSource: 'both' } : {}),
         mode: 'real',
         sttProvider: 'apple-local',
         language: 'pt-BR',
@@ -88,6 +89,9 @@ for (const version of [1, 2]) {
       await expect(page.getByLabel('Fonte de áudio')).toHaveValue('both');
       await page.getByLabel('Fonte de áudio').selectOption('system');
       await page.getByLabel('Modelo para as sugestões').selectOption('gpt-5.4');
+      await page
+        .getByLabel('Perfil padrão da reunião')
+        .selectOption('technical-review');
       await page.getByRole('button', { name: 'Salvar preferências' }).click();
       await expect(
         page
@@ -101,13 +105,14 @@ for (const version of [1, 2]) {
           await readFile(join(fixture.profile, 'preferences.v1.json'), 'utf8'),
         ),
       ).toEqual({
-        version: 3,
+        version: 4,
         audioSource: 'system',
         mode: 'real',
         sttProvider: 'apple-local',
         language: 'en-US',
         suggestionProvider: 'openai',
         suggestionModel: 'gpt-5.4',
+        meetingProfile: 'technical-review',
       });
       await app.close();
       app = await fixture.launch();
@@ -122,6 +127,9 @@ for (const version of [1, 2]) {
         'gpt-5.4',
       );
       await expect(page.getByLabel('Fonte de áudio')).toHaveValue('system');
+      await expect(page.getByLabel('Perfil padrão da reunião')).toHaveValue(
+        'technical-review',
+      );
       const state = await page.evaluate(async () => ({
         settings: await window.meetingCopilot.getSettings(),
         storage: { ...localStorage },

@@ -8,6 +8,10 @@ import type {
 import { isValidSecret } from '../settings/SecretStore';
 import { parseSuggestionResponse } from './parseSuggestionResponse';
 import { suggestionFormat, suggestionInstructions } from './suggestionFormat';
+import {
+  getMeetingProfile,
+  parseMeetingProfileId,
+} from '../../contracts/meeting/meetingProfile';
 
 type Options = {
   /** Required: host validates account access/support before authorized real use. */
@@ -127,6 +131,15 @@ export class OpenAISuggestionProvider implements SuggestionProvider {
           ? ''
           : parseUserContext(request.userContext);
       if (userContext === null) return { ok: false, code: 'invalid-request' };
+      const meetingProfileId =
+        request.meetingProfile === undefined
+          ? 'none'
+          : parseMeetingProfileId(request.meetingProfile);
+      if (meetingProfileId === null)
+        return { ok: false, code: 'invalid-request' };
+      if (meetingProfileId === 'none' && request.meetingProfile !== undefined)
+        return { ok: false, code: 'invalid-request' };
+      const meetingProfile = getMeetingProfile(meetingProfileId);
       const context = {
         recent: request.context.recent
           .filter((item) => item.type === 'final')
@@ -170,6 +183,15 @@ export class OpenAISuggestionProvider implements SuggestionProvider {
             }),
           ),
           ...(userContext ? { userContext } : {}),
+          ...(meetingProfile
+            ? {
+                meetingProfile: {
+                  id: meetingProfile.id,
+                  objective: meetingProfile.objective,
+                  priorities: meetingProfile.priorities,
+                },
+              }
+            : {}),
         });
       const exceedsLimit = (input: string) =>
         new TextEncoder().encode(input).byteLength >

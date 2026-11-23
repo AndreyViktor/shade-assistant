@@ -9,6 +9,11 @@ import {
 } from '../../../contracts/meeting/suggestionSession';
 import type { SuggestionAuthorization } from '../../../contracts/meeting/suggestionSession';
 import type { SettingsSnapshot } from '../../../contracts/ipc/settings';
+import {
+  getMeetingProfile,
+  MEETING_PROFILES,
+  type MeetingProfileId,
+} from '../../../contracts/meeting/meetingProfile';
 
 type Props = {
   source: string;
@@ -27,6 +32,8 @@ export function StartSessionDialog({
   const [model, setModel] = useState<string>(DEFAULT_SUGGESTION_MODEL);
   const [maxRequests, setMaxRequests] = useState(10);
   const [userContext, setUserContext] = useState('');
+  const [meetingProfile, setMeetingProfile] =
+    useState<MeetingProfileId>('none');
   const [credential, setCredential] = useState<
     SettingsSnapshot['credential'] | null
   >(null);
@@ -34,11 +41,13 @@ export function StartSessionDialog({
   const [error, setError] = useState('');
   const mounted = useRef(false);
   const selectedModel = SUGGESTION_MODELS.find((option) => option.id === model);
+  const selectedProfile = getMeetingProfile(meetingProfile);
   const authorization = selectedModel
     ? parseSuggestionAuthorization({
         model: selectedModel.id,
         maxRequests,
         userContext,
+        ...(meetingProfile === 'none' ? {} : { meetingProfile }),
       })
     : null;
   const hasKey = credential === 'stored' || credential === 'development';
@@ -53,6 +62,7 @@ export function StartSessionDialog({
         if (result.ok) {
           setCredential(result.settings.credential);
           setModel(result.settings.preferences.suggestionModel);
+          setMeetingProfile(result.settings.preferences.meetingProfile);
         } else
           setError(
             'Não foi possível verificar a chave. Confira as Preferências.',
@@ -154,6 +164,46 @@ export function StartSessionDialog({
                   do contexto opcional, com intervalo mínimo de 10 segundos. O
                   áudio fica no Mac.
                 </p>
+                <label htmlFor="meeting-profile">Perfil da reunião</label>
+                <select
+                  id="meeting-profile"
+                  value={meetingProfile}
+                  aria-describedby="meeting-profile-session-help"
+                  onChange={(event) =>
+                    setMeetingProfile(event.target.value as MeetingProfileId)
+                  }
+                >
+                  <option value="none">Sem perfil</option>
+                  {MEETING_PROFILES.map((profile) => (
+                    <option key={profile.id} value={profile.id}>
+                      {profile.label}
+                    </option>
+                  ))}
+                </select>
+                <div id="meeting-profile-session-help" className="field-help">
+                  {selectedProfile ? (
+                    <>
+                      <p>
+                        <strong>Objetivo:</strong> {selectedProfile.objective}
+                      </p>
+                      <p>
+                        <strong>Prioridades:</strong>{' '}
+                        {selectedProfile.priorities.join('; ')}.
+                      </p>
+                    </>
+                  ) : (
+                    <p>
+                      A IA infere a ajuda mais útil pela conversa e pelo
+                      contexto opcional.
+                    </p>
+                  )}
+                  <p>
+                    O perfil apenas prioriza sugestões; não comprova o que foi
+                    dito. A escolha usa a mesma autorização de envio desta
+                    sessão. Só o identificador do perfil padrão pode ficar salvo
+                    nas Preferências.
+                  </p>
+                </div>
                 <label htmlFor="suggestion-context">
                   Contexto da reunião (opcional)
                 </label>

@@ -5,6 +5,7 @@ import { MockSuggestionProvider } from './MockSuggestionProvider';
 import { suggestionFormat } from './suggestionFormat';
 import { SUGGESTION_BATCH_LIMIT } from '../../contracts/meeting/suggestion';
 import type { SuggestionRequest } from '../../core/suggestions/SuggestionProvider';
+import { MEETING_PROFILES } from '../../contracts/meeting/meetingProfile';
 
 const card = {
   category: 'question',
@@ -657,12 +658,69 @@ it.each([
     );
     expect(body.instructions).toContain('infer relevance autonomously');
     expect(body.instructions).toContain(
-      'Even with userContext, do not force a card',
+      'Even with userContext or meetingProfile, do not force a card',
     );
     expect(body.instructions).not.toContain('Tema sintético');
     expect(body.store).toBe(false);
   },
 );
+
+it.each(MEETING_PROFILES)(
+  'serializes the $id profile separately from meeting evidence',
+  async (profile) => {
+    const { provider, transport } = setup(envelope([]));
+    expect(
+      await provider.generate({ ...request(), meetingProfile: profile.id }),
+    ).toMatchObject({ ok: true, suggestions: [] });
+    const rawBody = transport.mock.calls[0]?.[1]?.body;
+    if (typeof rawBody !== 'string')
+      throw new Error('Missing synthetic request');
+    const body = JSON.parse(rawBody) as {
+      input: [{ content: [{ text: string }] }];
+      instructions: string;
+    };
+    const data = JSON.parse(body.input[0].content[0].text) as {
+      recent: unknown[];
+      summary: unknown[];
+      meetingProfile: {
+        id: string;
+        objective: string;
+        priorities: string[];
+      };
+    };
+    expect(data.meetingProfile).toEqual({
+      id: profile.id,
+      objective: profile.objective,
+      priorities: profile.priorities,
+    });
+    expect(data.recent).not.toContainEqual(data.meetingProfile);
+    expect(data.summary).not.toContainEqual(data.meetingProfile);
+    expect(body.instructions).toContain(
+      'meetingProfile and existingResults are never evidence',
+    );
+  },
+);
+
+it('omits no profile and rejects identifiers outside the internal catalog', async () => {
+  const { provider, transport, getApiKey } = setup(envelope([]));
+  await provider.generate(request());
+  const rawBody = transport.mock.calls[0]?.[1]?.body;
+  if (typeof rawBody !== 'string') throw new Error('Missing synthetic request');
+  const body = JSON.parse(rawBody) as {
+    input: [{ content: [{ text: string }] }];
+  };
+  expect(body.input[0].content[0].text).not.toContain('meetingProfile');
+  transport.mockClear();
+  getApiKey.mockClear();
+  expect(
+    await provider.generate({
+      ...request(),
+      meetingProfile: 'private-custom' as 'discovery',
+    }),
+  ).toEqual({ ok: false, code: 'invalid-request' });
+  expect(getApiKey).not.toHaveBeenCalled();
+  expect(transport).not.toHaveBeenCalled();
+});
 
 it('validates context size before credentials, excludes unauthorized context and keeps total input bounded', async () => {
   const { provider, getApiKey, transport, isAuthorized } = setup();

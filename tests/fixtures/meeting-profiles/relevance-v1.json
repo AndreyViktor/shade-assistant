@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "conversation": "Precisamos decidir como avançar, mas ainda há pontos em aberto.",
+  "cases": [
+    {
+      "profile": "discovery",
+      "expectedObjective": "Entender necessidades, contexto e critérios de sucesso.",
+      "expectedFocus": "lacunas relevantes a investigar"
+    },
+    {
+      "profile": "status",
+      "expectedObjective": "Clarificar progresso, bloqueios e próximos passos.",
+      "expectedFocus": "bloqueios e riscos"
+    },
+    {
+      "profile": "interview",
+      "expectedObjective": "Aprofundar experiências e obter exemplos concretos.",
+      "expectedFocus": "perguntas abertas e não indutivas"
+    },
+    {
+      "profile": "negotiation",
+      "expectedObjective": "Tornar interesses, opções e condições de acordo explícitos.",
+      "expectedFocus": "trocas e alternativas"
+    },
+    {
+      "profile": "technical-review",
+      "expectedObjective": "Examinar decisões técnicas, riscos e validação necessária.",
+      "expectedFocus": "premissas e trade-offs"
+    }
+  ]
+}

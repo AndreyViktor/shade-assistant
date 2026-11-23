@@ -1,16 +1,13 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-23. **Marco:** M10 — T060 DONE.
+**Atualizado:** 2026-11-23. **Marco:** M10 — T061 DONE.
 
-## Plano T060
+## Resultado T061
 
-- Objetivo/aceite: exibir tópico atual, decisões, ações, perguntas e riscos durante a reunião, sempre ligados a falas/horários, distinguindo fato de inferência e sem inventar decisão, responsável ou prazo; validar ausência, contradição e revisão.
-- Política antes da implementação: reutilizar consentimento, orçamento e chamada de contexto já autorizados; manter resultados somente em memória; aceitar apenas referências a segmentos finais do contexto enviado. Uma resposta substitui o tópico atual e aplica correção/remoção explícita por chave estável aos demais itens; contradição ou ausência sem suporte não vira fato. Limites pequenos e validação estrita serão registrados em ADR.
-- Implementação: adicionar contrato/store determinístico; ampliar Structured Output/provider sem chamada extra; integrar lifecycle e IPC versionado; criar painel acessível com evidências e disclosure. Módulos: contratos de reunião/IPC, provider/prompt, `MeetingSuggestions`, store, hook/UI/estilos, testes, ADR e evidência T060.
-- Testes/gates: contrato, store, provider, lifecycle, IPC e UI, incluindo conteúdo ausente, contraditório, revisado e inválido; testes focados, `npm run verify` e `git diff --check`.
+- Catálogo interno fechado oferece modo sem perfil e cinco perfis com objetivo/prioridades. Preferências v4 persistem somente o ID padrão; o diálogo permite override por sessão sob o consentimento existente.
+- IPC v10, core e provider transportam o perfil separado das falas. Prompt e validação impedem tratá-lo como evidência; revogação/parada limpam o estado efêmero. Política em ADR 0028.
+- Recuperação auditou e preservou a árvore interrompida; corrigiu somente fronteiras de teste, tipagem e precisão do novo E2E. `verify` aprovou 943 Vitest, 19 skipped e 19 runner; smoke Electron offline aprovou 30/30, incluindo foco nativo e o novo fluxo de perfis. `git diff --check` aprovado. Evidências em [T061.md](evidence/tasks/T061.md).
 
-## Resultado T060
+## Próximo passo
 
-- Esta sessão de recuperação preservou e auditou a implementação interrompida. Foram corrigidos somente os gaps encontrados: remoção exige grounding de reunião e fala posterior, o exemplo do prompt usa referência existente, o preload mantém a versão IPC literal e os e2e T060 distinguem resultados de cartões e percorrem os novos controles acessíveis.
-- Gates offline: testes focados 179/179; `verify` com 924 Vitest aprovados, 19 skipped, 19 runner, lint/formato/tipos/build; `git diff --check` aprovado. A execução completa do smoke aprovou 27/28; o único caso restante, `panel.spec.ts`, passou isoladamente (1/1) após uma única ativação nativa da janela no momento correto. Assim, todos os 28 casos foram cobertos sem alterar ou desabilitar o teste.
-- Próximo passo: iniciar T061 em sessão nova. Sem API paga, captura real, credenciais, push ou deploy.
+- Encerrar esta sessão após o commit local T061. Selecionar no máximo uma nova tarefa elegível somente em outra sessão; nenhuma foi iniciada aqui.

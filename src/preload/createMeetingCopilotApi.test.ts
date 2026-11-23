@@ -81,10 +81,11 @@ describe('limited preload API', () => {
 
 describe('settings preload boundary', () => {
   const preferences = {
-    version: 3 as const,
+    version: 4 as const,
     audioSource: 'both' as const,
     suggestionProvider: 'openai' as const,
     suggestionModel: 'gpt-5.4-mini' as const,
+    meetingProfile: 'none' as const,
     mode: 'demo' as const,
     sttProvider: 'apple-local' as const,
     language: 'pt-BR' as const,
@@ -176,7 +177,7 @@ describe('settings preload boundary', () => {
 describe('session preload boundary', () => {
   it('uses only the fixed channel, validates requests and redacts replies', async () => {
     const reply = {
-      version: 9,
+      version: 10,
       ok: true,
       demo: emptyDemo(),
       local: null,
@@ -195,40 +196,40 @@ describe('session preload boundary', () => {
     };
     const invoke = vi.fn().mockResolvedValue(reply);
     const api = createMeetingCopilotApi(invoke);
-    expect(await api.session({ version: 9, action: 'read' })).toEqual(reply);
+    expect(await api.session({ version: 10, action: 'read' })).toEqual(reply);
     expect(invoke).toHaveBeenCalledExactlyOnceWith('meeting-copilot:session', {
-      version: 9,
+      version: 10,
       action: 'read',
     });
     invoke.mockClear();
     for (const args of [
       [],
       [{ version: 7, action: 'read' }],
-      [{ version: 9, action: 'send' }],
-      [{ version: 9, action: 'stop' }, 'extra'],
+      [{ version: 10, action: 'send' }],
+      [{ version: 10, action: 'stop' }, 'extra'],
     ])
       expect(await Reflect.apply(api.session, null, args)).toEqual({
         ...ipcFailure('INVALID_REQUEST'),
-        version: 9,
+        version: 10,
       });
     expect(invoke).not.toHaveBeenCalled();
     invoke.mockResolvedValue({ ...reply, secret: 'synthetic' });
-    expect(await api.session({ version: 9, action: 'read' })).toEqual({
+    expect(await api.session({ version: 10, action: 'read' })).toEqual({
       ...ipcFailure('INVALID_RESPONSE'),
-      version: 9,
+      version: 10,
     });
     invoke.mockRejectedValue(new Error('private'));
-    expect(await api.session({ version: 9, action: 'stop' })).toEqual({
+    expect(await api.session({ version: 10, action: 'stop' })).toEqual({
       ...ipcFailure('UNAVAILABLE'),
-      version: 9,
+      version: 10,
     });
   });
   it('times out session commands with an explicit unconfirmed result', async () => {
     vi.useFakeTimers();
     const api = createMeetingCopilotApi(() => new Promise(() => {}));
-    const result = api.session({ version: 9, action: 'stop' });
+    const result = api.session({ version: 10, action: 'stop' });
     await vi.advanceTimersByTimeAsync(15000);
-    expect(await result).toEqual({ ...ipcFailure('TIMEOUT'), version: 9 });
+    expect(await result).toEqual({ ...ipcFailure('TIMEOUT'), version: 10 });
     expect(vi.getTimerCount()).toBe(0);
   });
 });

@@ -23,6 +23,7 @@ import type {
 } from '../../contracts/meeting/suggestionSession';
 import { MeetingResultStore } from './MeetingResultStore';
 import type { MeetingResultsSnapshot } from '../../contracts/meeting/meetingResult';
+import type { FocusedMeetingProfileId } from '../../contracts/meeting/meetingProfile';
 
 export type SuggestionProviderFactory = (
   authorization: SuggestionAuthorization,
@@ -51,6 +52,7 @@ export class MeetingSuggestions {
   private timer: ReturnType<typeof setInterval> | undefined;
   private model = '';
   private userContext = '';
+  private meetingProfile: FocusedMeetingProfileId | undefined;
   private maxRequests = 0;
   private lastTrigger: Trigger = 'none';
   private hasFinal = false;
@@ -92,6 +94,9 @@ export class MeetingSuggestions {
               ...request,
               language: this.language,
               ...(this.userContext ? { userContext: this.userContext } : {}),
+              ...(this.meetingProfile
+                ? { meetingProfile: this.meetingProfile }
+                : {}),
               onDispatch: (body) => {
                 if (current() && !request.signal.aborted)
                   attempt.requestBody = body;
@@ -144,6 +149,7 @@ export class MeetingSuggestions {
     this.remaining = authorization.maxRequests;
     this.model = authorization.model;
     this.userContext = authorization.userContext ?? '';
+    this.meetingProfile = authorization.meetingProfile;
     this.maxRequests = authorization.maxRequests;
     const generation = this.generation;
     try {
@@ -247,6 +253,7 @@ export class MeetingSuggestions {
     this.elapsed = 0;
     this.model = '';
     this.userContext = '';
+    this.meetingProfile = undefined;
     this.maxRequests = 0;
     this.lastTrigger = 'none';
     this.hasFinal = false;

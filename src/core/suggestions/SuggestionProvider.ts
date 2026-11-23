@@ -5,12 +5,14 @@ import type {
   MeetingResultItem,
   MeetingResultUpdate,
 } from '../../contracts/meeting/meetingResult';
+import type { FocusedMeetingProfileId } from '../../contracts/meeting/meetingProfile';
 export type { SuggestionFailure } from '../../contracts/meeting/suggestionDiagnostics';
 
 export type SuggestionRequest = {
   context: MeetingContext;
   existingResults?: MeetingResultItem[];
   userContext?: string;
+  meetingProfile?: FocusedMeetingProfileId;
   language: 'pt-BR' | 'en-US';
   signal: AbortSignal;
   onDispatch?: (body: string) => void;

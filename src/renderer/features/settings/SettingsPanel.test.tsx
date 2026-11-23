@@ -38,7 +38,7 @@ describe('settings interface', () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(
-      screen.getByText(/Fonte, idioma, fornecedores e modelo ficam salvos/),
+      screen.getByText(/Fonte, idioma, fornecedores, modelo e perfil padrão/),
     ).toBeVisible();
     expect(screen.getByLabelText('Fornecedor de transcrição')).toHaveValue(
       'apple-local',
@@ -50,6 +50,12 @@ describe('settings interface', () => {
     expect(screen.getByLabelText('Modelo para as sugestões')).toHaveValue(
       'gpt-5.4-mini',
     );
+    expect(screen.getByLabelText('Perfil padrão da reunião')).toHaveValue(
+      'none',
+    );
+    expect(
+      screen.getByText(/Somente este identificador interno/),
+    ).toBeVisible();
   });
   it('saves edited preferences only on explicit submit and renders the canonical response', async () => {
     render(<SettingsPanel />);
@@ -62,6 +68,11 @@ describe('settings interface', () => {
     fireEvent.change(screen.getByLabelText('Fonte de áudio'), {
       target: { value: 'system' },
     });
+    fireEvent.change(screen.getByLabelText('Perfil padrão da reunião'), {
+      target: { value: 'technical-review' },
+    });
+    expect(screen.getByText(/Examinar decisões técnicas/)).toBeVisible();
+    expect(screen.getByText(/premissas e trade-offs/)).toBeVisible();
     expect(api.savePreferences).not.toHaveBeenCalled();
     fireEvent.click(
       screen.getByRole('button', { name: 'Salvar preferências' }),
@@ -72,6 +83,7 @@ describe('settings interface', () => {
         language: 'en-US',
         audioSource: 'system',
         suggestionModel: 'gpt-5.4',
+        meetingProfile: 'technical-review',
       }),
     );
     expect(

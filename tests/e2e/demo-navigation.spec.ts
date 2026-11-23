@@ -11,7 +11,7 @@ test('DEMO stays in diagnostics across preferences, keyboard navigation and sess
     page.on('pageerror', (error) => errors.push(error.name));
     const read = () =>
       page.evaluate(() =>
-        window.meetingCopilot.session({ version: 9, action: 'read' }),
+        window.meetingCopilot.session({ version: 10, action: 'read' }),
       );
     const preferences = page.getByRole('button', {
       name: 'Preferências',

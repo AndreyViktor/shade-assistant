@@ -14,7 +14,7 @@ import { parseMeetingResults } from '../meeting/meetingResult';
 import type { MeetingResultsSnapshot } from '../meeting/meetingResult';
 
 export const SESSION_CHANNEL = 'meeting-copilot:session';
-export const SESSION_IPC_VERSION = 9;
+export const SESSION_IPC_VERSION = 10;
 export type SessionRequest =
   | {
       version: typeof SESSION_IPC_VERSION;

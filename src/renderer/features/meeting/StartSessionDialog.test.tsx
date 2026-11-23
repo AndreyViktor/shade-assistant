@@ -3,12 +3,20 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { StartSessionDialog } from './StartSessionDialog';
 
-function setup(credential = 'missing', suggestionModel = 'gpt-5.4-mini') {
+function setup(
+  credential = 'missing',
+  suggestionModel = 'gpt-5.4-mini',
+  meetingProfile = 'none',
+) {
   const getSettings = vi.fn().mockResolvedValue({
     ok: true,
     settings: {
       credential,
-      preferences: { ...defaultPreferences('darwin'), suggestionModel },
+      preferences: {
+        ...defaultPreferences('darwin'),
+        suggestionModel,
+        meetingProfile,
+      },
     },
   });
   const importSecret = vi
@@ -93,7 +101,12 @@ it.each(['gpt-5.4-mini', 'gpt-5.4'])(
     expect(screen.getByRole('checkbox')).not.toBeChecked();
     fireEvent.click(screen.getByRole('checkbox'));
     await screen.findByText('Chave configurada');
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('combobox', { name: 'Modelo para as sugestões' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('combobox', { name: 'Perfil da reunião' }),
+    ).toHaveValue('none');
     expect(
       screen.getByRole('textbox', { name: 'Contexto da reunião (opcional)' }),
     ).toHaveValue('');
@@ -104,6 +117,26 @@ it.each(['gpt-5.4-mini', 'gpt-5.4'])(
     expect(onStart).toHaveBeenCalledExactlyOnceWith({ model, maxRequests: 10 });
   },
 );
+
+it('loads a reusable default, exposes its focus and allows a session-only profile change', async () => {
+  const { onStart } = setup('stored', 'gpt-5.4-mini', 'status');
+  fireEvent.click(screen.getByRole('checkbox'));
+  await screen.findByText('Chave configurada');
+  const select = screen.getByRole('combobox', { name: 'Perfil da reunião' });
+  expect(select).toHaveValue('status');
+  expect(select).toHaveAccessibleDescription(/Clarificar progresso/);
+  expect(select).toHaveAccessibleDescription(/não comprova o que foi dito/);
+  fireEvent.change(select, { target: { value: 'technical-review' } });
+  expect(screen.getByText(/Examinar decisões técnicas/)).toBeVisible();
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Iniciar com sugestões' }),
+  );
+  expect(onStart).toHaveBeenCalledExactlyOnceWith({
+    model: 'gpt-5.4-mini',
+    maxRequests: 10,
+    meetingProfile: 'technical-review',
+  });
+});
 
 it('sends optional context only with explicit suggestions consent and clears it when disabled', async () => {
   const { onStart } = setup('stored');

@@ -6,6 +6,7 @@ import type {
   SuggestionResult,
 } from '../suggestions/SuggestionProvider';
 import type { SpeechSegment } from '../../contracts/meeting/localTranscript';
+import type { FocusedMeetingProfileId } from '../../contracts/meeting/meetingProfile';
 
 const config = {
   sessionId: 'synthetic-session',
@@ -43,6 +44,7 @@ function setup(
   maxRequests = 2,
   userContext?: string,
   locale: 'pt-BR' | 'en-US' = 'pt-BR',
+  meetingProfile?: FocusedMeetingProfileId,
 ) {
   const session = new MeetingSession();
   const generate = vi
@@ -61,6 +63,7 @@ function setup(
       ...authorization,
       maxRequests,
       ...(userContext ? { userContext } : {}),
+      ...(meetingProfile ? { meetingProfile } : {}),
     });
   };
   start();
@@ -624,4 +627,45 @@ it('does not retain or forward optional context without text consent', async () 
   expect(JSON.stringify(pipeline.snapshot())).not.toContain(
     'private synthetic context',
   );
+});
+
+it('switches focused profiles between sessions and clears the previous runtime choice', async () => {
+  const { pipeline, session, generate } = setup(
+    true,
+    2,
+    undefined,
+    'pt-BR',
+    'discovery',
+  );
+  pipeline.receive(speech());
+  await vi.advanceTimersByTimeAsync(2_000);
+  expect(generate.mock.calls[0]?.[0].meetingProfile).toBe('discovery');
+
+  session.stop();
+  pipeline.stop();
+  session.start({
+    mode: 'apple-local',
+    ...config,
+    consent: { capture: true, context: true, remoteAudio: false },
+  });
+  pipeline.start(config, {
+    ...authorization,
+    meetingProfile: 'technical-review',
+  });
+  pipeline.receive(speech(2));
+  await vi.advanceTimersByTimeAsync(2_000);
+  expect(generate.mock.calls[1]?.[0].meetingProfile).toBe('technical-review');
+
+  session.revokeContext();
+  pipeline.stop();
+  session.stop();
+  session.start({
+    mode: 'apple-local',
+    ...config,
+    consent: { capture: true, context: true, remoteAudio: false },
+  });
+  pipeline.start(config, authorization);
+  pipeline.receive(speech(3));
+  await vi.advanceTimersByTimeAsync(2_000);
+  expect(generate.mock.calls[2]?.[0]).not.toHaveProperty('meetingProfile');
 });

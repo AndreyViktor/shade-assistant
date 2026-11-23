@@ -20,7 +20,7 @@ function SessionControls({
 }
 const consent = { capture: false, context: false, remoteAudio: false };
 const reply = (phase: string) => ({
-  version: 9,
+  version: 10,
   ok: true,
   demo: emptyDemo(),
   local: null,
@@ -60,7 +60,7 @@ describe('session controls', () => {
     expect(screen.getByRole('alertdialog')).toHaveTextContent('microfone');
     expect(session).toHaveBeenCalledTimes(1);
     session.mockResolvedValue({
-      version: 9,
+      version: 10,
       ok: true,
       demo: emptyDemo(),
       local: null,
@@ -81,7 +81,7 @@ describe('session controls', () => {
     );
     await screen.findByText('Em andamento');
     expect(session).toHaveBeenLastCalledWith({
-      version: 9,
+      version: 10,
       action: 'start',
       options: {
         mode: 'apple-local',
@@ -103,7 +103,7 @@ describe('session controls', () => {
     vi.stubGlobal('meetingCopilot', { session });
     render(<SessionControls />);
     await screen.findByText('Em andamento');
-    session.mockResolvedValue({ version: 9, ok: false, code: 'TIMEOUT' });
+    session.mockResolvedValue({ version: 10, ok: false, code: 'TIMEOUT' });
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     await screen.findByRole('alert');
@@ -139,6 +139,7 @@ it('requires an explicit text/cost opt-in and valid model/budget before sending 
         preferences: {
           ...defaultPreferences('darwin'),
           suggestionModel: 'gpt-5.4',
+          meetingProfile: 'status',
         },
       },
     }),
@@ -171,14 +172,18 @@ it('requires an explicit text/cost opt-in and valid model/budget before sending 
   fireEvent.click(confirm);
   await waitFor(() =>
     expect(session).toHaveBeenLastCalledWith({
-      version: 9,
+      version: 10,
       action: 'start',
       options: {
         mode: 'apple-local',
         locale: 'pt-BR',
         sources: ['mic', 'system'],
         consent: { capture: true, context: true, remoteAudio: false },
-        suggestions: { model: 'gpt-5.4', maxRequests: 1 },
+        suggestions: {
+          model: 'gpt-5.4',
+          maxRequests: 1,
+          meetingProfile: 'status',
+        },
       },
     }),
   );
@@ -225,7 +230,7 @@ it('renders real-session cards separately from DEMO and exposes revocation', asy
   fireEvent.click(screen.getByRole('button', { name: 'Desativar sugestões' }));
   await waitFor(() =>
     expect(session).toHaveBeenLastCalledWith({
-      version: 9,
+      version: 10,
       action: 'revoke-suggestions',
     }),
   );
@@ -246,7 +251,7 @@ it('loads the persisted source on startup and still requires capture confirmatio
   render(<SessionControls />);
   await screen.findByText('Pronta para iniciar');
   expect(session).toHaveBeenCalledExactlyOnceWith({
-    version: 9,
+    version: 10,
     action: 'read',
   });
   fireEvent.click(
@@ -258,7 +263,7 @@ it('loads the persisted source on startup and still requires capture confirmatio
   fireEvent.click(screen.getByRole('button', { name: 'Iniciar transcrição' }));
   await waitFor(() =>
     expect(session).toHaveBeenLastCalledWith({
-      version: 9,
+      version: 10,
       action: 'start',
       options: {
         mode: 'apple-local',
