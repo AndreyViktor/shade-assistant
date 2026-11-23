@@ -76,6 +76,47 @@ afterEach(() => {
 });
 
 describe('session suggestion integration with synthetic speech', () => {
+  it('publishes only evidence-backed live results, preserves pause and clears revocation lifecycle', async () => {
+    const { pipeline, generate, session } = setup(true, 1);
+    generate.mockResolvedValueOnce({
+      ok: true,
+      suggestions: [],
+      resultUpdates: [
+        {
+          operation: 'upsert',
+          key: 'prazo-projeto',
+          kind: 'question',
+          text: 'Qual é o prazo do projeto?',
+          groundedIn: 'meeting',
+          evidence: [{ source: 'mic', segmentId: 's1' }],
+        },
+        {
+          operation: 'upsert',
+          key: 'sem-suporte',
+          kind: 'risk',
+          text: 'Não deve aparecer.',
+          groundedIn: 'inference',
+          evidence: [{ source: 'mic', segmentId: 'inventado' }],
+        },
+      ],
+    });
+    pipeline.receive(speech());
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(generate.mock.calls[0]?.[0].existingResults).toEqual([]);
+    expect(pipeline.resultSnapshot().items).toHaveLength(1);
+    expect(pipeline.resultSnapshot().items[0]).toMatchObject({
+      key: 'prazo-projeto',
+      evidence: [{ segmentId: 's1', startMs: 900, endMs: 1000 }],
+    });
+
+    session.pause();
+    pipeline.pause();
+    expect(pipeline.resultSnapshot().items).toHaveLength(1);
+    session.revokeContext();
+    pipeline.stop();
+    expect(pipeline.resultSnapshot()).toEqual({ items: [] });
+  });
+
   it('keeps an initial fragment without spending budget, then evaluates actionable accumulated context', async () => {
     const { pipeline, generate } = setup(true, 2);
     generate.mockResolvedValueOnce({ ok: true, suggestions: [] });

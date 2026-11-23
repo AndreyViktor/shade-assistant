@@ -81,6 +81,7 @@ it.each<SuggestionAttempt['result']>([
       error: '',
       preferences: null,
       command,
+      results: { items: [] },
       suggestions: {
         status: 'exhausted',
         items: [],
@@ -139,6 +140,7 @@ it.each<SuggestionAttempt['result']>([
             status: 'disabled',
             diagnostics: null,
           },
+          results: { items: [] },
         }}
       />,
     );

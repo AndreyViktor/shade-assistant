@@ -1,15 +1,16 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-19. **Marco:** M10 — T027 DONE.
+**Atualizado:** 2026-11-23. **Marco:** M10 — T060 BLOCKED.
 
-## Resultado T027
+## Plano T060
 
-- Comparação real pareada: 5 pontos por modelo, 10 chamadas totais, 3 cartões em `gpt-5.4-mini` e 3 em `gpt-5.4`. Custo combinado US$ 0,020108, dentro do teto de US$ 0,10.
-- Ambos abstiveram nos fragmentos inicial/incerto, sugeriram no caso rotulado para abstenção e repetiram a intenção de atribuir responsável. O mini teve p50 1605 ms e primeiro cartão útil 1540 ms; o GPT-5.4 teve p50 2025 ms/2087 ms e grounding mais aderente (100% contra 33,33%).
-- Respostas brutas existiram apenas em temporário privado e foram removidas; Git guarda corpus/rótulos/tokens/tempos/custo, sem texto dos cartões nem chave. Evidências e limitações em [T027.md](evidence/tasks/T027.md).
-- Gates: runner real aprovado; `verify` com 909 TS aprovados (19 skipped), 19 runner, lint/formato/tipos/build; `git diff --check` aprovado.
+- Objetivo/aceite: exibir tópico atual, decisões, ações, perguntas e riscos durante a reunião, sempre ligados a falas/horários, distinguindo fato de inferência e sem inventar decisão, responsável ou prazo; validar ausência, contradição e revisão.
+- Política antes da implementação: reutilizar consentimento, orçamento e chamada de contexto já autorizados; manter resultados somente em memória; aceitar apenas referências a segmentos finais do contexto enviado. Uma resposta substitui o tópico atual e aplica correção/remoção explícita por chave estável aos demais itens; contradição ou ausência sem suporte não vira fato. Limites pequenos e validação estrita serão registrados em ADR.
+- Implementação: adicionar contrato/store determinístico; ampliar Structured Output/provider sem chamada extra; integrar lifecycle e IPC versionado; criar painel acessível com evidências e disclosure. Módulos: contratos de reunião/IPC, provider/prompt, `MeetingSuggestions`, store, hook/UI/estilos, testes, ADR e evidência T060.
+- Testes/gates: contrato, store, provider, lifecycle, IPC e UI, incluindo conteúdo ausente, contraditório, revisado e inválido; testes focados, `npm run verify` e `git diff --check`.
 
-## Handoff e limites
+## Recuperação/auditoria T060
 
-- Amostra pequena, uma execução, rotulagem não cega e schema limitado a um cartão/ponto: baseline, não benchmark geral. Manter `gpt-5.4-mini` como padrão; T025 continua responsável por orçamento operacional.
-- Encerrar após commit local T027. T060 pode começar somente em uma nova sessão; T061 continua dependente de T060. Não houve push.
+- Esta sessão de recuperação preservou e auditou a implementação interrompida. Foram corrigidos somente os gaps encontrados: remoção exige grounding de reunião e fala posterior, o exemplo do prompt usa referência existente, o preload mantém a versão IPC literal e os e2e T060 distinguem resultados de cartões e percorrem os novos controles acessíveis.
+- Gates offline: testes focados 179/179; `verify` com 924 Vitest aprovados, 19 skipped, 19 runner, lint/formato/tipos/build; `git diff --check` aprovado. Smoke Electron: 27/28; todos os fluxos T060 passaram.
+- Bloqueio: `tests/e2e/panel.spec.ts`, não alterado pela tarefa, não obteve foco nativo no macOS desta sessão (`BrowserWindow.isFocused() === false`) nem isolado. Repetir o smoke em sessão gráfica que conceda foco; se 28/28, atualizar T060 para `DONE` e encerrar sem iniciar T061. Sem API paga, captura real, credenciais, push ou deploy.

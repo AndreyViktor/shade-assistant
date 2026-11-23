@@ -2,14 +2,17 @@ import { emptySuggestionSession } from '../../../contracts/meeting/suggestionSes
 import type { LocalTranscriptSnapshot } from '../../../contracts/meeting/localTranscript';
 import { useEffect, useRef, useState } from 'react';
 import type { SessionRequest } from '../../../contracts/ipc/session';
+import { SESSION_IPC_VERSION } from '../../../contracts/ipc/session';
 import type { SessionSnapshot } from '../../../contracts/meeting/session';
 import { emptyDemo } from '../../../contracts/meeting/demo';
 import type { Preferences } from '../../../contracts/settings/preferences';
 import type { IpcErrorCode } from '../../../contracts/ipc/appStatus';
+import { emptyMeetingResults } from '../../../contracts/meeting/meetingResult';
 
 export function useMeetingSession() {
   const [session, setSession] = useState<SessionSnapshot | null>(null);
   const [suggestions, setSuggestions] = useState(emptySuggestionSession);
+  const [results, setResults] = useState(emptyMeetingResults);
   const [demo, setDemo] = useState(emptyDemo);
   const [local, setLocal] = useState<LocalTranscriptSnapshot | null>(null);
   const [busy, setBusy] = useState(false);
@@ -27,7 +30,10 @@ export function useMeetingSession() {
       const [result, settings] = await Promise.all([
         Promise.resolve()
           .then(() =>
-            window.meetingCopilot.session({ version: 8, action: 'read' }),
+            window.meetingCopilot.session({
+              version: SESSION_IPC_VERSION,
+              action: 'read',
+            }),
           )
           .catch(() => null),
         Promise.resolve()
@@ -41,6 +47,7 @@ export function useMeetingSession() {
         setDemo(result.demo);
         setLocal(result.local);
         setSuggestions(result.suggestions);
+        setResults(result.results);
       } else setError('Não foi possível verificar a sessão. Reabra o app.');
     }
     void load();
@@ -64,13 +71,15 @@ export function useMeetingSession() {
         setDemo(result.demo);
         setLocal(result.local);
         setSuggestions(result.suggestions);
+        setResults(result.results);
       } else {
         setDemo(emptyDemo());
         setLocal(null);
         setSuggestions(emptySuggestionSession());
+        setResults(emptyMeetingResults());
         try {
           const current = await window.meetingCopilot.session({
-            version: 8,
+            version: SESSION_IPC_VERSION,
             action: 'read',
           });
           if (!mounted.current) return;
@@ -78,6 +87,7 @@ export function useMeetingSession() {
             setSession(current.session);
             setLocal(current.local);
             setSuggestions(current.suggestions);
+            setResults(current.results);
           }
         } catch {
           // Keep the last confirmed session state if a refresh also fails.
@@ -90,6 +100,7 @@ export function useMeetingSession() {
         setDemo(emptyDemo());
         setLocal(null);
         setSuggestions(emptySuggestionSession());
+        setResults(emptyMeetingResults());
         setError(
           'Não foi possível confirmar a ação. Use Parar ou reabra o app.',
         );
@@ -109,7 +120,7 @@ export function useMeetingSession() {
     async function poll() {
       try {
         const result = await window.meetingCopilot.session({
-          version: 8,
+          version: SESSION_IPC_VERSION,
           action: 'read',
         });
         if (!active || revision.current !== currentRevision) return;
@@ -118,6 +129,7 @@ export function useMeetingSession() {
         setDemo(result.demo);
         setLocal(result.local);
         setSuggestions(result.suggestions);
+        setResults(result.results);
         if (shouldPoll(result.session, result.demo))
           timer = setTimeout(() => {
             void poll();
@@ -128,6 +140,7 @@ export function useMeetingSession() {
         setDemo(emptyDemo());
         setLocal(null);
         setSuggestions(emptySuggestionSession());
+        setResults(emptyMeetingResults());
         setError(
           'Não foi possível atualizar a sessão. Use Parar ou reabra o app.',
         );
@@ -147,6 +160,7 @@ export function useMeetingSession() {
     demo,
     local,
     suggestions,
+    results,
     busy,
     error,
     preferences,

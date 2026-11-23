@@ -550,6 +550,77 @@ button {
   color: #b7c4d8;
 }
 
+.meeting-results {
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #314058;
+}
+
+.meeting-results > h3,
+.meeting-results > p,
+.meeting-result-groups h4,
+.meeting-result-item p,
+.result-evidence blockquote {
+  margin: 0;
+}
+
+.meeting-result-groups,
+.meeting-result-groups > section,
+.meeting-result-groups ul,
+.result-evidence {
+  display: grid;
+  gap: 8px;
+}
+
+.meeting-result-groups ul,
+.result-evidence {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.meeting-result-item {
+  display: grid;
+  gap: 6px;
+  padding: 9px;
+  border: 1px solid #34445d;
+  border-radius: 9px;
+  background: #152033;
+}
+
+.result-grounding {
+  font-size: 12px;
+  color: #b7c4d8;
+}
+
+.result-grounding-inference {
+  color: #e2c78e;
+}
+
+.meeting-result-item summary,
+.result-policy summary {
+  cursor: pointer;
+}
+
+.result-evidence {
+  margin-top: 8px;
+}
+
+.result-evidence li {
+  padding-left: 8px;
+  border-left: 2px solid #6483ad;
+}
+
+.result-evidence p {
+  color: #b7c4d8;
+  font-size: 12px;
+}
+
+.result-evidence blockquote {
+  padding-top: 4px;
+  font-size: 13px;
+}
+
 /* Below native minimum only at high zoom: reflow keeps text/controls reachable. */
 @media (max-width: 520px) {
   .meeting-workspace {

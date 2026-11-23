@@ -34,14 +34,22 @@ const request = (): SuggestionRequest => ({
     ],
   },
 });
-const envelope = (suggestions: unknown = [card]) => ({
+const envelope = (
+  suggestions: unknown = [card],
+  resultUpdates: unknown = [],
+) => ({
   status: 'completed',
   output: [
     {
       type: 'message',
       role: 'assistant',
       status: 'completed',
-      content: [{ type: 'output_text', text: JSON.stringify({ suggestions }) }],
+      content: [
+        {
+          type: 'output_text',
+          text: JSON.stringify({ suggestions, resultUpdates }),
+        },
+      ],
     },
   ],
 });
@@ -95,7 +103,7 @@ describe('OpenAI suggestion adapter with synthetic HTTP only', () => {
       ]);
       expect(publicData).toContain('Qual é o prazo?');
       expect(publicData).not.toMatch(
-        /synthetic-key|Authorization|Bearer|private-error-sentinel|private-session|private-id/,
+        /synthetic-key|Authorization|Bearer|private-error-sentinel|private-session/,
       );
     },
   );
@@ -121,7 +129,49 @@ describe('OpenAI suggestion adapter with synthetic HTTP only', () => {
     expect(await provider.generate(request())).toEqual({
       ok: true,
       suggestions,
+      resultUpdates: [],
     });
+  });
+  it('returns evidence updates and sends bounded existing state for correction', async () => {
+    const resultUpdates = [
+      {
+        operation: 'upsert',
+        key: 'prazo-aberto',
+        kind: 'question',
+        text: 'Qual é o prazo?',
+        groundedIn: 'meeting',
+        evidence: [{ source: 'system', segmentId: 'private-id' }],
+      },
+    ];
+    const { provider, transport } = setup(envelope([], resultUpdates));
+    const input = request();
+    input.existingResults = [
+      {
+        key: 'risco-prazo',
+        kind: 'risk',
+        text: 'O prazo pode estar apertado.',
+        groundedIn: 'inference',
+        evidence: [
+          {
+            source: 'system',
+            segmentId: 'old-id',
+            startMs: 0,
+            endMs: 1000,
+            text: 'Texto local não reenviado.',
+            truncated: false,
+          },
+        ],
+      },
+    ];
+    expect(await provider.generate(input)).toEqual({
+      ok: true,
+      suggestions: [],
+      resultUpdates,
+    });
+    const body = transport.mock.calls[0]?.[1]?.body;
+    expect(body).toContain('risco-prazo');
+    expect(body).toContain('old-id');
+    expect(body).not.toContain('Texto local não reenviado.');
   });
   it('uses Responses strict schema, configured model, final-only bounded data and no storage/tools', async () => {
     const { provider, transport } = setup();
@@ -161,9 +211,9 @@ describe('OpenAI suggestion adapter with synthetic HTTP only', () => {
       text: { format: suggestionFormat },
       input: [{ role: 'user' }],
     });
-    expect(init.body).not.toMatch(
-      /private-session|private-id|summary-id|draft-only|synthetic-key/,
-    );
+    expect(init.body).not.toMatch(/private-session|draft-only|synthetic-key/);
+    expect(init.body).toContain('private-id');
+    expect(init.body).toContain('summary-id');
     expect(body).not.toHaveProperty('tools');
     expect(body).not.toHaveProperty('previous_response_id');
     expect(init.body).toContain('Resumo sintético');
@@ -204,7 +254,7 @@ describe('OpenAI suggestion adapter with synthetic HTTP only', () => {
       'A nearby topic does not make an unclear phrase worth asking about',
     );
     expect(body.instructions).toContain(
-      '<assistant_response>{"suggestions":[]}</assistant_response>',
+      '<assistant_response>{"suggestions":[],"resultUpdates":[]}</assistant_response>',
     );
     expect(body.instructions).toContain('Definir responsável');
     expect(body.instructions).not.toContain(
@@ -264,6 +314,7 @@ describe('OpenAI suggestion adapter with synthetic HTTP only', () => {
     expect(await provider.generate(input)).toEqual({
       ok: true,
       suggestions: [],
+      resultUpdates: [],
     });
     expect(transport).not.toHaveBeenCalled();
     expect(getApiKey).not.toHaveBeenCalled();
@@ -393,7 +444,7 @@ describe('OpenAI suggestion adapter with synthetic HTTP only', () => {
         ...response,
         output: [{ type: 'reasoning', summary: [] }, ...response.output],
       }).provider.generate(request()),
-    ).toEqual({ ok: true, suggestions: [card] });
+    ).toEqual({ ok: true, suggestions: [card], resultUpdates: [] });
   });
   it('handles refusals and incomplete output even if a card looks valid', async () => {
     expect(
@@ -522,6 +573,7 @@ describe('offline mock uses the same contract', () => {
     expect(await new MockSuggestionProvider().generate(request())).toEqual({
       ok: true,
       suggestions: [],
+      resultUpdates: [],
     });
     expect(transport).not.toHaveBeenCalled();
   });
@@ -532,12 +584,17 @@ describe('offline mock uses the same contract', () => {
     if (!original) throw new Error('fixture');
     original.title = 'changed';
     const first = await mock.generate(request());
-    expect(first).toEqual({ ok: true, suggestions: [card] });
+    expect(first).toEqual({
+      ok: true,
+      suggestions: [card],
+      resultUpdates: [],
+    });
     if (first.ok && first.suggestions[0])
       first.suggestions[0].title = 'changed again';
     expect(await mock.generate(request())).toEqual({
       ok: true,
       suggestions: [card],
+      resultUpdates: [],
     });
     expect(
       await new MockSuggestionProvider({
@@ -575,6 +632,7 @@ it.each([
     expect(await provider.generate(input)).toEqual({
       ok: true,
       suggestions: [],
+      resultUpdates: [],
     });
     expect(transport).toHaveBeenCalledOnce();
     const rawBody = transport.mock.calls[0]?.[1]?.body;
@@ -660,6 +718,7 @@ it('makes room for optional context by dropping oldest history while preserving 
   expect(await provider.generate({ ...input, userContext })).toEqual({
     ok: true,
     suggestions: [],
+    resultUpdates: [],
   });
   const rawBody = transport.mock.calls[0]?.[1]?.body;
   if (typeof rawBody !== 'string') throw new Error('Missing synthetic request');

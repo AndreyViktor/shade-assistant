@@ -3,6 +3,10 @@ import type { MeetingContext } from '../meeting/ContextManager';
 import type { SuggestionProvider } from './SuggestionProvider';
 import type { Trigger } from './TriggerEngine';
 import { SUGGESTION_AUTOMATIC_DEBOUNCE_MS } from '../../contracts/meeting/suggestionDiagnostics';
+import type {
+  MeetingResultItem,
+  MeetingResultUpdate,
+} from '../../contracts/meeting/meetingResult';
 
 export type SuggestionPolicy = {
   debounceMs: number;
@@ -47,6 +51,11 @@ export class SuggestionScheduler {
     private readonly language: 'pt-BR' | 'en-US' = 'pt-BR',
     policy: Partial<SuggestionPolicy> = {},
     private readonly continuous = false,
+    private readonly onResultUpdates: (
+      updates: MeetingResultUpdate[],
+      context: MeetingContext,
+    ) => void = () => {},
+    private readonly getMeetingResults: () => MeetingResultItem[] = () => [],
   ) {
     this.policy = { ...DEFAULT_SUGGESTION_POLICY, ...policy };
     for (const [key, value] of Object.entries(this.policy)) {
@@ -189,6 +198,7 @@ export class SuggestionScheduler {
     try {
       const result = await this.provider.generate({
         context: pending.context,
+        existingResults: this.getMeetingResults(),
         language: this.language,
         signal: controller.signal,
       });
@@ -199,6 +209,7 @@ export class SuggestionScheduler {
         !result.ok
       )
         return;
+      this.onResultUpdates(result.resultUpdates ?? [], pending.context);
       for (const content of result.suggestions)
         this.store.add(`suggestion-${++this.nextId}`, content);
     } catch {

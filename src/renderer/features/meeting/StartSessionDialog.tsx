@@ -148,10 +148,11 @@ export function StartSessionDialog({
                 className="suggestion-setup-fields"
               >
                 <p>
-                  Receba perguntas e próximos passos a partir da conversa. Para
-                  isso, trechos finais e um resumo são enviados periodicamente à
-                  OpenAI junto do contexto opcional, com intervalo mínimo de 10
-                  segundos. O áudio fica no Mac.
+                  Receba perguntas, próximos passos e resultados estruturados a
+                  partir da conversa. Para isso, trechos finais, um resumo e os
+                  resultados atuais são enviados periodicamente à OpenAI junto
+                  do contexto opcional, com intervalo mínimo de 10 segundos. O
+                  áudio fica no Mac.
                 </p>
                 <label htmlFor="suggestion-context">
                   Contexto da reunião (opcional)
@@ -231,7 +232,8 @@ export function StartSessionDialog({
                   na sua conta.
                 </p>
                 <p className="field-help">
-                  Você pode desativar as sugestões durante a sessão.
+                  Você pode desativar as sugestões e os resultados ao vivo
+                  durante a sessão; ambos ficam somente em memória.
                 </p>
               </div>
             )}

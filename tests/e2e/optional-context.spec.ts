@@ -115,13 +115,13 @@ for (const filled of [false, true]) {
       await page.getByRole('button', { name: 'Desativar sugestões' }).click();
       await expect(
         page.getByText(
-          'Sugestões desativadas. A transcrição continua disponível neste painel.',
+          'Sugestões e resultados ao vivo desativados. A transcrição continua disponível neste painel.',
           { exact: true },
         ),
       ).toBeVisible();
       const state = await page.evaluate(async () => ({
         session: await window.meetingCopilot.session({
-          version: 8,
+          version: 9,
           action: 'read',
         }),
         settings: await window.meetingCopilot.getSettings(),
@@ -149,7 +149,7 @@ for (const filled of [false, true]) {
       expect(
         JSON.stringify(
           await page.evaluate(() =>
-            window.meetingCopilot.session({ version: 8, action: 'read' }),
+            window.meetingCopilot.session({ version: 9, action: 'read' }),
           ),
         ),
       ).not.toContain(sentinel);

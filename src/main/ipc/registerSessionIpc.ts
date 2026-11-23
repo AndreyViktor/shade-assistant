@@ -7,6 +7,7 @@ import { ipcMain } from 'electron';
 import type { BrowserWindow } from 'electron';
 import {
   SESSION_CHANNEL,
+  SESSION_IPC_VERSION,
   parseSessionRequest,
 } from '../../contracts/ipc/session';
 import type { SessionResult } from '../../contracts/ipc/session';
@@ -50,15 +51,16 @@ export function registerSessionIpc(
   let lifecycle = 0;
 
   const success = (): SessionResult => ({
-    version: 8,
+    version: SESSION_IPC_VERSION,
     ok: true,
     session: session.snapshot(),
     demo: demo.snapshot(),
     local: local.snapshot(),
     suggestions: suggestions.snapshot(),
+    results: suggestions.resultSnapshot(),
   });
   const failure = (code: IpcErrorCode): SessionResult => ({
-    version: 8,
+    version: SESSION_IPC_VERSION,
     ok: false,
     code,
   });

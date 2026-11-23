@@ -1,4 +1,6 @@
 import { parseSuggestionBatch } from '../../contracts/meeting/suggestion';
+import { parseMeetingResultUpdates } from '../../contracts/meeting/meetingResult';
+import { hasExactKeys } from '../../contracts/validation';
 import type { SuggestionResult } from '../../core/suggestions/SuggestionProvider';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -37,8 +39,15 @@ export function parseSuggestionResponse(value: unknown): SuggestionResult {
   }
   if (text === undefined) return invalid;
   try {
-    const suggestions = parseSuggestionBatch(JSON.parse(text));
-    return suggestions ? { ok: true, suggestions } : invalid;
+    const parsed: unknown = JSON.parse(text);
+    if (!hasExactKeys(parsed, ['suggestions', 'resultUpdates'])) return invalid;
+    const suggestions = parseSuggestionBatch({
+      suggestions: parsed.suggestions,
+    });
+    const resultUpdates = parseMeetingResultUpdates(parsed.resultUpdates);
+    return suggestions && resultUpdates
+      ? { ok: true, suggestions, resultUpdates }
+      : invalid;
   } catch {
     return invalid;
   }

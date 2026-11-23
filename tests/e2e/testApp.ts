@@ -100,6 +100,20 @@ app.on('session-created', (session) => {
             groundedIn: 'inference',
           },
         ];
+  const successResultUpdates = [
+    {
+      operation: 'upsert',
+      key: 'prazo-aurora',
+      kind: 'question',
+      text: 'Qual é o prazo do projeto Aurora?',
+      groundedIn: 'meeting',
+      evidence: [
+        options.syntheticNative === 'layout'
+          ? { source: 'system', segmentId: 'layout-7' }
+          : { source: 'mic', segmentId: 'synthetic-question' },
+      ],
+    },
+  ];
   // Only this test bootstrap replaces the transport; production has no mock flag.
   const suggestionBootstrap = options.syntheticSuggestions
     ? `
@@ -112,11 +126,12 @@ app.on('session-created', (session) => {
       globalThis.syntheticSuggestionRequests.push(body);
       const outcome = ${JSON.stringify(options.syntheticSuggestionOutcome ?? 'success')};
       if (outcome === 'authentication') return new Response(JSON.stringify({error:'private-error-sentinel'}), {status:401});
-      if (outcome === 'empty') return new Response(JSON.stringify({status:'completed', output:[{type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:JSON.stringify({suggestions:[]})}]}]}), {status:200});
+      if (outcome === 'empty') return new Response(JSON.stringify({status:'completed', output:[{type:'message',role:'assistant',status:'completed',content:[{type:'output_text',text:JSON.stringify({suggestions:[],resultUpdates:[]})}]}]}), {status:200});
       const suggestions = ${JSON.stringify(successCards)};
+      const resultUpdates = ${JSON.stringify(successResultUpdates)};
       return new Response(JSON.stringify({status:'completed', output:[{
         type:'message', role:'assistant', status:'completed', content:[{
-          type:'output_text', text:JSON.stringify({suggestions})
+          type:'output_text', text:JSON.stringify({suggestions,resultUpdates})
         }]
       }]}), {status:200});
     };

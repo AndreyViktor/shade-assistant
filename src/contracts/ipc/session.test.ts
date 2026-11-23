@@ -5,23 +5,23 @@ const options = {
   mode: 'demo',
   consent: { capture: false, context: false, remoteAudio: false },
 };
-const start = { version: 8, action: 'start', options };
+const start = { version: 9, action: 'start', options };
 describe('strict session contract', () => {
   it('accepts the versioned allowlist and snapshots', () => {
     expect(parseSessionRequest(start)).toEqual(start);
     const dismiss = {
-      version: 8,
+      version: 9,
       action: 'dismiss-suggestion',
       id: 'demo-1-2',
     };
     expect(parseSessionRequest(dismiss)).toEqual(dismiss);
     for (const action of ['read', 'pause', 'resume', 'stop'])
-      expect(parseSessionRequest({ version: 8, action })).toEqual({
-        version: 8,
+      expect(parseSessionRequest({ version: 9, action })).toEqual({
+        version: 9,
         action,
       });
     const result = {
-      version: 8,
+      version: 9,
       ok: true,
       demo: emptyDemo(),
       local: null,
@@ -31,16 +31,17 @@ describe('strict session contract', () => {
         status: 'disabled',
         diagnostics: null,
       },
+      results: { items: [] },
       session: { phase: 'running', ...options },
     };
     expect(parseSessionResult(result)).toEqual(result);
     expect(
-      parseSessionResult({ version: 8, ok: false, code: 'TIMEOUT' }),
-    ).toEqual({ version: 8, ok: false, code: 'TIMEOUT' });
+      parseSessionResult({ version: 9, ok: false, code: 'TIMEOUT' }),
+    ).toEqual({ version: 9, ok: false, code: 'TIMEOUT' });
   });
   it('validates Apple local source, locale and consent configuration', () => {
     const appleStart = {
-      version: 8,
+      version: 9,
       action: 'start',
       options: {
         mode: 'apple-local',
@@ -72,11 +73,11 @@ describe('strict session contract', () => {
     { ...start, version: 99 },
     { ...start, version: 1 },
     { ...start, version: 7 },
-    { version: 8, action: 'dismiss-suggestion' },
-    { version: 8, action: 'dismiss-suggestion', id: '' },
-    { version: 8, action: 'dismiss-suggestion', id: 'x'.repeat(81) },
-    { version: 8, action: 'dismiss-suggestion', id: 1 },
-    { version: 8, action: 'dismiss-suggestion', id: 'ok', extra: true },
+    { version: 9, action: 'dismiss-suggestion' },
+    { version: 9, action: 'dismiss-suggestion', id: '' },
+    { version: 9, action: 'dismiss-suggestion', id: 'x'.repeat(81) },
+    { version: 9, action: 'dismiss-suggestion', id: 1 },
+    { version: 9, action: 'dismiss-suggestion', id: 'ok', extra: true },
     { ...start, action: 'send' },
     { ...start, options: { ...options, mode: 'unknown' } },
     { ...start, options: { ...options, consent: { capture: true } } },
@@ -92,7 +93,7 @@ describe('strict session contract', () => {
         consent: { ...options.consent, screenshot: true },
       },
     },
-    { version: 8, action: 'stop', extra: true },
+    { version: 9, action: 'stop', extra: true },
   ])('rejects malformed requests %#', (request) => {
     expect(parseSessionRequest(request)).toBeNull();
   });
@@ -113,21 +114,21 @@ describe('strict session contract', () => {
     },
     { version: 1, ok: false, code: 'TIMEOUT' },
     { version: 99, ok: true, session: { phase: 'idle', ...options } },
-    { version: 8, ok: true, session: { phase: 'unknown', ...options } },
+    { version: 9, ok: true, session: { phase: 'unknown', ...options } },
     {
-      version: 8,
+      version: 9,
       ok: true,
       session: { phase: 'idle', ...options, secret: 'synthetic' },
     },
     {
-      version: 8,
+      version: 9,
       ok: true,
       session: { phase: 'idle', ...options },
       extra: true,
     },
   ])('rejects malformed replies %#', (reply) => {
     expect(parseSessionResult(reply)).toEqual({
-      version: 8,
+      version: 9,
       ok: false,
       code: 'INVALID_RESPONSE',
     });
@@ -142,7 +143,7 @@ it('requires explicit model and request budget with context consent; rejects old
     consent: { capture: true, context: true, remoteAudio: false },
     suggestions: { model: 'synthetic-model', maxRequests: 1 },
   };
-  const request = { version: 8, action: 'start', options };
+  const request = { version: 9, action: 'start', options };
   expect(parseSessionRequest(request)).toEqual(request);
   expect(parseSessionRequest({ ...request, version: 3 })).toBeNull();
   expect(parseSessionRequest({ ...request, version: 4 })).toBeNull();
@@ -152,7 +153,7 @@ it('requires explicit model and request budget with context consent; rejects old
   expect(
     parseSessionResult({ version: 5, ok: false, code: 'TIMEOUT' }),
   ).toEqual({
-    version: 8,
+    version: 9,
     ok: false,
     code: 'INVALID_RESPONSE',
   });
@@ -177,8 +178,8 @@ it('requires explicit model and request budget with context consent; rejects old
     }),
   ).toBeNull();
   expect(
-    parseSessionRequest({ version: 8, action: 'revoke-suggestions' }),
-  ).toEqual({ version: 8, action: 'revoke-suggestions' });
+    parseSessionRequest({ version: 9, action: 'revoke-suggestions' }),
+  ).toEqual({ version: 9, action: 'revoke-suggestions' });
 });
 
 it('validates optional context at the session boundary and requires consent', () => {
@@ -190,7 +191,7 @@ it('validates optional context at the session boundary and requires consent', ()
     suggestions: { model: 'synthetic-model', maxRequests: 1 },
   };
   const start = (userContext: unknown, context = true) => ({
-    version: 8,
+    version: 9,
     action: 'start',
     options: {
       ...options,
@@ -222,7 +223,7 @@ it('validates optional context at the session boundary and requires consent', ()
     expect(parseSessionRequest(start(userContext, false))).toBeNull();
   }
   expect(parseSessionRequest(start(' \n '))).toEqual({
-    version: 8,
+    version: 9,
     action: 'start',
     options,
   });
@@ -232,7 +233,7 @@ it('validates optional context at the session boundary and requires consent', ()
   expect(parseSessionRequest({ ...start('tema'), version: 6 })).toBeNull();
   expect(
     parseSessionResult({ version: 6, ok: false, code: 'TIMEOUT' }),
-  ).toEqual({ version: 8, ok: false, code: 'INVALID_RESPONSE' });
+  ).toEqual({ version: 9, ok: false, code: 'INVALID_RESPONSE' });
   for (const mode of ['demo', 'openai-stt']) {
     expect(
       parseSessionRequest({

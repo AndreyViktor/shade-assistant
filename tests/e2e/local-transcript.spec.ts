@@ -22,7 +22,7 @@ test('reconciles synthetic revisions and echo through the provider, IPC and rend
       .click();
     const read = () =>
       page.evaluate(() =>
-        window.meetingCopilot.session({ version: 8, action: 'read' }),
+        window.meetingCopilot.session({ version: 9, action: 'read' }),
       );
     const ids = async () => {
       const snapshot = await read();
@@ -32,12 +32,14 @@ test('reconciles synthetic revisions and echo through the provider, IPC and rend
     };
     await expect.poll(ids).toEqual(reconciledReplayIds);
     const log = page.getByRole('log', { name: 'Falas recentes' });
-    await expect(log.locator('.transcript-segment')).toHaveCount(7);
+    await expect(log.locator('.transcript-segment')).toHaveCount(
+      reconciledReplayIds.length,
+    );
     await expect(log.locator('.transcript-segment').first()).toContainText(
       'Sistema · pt-BR · Final',
     );
     await expect(log.locator('.transcript-segment').first()).toContainText(
-      '00:01.000–00:02.000',
+      '00:01.000–00:02.500',
     );
     await expect(log.getByText('Sim.', { exact: true })).toHaveCount(2);
     await expect(log.getByText('Hipótese atrasada')).toHaveCount(0);
@@ -116,7 +118,7 @@ test('synthetic native subprocess → real provider → IPC → live transcript 
     ).toBeVisible();
     const read = () =>
       page.evaluate(() =>
-        window.meetingCopilot.session({ version: 8, action: 'read' }),
+        window.meetingCopilot.session({ version: 9, action: 'read' }),
       );
     const paused = await read();
     await page.waitForTimeout(1200);

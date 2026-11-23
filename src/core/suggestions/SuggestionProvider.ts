@@ -1,10 +1,15 @@
 import type { SuggestionContent } from '../../contracts/meeting/suggestion';
 import type { MeetingContext } from '../meeting/ContextManager';
 import type { SuggestionFailure } from '../../contracts/meeting/suggestionDiagnostics';
+import type {
+  MeetingResultItem,
+  MeetingResultUpdate,
+} from '../../contracts/meeting/meetingResult';
 export type { SuggestionFailure } from '../../contracts/meeting/suggestionDiagnostics';
 
 export type SuggestionRequest = {
   context: MeetingContext;
+  existingResults?: MeetingResultItem[];
   userContext?: string;
   language: 'pt-BR' | 'en-US';
   signal: AbortSignal;
@@ -12,7 +17,11 @@ export type SuggestionRequest = {
   onHttpResponse?: (status: number) => void;
 };
 export type SuggestionResult =
-  | { ok: true; suggestions: SuggestionContent[] }
+  | {
+      ok: true;
+      suggestions: SuggestionContent[];
+      resultUpdates?: MeetingResultUpdate[];
+    }
   | { ok: false; code: SuggestionFailure };
 
 /** Returns safe failures instead of transport errors. Host owns consent, budget,

@@ -20,7 +20,7 @@ function SessionControls({
 }
 const consent = { capture: false, context: false, remoteAudio: false };
 const reply = (phase: string) => ({
-  version: 8,
+  version: 9,
   ok: true,
   demo: emptyDemo(),
   local: null,
@@ -30,6 +30,7 @@ const reply = (phase: string) => ({
     status: 'disabled',
     diagnostics: null,
   },
+  results: { items: [] },
   session: { mode: 'demo', phase, consent },
 });
 afterEach(() => {
@@ -59,7 +60,7 @@ describe('session controls', () => {
     expect(screen.getByRole('alertdialog')).toHaveTextContent('microfone');
     expect(session).toHaveBeenCalledTimes(1);
     session.mockResolvedValue({
-      version: 8,
+      version: 9,
       ok: true,
       demo: emptyDemo(),
       local: null,
@@ -80,7 +81,7 @@ describe('session controls', () => {
     );
     await screen.findByText('Em andamento');
     expect(session).toHaveBeenLastCalledWith({
-      version: 8,
+      version: 9,
       action: 'start',
       options: {
         mode: 'apple-local',
@@ -102,7 +103,7 @@ describe('session controls', () => {
     vi.stubGlobal('meetingCopilot', { session });
     render(<SessionControls />);
     await screen.findByText('Em andamento');
-    session.mockResolvedValue({ version: 8, ok: false, code: 'TIMEOUT' });
+    session.mockResolvedValue({ version: 9, ok: false, code: 'TIMEOUT' });
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     await screen.findByRole('alert');
@@ -154,6 +155,10 @@ it('requires an explicit text/cost opt-in and valid model/budget before sending 
   const checkbox = screen.getByRole('checkbox');
   expect(checkbox).not.toBeChecked();
   fireEvent.click(checkbox);
+  expect(
+    screen.getByText(/trechos finais, um resumo e os resultados atuais/),
+  ).toBeVisible();
+  expect(screen.getByText(/sugestões e os resultados ao vivo/)).toBeVisible();
   const confirm = screen.getByRole('button', { name: 'Iniciar com sugestões' });
   expect(confirm).toBeDisabled();
   expect(
@@ -166,7 +171,7 @@ it('requires an explicit text/cost opt-in and valid model/budget before sending 
   fireEvent.click(confirm);
   await waitFor(() =>
     expect(session).toHaveBeenLastCalledWith({
-      version: 8,
+      version: 9,
       action: 'start',
       options: {
         mode: 'apple-local',
@@ -220,7 +225,7 @@ it('renders real-session cards separately from DEMO and exposes revocation', asy
   fireEvent.click(screen.getByRole('button', { name: 'Desativar sugestões' }));
   await waitFor(() =>
     expect(session).toHaveBeenLastCalledWith({
-      version: 8,
+      version: 9,
       action: 'revoke-suggestions',
     }),
   );
@@ -241,7 +246,7 @@ it('loads the persisted source on startup and still requires capture confirmatio
   render(<SessionControls />);
   await screen.findByText('Pronta para iniciar');
   expect(session).toHaveBeenCalledExactlyOnceWith({
-    version: 8,
+    version: 9,
     action: 'read',
   });
   fireEvent.click(
@@ -253,7 +258,7 @@ it('loads the persisted source on startup and still requires capture confirmatio
   fireEvent.click(screen.getByRole('button', { name: 'Iniciar transcrição' }));
   await waitFor(() =>
     expect(session).toHaveBeenLastCalledWith({
-      version: 8,
+      version: 9,
       action: 'start',
       options: {
         mode: 'apple-local',

@@ -130,17 +130,19 @@ export class OpenAISuggestionProvider implements SuggestionProvider {
       const context = {
         recent: request.context.recent
           .filter((item) => item.type === 'final')
-          .map(({ source, locale, startMs, endMs, text }) => ({
+          .map(({ source, locale, segmentId, startMs, endMs, text }) => ({
             source,
             locale,
+            segmentId,
             startMs,
             endMs,
             text,
           })),
         summary: request.context.summary.map(
-          ({ source, locale, startMs, endMs, text, truncated }) => ({
+          ({ source, locale, segmentId, startMs, endMs, text, truncated }) => ({
             source,
             locale,
+            segmentId,
             startMs,
             endMs,
             text,
@@ -151,16 +153,31 @@ export class OpenAISuggestionProvider implements SuggestionProvider {
       const serialize = () =>
         JSON.stringify({
           ...context,
+          existingResults: (request.existingResults ?? []).map(
+            ({ key, kind, text, groundedIn, evidence }) => ({
+              key,
+              kind,
+              text,
+              groundedIn,
+              evidence: evidence.map(
+                ({ source, segmentId, startMs, endMs }) => ({
+                  source,
+                  segmentId,
+                  startMs,
+                  endMs,
+                }),
+              ),
+            }),
+          ),
           ...(userContext ? { userContext } : {}),
         });
       const exceedsLimit = (input: string) =>
         new TextEncoder().encode(input).byteLength >
         DEFAULT_CONTEXT_LIMITS.maxEstimatedTokens;
       let input = serialize();
-      // Make room for optional context within the existing payload budget.
+      // Make room for optional/current result context within the payload budget.
       // Preserve the newest final; older lossy history is discarded first.
       while (
-        userContext &&
         exceedsLimit(input) &&
         (context.summary.length > 0 || context.recent.length > 1)
       ) {
@@ -170,7 +187,7 @@ export class OpenAISuggestionProvider implements SuggestionProvider {
       }
       if (exceedsLimit(input)) return { ok: false, code: 'invalid-request' };
       if (context.recent.length === 0 && context.summary.length === 0)
-        return { ok: true, suggestions: [] };
+        return { ok: true, suggestions: [], resultUpdates: [] };
       let key: string | null;
       try {
         key = await this.options.getApiKey();

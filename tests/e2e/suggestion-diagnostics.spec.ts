@@ -65,7 +65,7 @@ for (const outcome of ['authentication', 'empty'] as const) {
       const publicState = await page.evaluate(async () => ({
         settings: await window.meetingCopilot.getSettings(),
         session: await window.meetingCopilot.session({
-          version: 8,
+          version: 9,
           action: 'read',
         }),
         storage: { ...localStorage },
@@ -96,7 +96,7 @@ for (const outcome of ['authentication', 'empty'] as const) {
       ).toHaveCount(0);
       expect(
         await page.evaluate(() =>
-          window.meetingCopilot.session({ version: 8, action: 'read' }),
+          window.meetingCopilot.session({ version: 9, action: 'read' }),
         ),
       ).toMatchObject({
         suggestions: { diagnostics: null, status: 'disabled' },

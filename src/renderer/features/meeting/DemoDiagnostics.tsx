@@ -1,4 +1,5 @@
 import type { useMeetingSession } from './useMeetingSession';
+import { SESSION_IPC_VERSION } from '../../../contracts/ipc/session';
 import { DemoPreview } from './DemoPreview';
 
 export function DemoDiagnostics({
@@ -41,7 +42,7 @@ export function DemoDiagnostics({
             disabled={busy || !canStart}
             onClick={() => {
               void command({
-                version: 8,
+                version: SESSION_IPC_VERSION,
                 action: 'start',
                 options: {
                   mode: 'demo',
@@ -61,7 +62,7 @@ export function DemoDiagnostics({
               disabled={busy}
               onClick={() => {
                 void command({
-                  version: 8,
+                  version: SESSION_IPC_VERSION,
                   action: session.phase === 'paused' ? 'resume' : 'pause',
                 });
               }}
@@ -73,7 +74,10 @@ export function DemoDiagnostics({
             <button
               disabled={busy}
               onClick={() => {
-                void command({ version: 8, action: 'stop' });
+                void command({
+                  version: SESSION_IPC_VERSION,
+                  action: 'stop',
+                });
               }}
             >
               Parar
@@ -86,7 +90,11 @@ export function DemoDiagnostics({
             phase={session.phase}
             busy={busy}
             onDismiss={(id) => {
-              void command({ version: 8, action: 'dismiss-suggestion', id });
+              void command({
+                version: SESSION_IPC_VERSION,
+                action: 'dismiss-suggestion',
+                id,
+              });
             }}
           />
         )}

@@ -9,6 +9,8 @@ import type {
   TranscriptionLocale,
 } from '../../../contracts/native/protocol';
 import type { useMeetingSession } from './useMeetingSession';
+import { StructuredMeetingResults } from './StructuredMeetingResults';
+import { SESSION_IPC_VERSION } from '../../../contracts/ipc/session';
 
 type SourceChoice = Preferences['audioSource'];
 
@@ -40,8 +42,16 @@ export function SessionControls({
   available?: boolean;
   appError?: string;
 }) {
-  const { session, local, suggestions, busy, error, preferences, command } =
-    meeting;
+  const {
+    session,
+    local,
+    suggestions,
+    results,
+    busy,
+    error,
+    preferences,
+    command,
+  } = meeting;
   const locale: TranscriptionLocale =
     (savedPreferences ?? preferences)?.language === 'en-US' ? 'en-US' : 'pt-BR';
   const source = (savedPreferences ?? preferences)?.audioSource ?? 'both';
@@ -69,7 +79,7 @@ export function SessionControls({
   function confirmLocalConsent(authorization?: SuggestionAuthorization): void {
     setConfirming(false);
     void command({
-      version: 8,
+      version: SESSION_IPC_VERSION,
       action: 'start',
       options: {
         mode: 'apple-local',
@@ -101,7 +111,7 @@ export function SessionControls({
         <button
           disabled={busy}
           onClick={() => {
-            void command({ version: 8, action: 'stop' });
+            void command({ version: SESSION_IPC_VERSION, action: 'stop' });
           }}
         >
           Parar DEMO
@@ -134,7 +144,10 @@ export function SessionControls({
             <button
               disabled={busy}
               onClick={() => {
-                void command({ version: 8, action: 'pause' });
+                void command({
+                  version: SESSION_IPC_VERSION,
+                  action: 'pause',
+                });
               }}
             >
               Pausar
@@ -144,7 +157,10 @@ export function SessionControls({
             <button
               disabled={busy}
               onClick={() => {
-                void command({ version: 8, action: 'resume' });
+                void command({
+                  version: SESSION_IPC_VERSION,
+                  action: 'resume',
+                });
               }}
             >
               Retomar
@@ -156,7 +172,10 @@ export function SessionControls({
             <button
               disabled={busy}
               onClick={() => {
-                void command({ version: 8, action: 'stop' });
+                void command({
+                  version: SESSION_IPC_VERSION,
+                  action: 'stop',
+                });
               }}
             >
               Parar
@@ -196,13 +215,14 @@ export function SessionControls({
           )}
           {localActive && suggestions.status !== 'disabled' ? (
             <>
+              <StructuredMeetingResults snapshot={results} />
               <SuggestionCards
                 demo={false}
                 suggestions={suggestions.items}
                 busy={busy}
                 onDismiss={(id) => {
                   void command({
-                    version: 8,
+                    version: SESSION_IPC_VERSION,
                     action: 'dismiss-suggestion',
                     id,
                   });
@@ -216,7 +236,10 @@ export function SessionControls({
               <button
                 disabled={busy}
                 onClick={() => {
-                  void command({ version: 8, action: 'revoke-suggestions' });
+                  void command({
+                    version: SESSION_IPC_VERSION,
+                    action: 'revoke-suggestions',
+                  });
                 }}
               >
                 Desativar sugestões
@@ -224,10 +247,10 @@ export function SessionControls({
             </>
           ) : (
             <>
-              <h3>Sugestões</h3>
+              <h3>Assistência</h3>
               <p>
-                Sugestões desativadas. A transcrição continua disponível neste
-                painel.
+                Sugestões e resultados ao vivo desativados. A transcrição
+                continua disponível neste painel.
               </p>
             </>
           )}

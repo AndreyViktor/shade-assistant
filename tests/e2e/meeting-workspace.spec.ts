@@ -27,8 +27,11 @@ for (const empty of [false, true]) {
       const assistance = page.getByRole('region', {
         name: 'Assistência da reunião',
       });
-      const cards = assistance.getByRole('article');
-      const cardList = assistance.getByRole('list', {
+      const suggestionRegion = assistance.getByRole('region', {
+        name: 'Sugestões da reunião',
+      });
+      const cards = suggestionRegion.getByRole('article');
+      const cardList = suggestionRegion.getByRole('list', {
         name: 'Lista rolável de cartões da reunião',
       });
       await expect(log).toBeVisible();
@@ -43,7 +46,7 @@ for (const empty of [false, true]) {
       } else await expect(log.locator('.transcript-segment')).toHaveCount(8);
       const read = () =>
         page.evaluate(() =>
-          window.meetingCopilot.session({ version: 8, action: 'read' }),
+          window.meetingCopilot.session({ version: 9, action: 'read' }),
         );
       const before = await read();
       for (const [width, height] of [

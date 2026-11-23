@@ -43,7 +43,7 @@ const provider: TranscriptionProvider = {
 const createAppleProvider = vi.fn(() => Promise.resolve(provider));
 const requestMicrophoneAccess = vi.fn(() => Promise.resolve(true));
 const demoStart = {
-  version: 8,
+  version: 9,
   action: 'start',
   options: {
     mode: 'demo',
@@ -51,7 +51,7 @@ const demoStart = {
   },
 } satisfies SessionRequest;
 const appleStart = {
-  version: 8,
+  version: 9,
   action: 'start',
   options: {
     mode: 'apple-local',
@@ -92,7 +92,7 @@ function setup(
 }
 
 async function read(call: (request: unknown) => unknown) {
-  return parseSessionResult(await call({ version: 8, action: 'read' }));
+  return parseSessionResult(await call({ version: 9, action: 'read' }));
 }
 
 beforeEach(() => {
@@ -113,12 +113,12 @@ describe('session main boundary and provider selection', () => {
       ok: true,
       demo: { transcript: { sequence: 2, source: 'system' }, suggestions: [] },
     });
-    await call({ version: 8, action: 'pause' });
+    await call({ version: 9, action: 'pause' });
     const paused = await read(call);
     vi.advanceTimersByTime(10000);
     expect(await read(call)).toEqual(paused);
-    await call({ version: 8, action: 'resume' });
-    await call({ version: 8, action: 'stop' });
+    await call({ version: 9, action: 'resume' });
+    await call({ version: 9, action: 'stop' });
     expect(await read(call)).toMatchObject({
       ok: true,
       session: { phase: 'stopped', mode: 'demo' },
@@ -145,15 +145,15 @@ describe('session main boundary and provider selection', () => {
     expect(startCall?.[0].sessionId).toMatch(/^[a-f0-9]{32}$/);
     expect(startCall?.[1]).toEqual(expect.any(Function));
     expect(startCall?.[2]).toBeInstanceOf(AbortSignal);
-    await call({ version: 8, action: 'pause' });
+    await call({ version: 9, action: 'pause' });
     expect(pauseMock.mock.calls).toHaveLength(1);
     expect(await read(call)).toMatchObject({
       ok: true,
       session: { phase: 'paused', mode: 'apple-local' },
     });
-    await call({ version: 8, action: 'resume' });
+    await call({ version: 9, action: 'resume' });
     expect(resumeMock.mock.calls).toHaveLength(1);
-    await call({ version: 8, action: 'stop' });
+    await call({ version: 9, action: 'stop' });
     expect(stopMock.mock.calls).toHaveLength(1);
     expect(await read(call)).toMatchObject({
       ok: true,
@@ -195,7 +195,7 @@ describe('session main boundary and provider selection', () => {
     });
     expect(
       await call({
-        version: 8,
+        version: 9,
         action: 'start',
         options: {
           mode: 'openai-stt',
@@ -358,11 +358,11 @@ describe('local transcript delivery', () => {
     expect(await read(call)).toMatchObject({
       local: { segments: [speech, { ...speech, source: 'system' }] },
     });
-    await call({ version: 8, action: 'pause' });
+    await call({ version: 9, action: 'pause' });
     emit({ ...speech, seq: 2, segmentId: 'paused' });
     const paused = await read(call);
     expect(paused.ok && paused.local?.segments).toHaveLength(2);
-    await call({ version: 8, action: 'resume' });
+    await call({ version: 9, action: 'resume' });
     emit({
       version: 1,
       sessionId: config.sessionId,
@@ -382,7 +382,7 @@ describe('local transcript delivery', () => {
     });
     emit({ ...speech, seq: 4 });
     expect(await read(call)).toMatchObject({ local: { segments: [] } });
-    await call({ version: 8, action: 'stop' });
+    await call({ version: 9, action: 'stop' });
     expect(await read(call)).toMatchObject({ local: null });
     await call(appleStart);
     emit({ ...speech, seq: 5 });
@@ -415,7 +415,7 @@ it('does not revive a stopped session when provider creation completes late', as
   const { call } = setup();
   const starting = call(appleStart);
   await vi.waitFor(() => expect(createAppleProvider).toHaveBeenCalledOnce());
-  await call({ version: 8, action: 'stop' });
+  await call({ version: 9, action: 'stop' });
   resolveProvider(provider);
   expect(await starting).toMatchObject({
     ok: false,
@@ -481,6 +481,18 @@ it('connects native events to real Responses serialization with synthetic creden
                       groundedIn: 'inference',
                     },
                   ],
+                  resultUpdates: [
+                    {
+                      operation: 'upsert',
+                      key: 'prazo-aurora',
+                      kind: 'question',
+                      text: 'Qual é o prazo do projeto Aurora?',
+                      groundedIn: 'meeting',
+                      evidence: [
+                        { source: 'mic', segmentId: 'synthetic-question' },
+                      ],
+                    },
+                  ],
                 }),
               },
             ],
@@ -503,7 +515,7 @@ it('connects native events to real Responses serialization with synthetic creden
   emitQuestion();
   await vi.advanceTimersByTimeAsync(1000);
   expect(getApiKey).not.toHaveBeenCalled();
-  await call({ version: 8, action: 'stop' });
+  await call({ version: 9, action: 'stop' });
   await call(withSuggestions);
   emitQuestion();
   await vi.advanceTimersByTimeAsync(2_000);
@@ -514,10 +526,29 @@ it('connects native events to real Responses serialization with synthetic creden
   const body = transport.mock.calls[0]?.[1]?.body;
   expect(typeof body).toBe('string');
   expect(body).toContain('Qual é o prazo do projeto fictício Aurora?');
-  expect(body).not.toMatch(/sessionId|segmentId|input_audio|input_image/);
+  expect(body).not.toMatch(/sessionId|input_audio|input_image/);
+  expect(body).toContain('segmentId');
   expect(body).toContain(withSuggestions.options.suggestions.userContext);
   expect(await read(call)).toMatchObject({
     suggestions: { status: 'exhausted', items: [{ title: 'Prazo' }] },
+    results: {
+      items: [
+        {
+          key: 'prazo-aurora',
+          kind: 'question',
+          text: 'Qual é o prazo do projeto Aurora?',
+          evidence: [
+            {
+              source: 'mic',
+              segmentId: 'synthetic-question',
+              startMs: 0,
+              endMs: 1000,
+              text: 'Qual é o prazo do projeto fictício Aurora?',
+            },
+          ],
+        },
+      ],
+    },
   });
   await vi.advanceTimersByTimeAsync(60000);
   expect(await read(call)).toMatchObject({
@@ -528,10 +559,11 @@ it('connects native events to real Responses serialization with synthetic creden
   });
   expect(transport).toHaveBeenCalledOnce();
   expect(JSON.stringify(await read(call))).not.toContain('synthetic-key');
-  await call({ version: 8, action: 'revoke-suggestions' });
+  await call({ version: 9, action: 'revoke-suggestions' });
   expect(await read(call)).toMatchObject({
     session: { phase: 'running', consent: { context: false, capture: true } },
     suggestions: { status: 'disabled', items: [] },
+    results: { items: [] },
   });
   expect(stopMock).toHaveBeenCalledTimes(1);
   expect(JSON.stringify(await read(call))).not.toContain(
@@ -569,7 +601,7 @@ it.each(['pause', 'stop', 'revoke-suggestions', 'reload', 'failure'] as const)(
         ([name]) => name === 'did-start-loading',
       )?.[1]();
     else if (action === 'failure') startMock.mock.calls.at(-1)?.[3]?.();
-    else await call({ version: 8, action });
+    else await call({ version: 9, action });
     resolve('synthetic-key');
     await vi.advanceTimersByTimeAsync(0);
     expect(transport).not.toHaveBeenCalled();
@@ -610,7 +642,7 @@ it('does not start capture if stop arrives during the mocked OS permission promp
   );
   const { call } = setup();
   const starting = call(appleStart);
-  await call({ version: 8, action: 'stop' });
+  await call({ version: 9, action: 'stop' });
   finish(true);
   expect(await starting).toMatchObject({ ok: false });
   expect(createAppleProvider).not.toHaveBeenCalled();

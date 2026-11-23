@@ -1,9 +1,10 @@
 import {
   SESSION_CHANNEL,
+  SESSION_IPC_VERSION,
   parseSessionRequest,
   parseSessionResult,
 } from '../contracts/ipc/session';
-import type { SessionRequest } from '../contracts/ipc/session';
+import type { SessionRequest, SessionResult } from '../contracts/ipc/session';
 import {
   APP_STATUS_CHANNEL,
   IPC_VERSION,
@@ -72,11 +73,11 @@ export function createMeetingCopilotApi(invoke: Invoke): MeetingCopilotApi {
   }
 
   return Object.freeze({
-    async session(...args: unknown[]) {
+    async session(...args: unknown[]): Promise<SessionResult> {
       const request = args.length === 1 ? parseSessionRequest(args[0]) : null;
       if (!request)
         return {
-          version: 8 as const,
+          version: SESSION_IPC_VERSION,
           ok: false as const,
           code: 'INVALID_REQUEST' as const,
         };

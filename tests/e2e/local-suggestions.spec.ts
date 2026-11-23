@@ -42,7 +42,11 @@ for (const { consent, model } of [
         await expect(
           page.getByRole('combobox', { name: 'Modelo para as sugestões' }),
         ).toHaveCount(0);
-        await expect(page.getByRole('textbox')).toHaveCount(0);
+        await expect(
+          page.getByRole('textbox', {
+            name: 'Contexto da reunião (opcional)',
+          }),
+        ).toBeVisible();
         await expect(page.getByRole('alertdialog')).toContainText(
           model === 'gpt-5.4' ? 'GPT-5.4 —' : 'GPT-5.4 mini',
         );
@@ -62,23 +66,37 @@ for (const { consent, model } of [
           .getByText('Qual é o prazo do projeto fictício Aurora?'),
       ).toBeVisible();
       const cards = page.getByRole('region', { name: 'Sugestões da reunião' });
+      const results = page.getByRole('region', {
+        name: 'Resultados estruturados da reunião',
+      });
       if (consent) {
+        await expect(results.getByRole('article')).toHaveCount(1);
+        await expect(results).toContainText(
+          'Qual é o prazo do projeto Aurora?',
+        );
+        await expect(results).toContainText('Fato da reunião');
+        await results.getByText('1 fala de suporte').click();
+        await expect(results).toContainText(
+          'Qual é o prazo do projeto fictício Aurora?',
+        );
+        await expect(results).toContainText('00:00–00:01');
         await expect(cards.getByRole('article')).toHaveCount(1);
         await expect(cards).toContainText('Prazo sintético Aurora');
         await expect(cards).not.toContainText('DEMO');
-        await expect(cards).toContainText('sem expiração por tempo');
+        await expect(cards).toContainText('até descarte ou limpeza');
         // Advance the main clock only: no capture, network or real-time wait.
         await app.evaluate(() => {
           const now = Date.now.bind(Date);
           Date.now = () => now() + 60000;
         });
         const retained = await page.evaluate(() =>
-          window.meetingCopilot.session({ version: 8, action: 'read' }),
+          window.meetingCopilot.session({ version: 9, action: 'read' }),
         );
         expect(retained).toMatchObject({
           suggestions: {
             items: [{ title: 'Prazo sintético Aurora', expiresAt: null }],
           },
+          results: { items: [{ key: 'prazo-aurora' }] },
         });
         await expect(cards.getByRole('article')).toHaveCount(1);
         await expect(
@@ -124,6 +142,7 @@ for (const { consent, model } of [
         }
         await page.getByRole('button', { name: 'Pausar' }).click();
         await expect(cards.getByRole('article')).toHaveCount(0);
+        await expect(results.getByRole('article')).toHaveCount(1);
         await page
           .getByRole('button', { name: 'Preferências', exact: true })
           .click();
@@ -131,10 +150,12 @@ for (const { consent, model } of [
         await page.getByRole('button', { name: 'Voltar ao painel' }).click();
         await page.getByRole('button', { name: 'Retomar' }).click();
         await expect(cards.getByRole('article')).toHaveCount(0);
+        await expect(results.getByRole('article')).toHaveCount(1);
         await page.getByRole('button', { name: 'Desativar sugestões' }).click();
         await expect(cards).toHaveCount(0);
+        await expect(results).toHaveCount(0);
         const snapshot = await page.evaluate(() =>
-          window.meetingCopilot.session({ version: 8, action: 'read' }),
+          window.meetingCopilot.session({ version: 9, action: 'read' }),
         );
         expect(snapshot).toMatchObject({
           session: {
@@ -142,6 +163,7 @@ for (const { consent, model } of [
             consent: { context: false, capture: true },
           },
           suggestions: { status: 'disabled' },
+          results: { items: [] },
         });
       } else {
         await page.waitForTimeout(1200);
@@ -164,18 +186,18 @@ for (const { consent, model } of [
         });
         const body = JSON.stringify(requests[0]);
         expect(body).toContain('Qual é o prazo do projeto fictício Aurora?');
-        expect(body).not.toMatch(
-          /input_audio|input_image|sessionId|segmentId|Bearer/,
-        );
+        expect(body).not.toMatch(/input_audio|input_image|sessionId|Bearer/);
+        expect(body).toContain('segmentId');
       }
       await page.getByRole('button', { name: 'Parar' }).click();
       expect(
         await page.evaluate(() =>
-          window.meetingCopilot.session({ version: 8, action: 'read' }),
+          window.meetingCopilot.session({ version: 9, action: 'read' }),
         ),
       ).toMatchObject({
         local: null,
         suggestions: { items: [], status: 'disabled' },
+        results: { items: [] },
       });
       expect(
         await app.evaluate(

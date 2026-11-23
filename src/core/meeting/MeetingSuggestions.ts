@@ -21,6 +21,8 @@ import type {
   SuggestionAuthorization,
   SuggestionSessionSnapshot,
 } from '../../contracts/meeting/suggestionSession';
+import { MeetingResultStore } from './MeetingResultStore';
+import type { MeetingResultsSnapshot } from '../../contracts/meeting/meetingResult';
 
 export type SuggestionProviderFactory = (
   authorization: SuggestionAuthorization,
@@ -33,6 +35,7 @@ export type SuggestionProviderFactory = (
  */
 export class MeetingSuggestions {
   private readonly context = new ContextManager();
+  private readonly results = new MeetingResultStore();
   private readonly trigger = new TriggerEngine();
   private readonly scheduler: SuggestionScheduler;
   private provider: SuggestionProvider | undefined;
@@ -122,6 +125,8 @@ export class MeetingSuggestions {
       'pt-BR',
       { ttlMs: null },
       true,
+      (updates, context) => this.results.apply(updates, context),
+      () => this.results.snapshot().items,
     );
   }
 
@@ -246,6 +251,7 @@ export class MeetingSuggestions {
     this.lastTrigger = 'none';
     this.hasFinal = false;
     this.lastAttempt = null;
+    this.results.clear();
   }
 
   dismiss(id: string): void {
@@ -282,5 +288,9 @@ export class MeetingSuggestions {
           ? 'exhausted'
           : 'ready',
     };
+  }
+
+  resultSnapshot(): MeetingResultsSnapshot {
+    return this.results.snapshot();
   }
 }

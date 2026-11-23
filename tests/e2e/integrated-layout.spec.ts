@@ -136,7 +136,7 @@ test('active meeting keeps preferences reachable and all panes usable at 200% zo
     });
     const read = () =>
       page.evaluate(() =>
-        window.meetingCopilot.session({ version: 8, action: 'read' }),
+        window.meetingCopilot.session({ version: 9, action: 'read' }),
       );
     await page
       .getByRole('button', { name: 'Iniciar transcrição local' })
@@ -148,8 +148,11 @@ test('active meeting keeps preferences reachable and all panes usable at 200% zo
     const assistance = page.getByRole('region', {
       name: 'Assistência da reunião',
     });
+    const suggestionRegion = assistance.getByRole('region', {
+      name: 'Sugestões da reunião',
+    });
     await expect(log.locator('.transcript-segment')).toHaveCount(8);
-    await expect(assistance.getByRole('article')).toHaveCount(2);
+    await expect(suggestionRegion.getByRole('article')).toHaveCount(8);
     const before = await read();
 
     for (const width of [960, 640]) {
@@ -222,7 +225,24 @@ test('active meeting keeps preferences reachable and all panes usable at 200% zo
       .poll(() => assistance.evaluate((element) => element.scrollTop))
       .toBe(0);
     await expect(
-      assistance.getByRole('article').first().getByRole('heading'),
+      assistance.getByRole('heading', { name: 'Resultados ao vivo' }),
+    ).toBeInViewport({ ratio: 1 });
+    const resultEvidence = assistance.getByText('1 fala de suporte');
+    await page.keyboard.press('Tab');
+    await expect(resultEvidence).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(
+      assistance.getByText('Como estes resultados mudam?'),
+    ).toBeFocused();
+    const suggestionList = suggestionRegion.getByRole('list', {
+      name: 'Lista rolável de cartões da reunião',
+    });
+    await page.keyboard.press('Tab');
+    await expect(suggestionList).toBeFocused();
+    await suggestionList.press('Home');
+    await settleScroll(page);
+    await expect(
+      suggestionRegion.getByRole('article').first().getByRole('heading'),
     ).toBeInViewport({ ratio: 1 });
     await captureWindow(win, page, 'zoom-suggestions-start.png');
     for (const dismiss of await assistance
@@ -307,7 +327,7 @@ test('active meeting keeps preferences reachable and all panes usable at 200% zo
     await page.keyboard.press('Escape');
     await expect(preferences).toBeFocused();
     await page.getByRole('button', { name: 'Pausar', exact: true }).click();
-    await expect(assistance.getByRole('article')).toHaveCount(0);
+    await expect(suggestionRegion.getByRole('article')).toHaveCount(0);
     await captureWindow(win, page, 'zoom-paused.png');
     const paused = await read();
     await preferences.click();

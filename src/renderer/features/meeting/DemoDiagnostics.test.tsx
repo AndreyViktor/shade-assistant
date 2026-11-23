@@ -14,7 +14,7 @@ function renderDemo() {
 }
 const consent = { capture: false, context: false, remoteAudio: false };
 const reply = (phase: string) => ({
-  version: 8,
+  version: 9,
   ok: true,
   demo: emptyDemo(),
   local: null,
@@ -56,7 +56,7 @@ describe('DEMO diagnostics', () => {
         screen.queryByRole('region', { name: 'Roteiro DEMO' }),
       ).not.toBeInTheDocument();
       expect(session).toHaveBeenCalledExactlyOnceWith({
-        version: 8,
+        version: 9,
         action: 'read',
       });
     },
@@ -136,7 +136,7 @@ describe('DEMO diagnostics', () => {
       await Promise.resolve();
     });
     expect(session).toHaveBeenLastCalledWith({
-      version: 8,
+      version: 9,
       action: 'dismiss-suggestion',
       id: card.id,
     });
@@ -287,7 +287,7 @@ describe('DEMO diagnostics', () => {
     renderDemo();
     await screen.findByText('Pronta para iniciar');
     expect(session).toHaveBeenCalledExactlyOnceWith({
-      version: 8,
+      version: 9,
       action: 'read',
     });
     expect(
@@ -297,7 +297,7 @@ describe('DEMO diagnostics', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Iniciar DEMO' }));
     await screen.findByText('Em andamento');
     expect(session).toHaveBeenLastCalledWith({
-      version: 8,
+      version: 9,
       action: 'start',
       options: { mode: 'demo', consent },
     });

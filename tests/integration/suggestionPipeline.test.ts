@@ -65,7 +65,10 @@ it('passes bounded context through interchangeable providers into existing card 
             status: 'completed',
             role: 'assistant',
             content: [
-              { type: 'output_text', text: JSON.stringify({ suggestions }) },
+              {
+                type: 'output_text',
+                text: JSON.stringify({ suggestions, resultUpdates: [] }),
+              },
             ],
           },
         ],

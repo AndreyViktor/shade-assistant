@@ -32,7 +32,11 @@ it('replays synthetic turns through context, triggers and an offline provider, p
         signal,
       });
       // A trigger permits evaluation; it never forces a card or invents content.
-      expect(result).toEqual({ ok: true, suggestions: [] });
+      expect(result).toEqual({
+        ok: true,
+        suggestions: [],
+        resultUpdates: [],
+      });
     }
     return trigger;
   }

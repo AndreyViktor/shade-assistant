@@ -21,6 +21,7 @@ export class MockSuggestionProvider implements SuggestionProvider {
         ? {
             ok: true,
             suggestions: this.suggestions.map((content) => ({ ...content })),
+            resultUpdates: [],
           }
         : { ok: false, code: 'invalid-response' },
     );

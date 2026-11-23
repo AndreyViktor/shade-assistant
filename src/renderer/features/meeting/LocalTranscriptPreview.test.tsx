@@ -18,7 +18,7 @@ const base = {
   timestampMs: 100,
 };
 const reply = (): SessionResult => ({
-  version: 8,
+  version: 9,
   ok: true,
   demo: emptyDemo(),
   session: {
@@ -32,6 +32,7 @@ const reply = (): SessionResult => ({
     status: 'disabled',
     diagnostics: null,
   },
+  results: { items: [] },
   local: {
     failed: false,
     config: { sessionId: 'test', sources: ['mic', 'system'], locale: 'pt-BR' },
