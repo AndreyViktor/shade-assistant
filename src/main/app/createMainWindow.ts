@@ -38,8 +38,13 @@ export async function createMainWindow(): Promise<BrowserWindow> {
       session: windowSession,
       contextIsolation: true,
       nodeIntegration: false,
+      nodeIntegrationInWorker: false,
+      nodeIntegrationInSubFrames: false,
       sandbox: true,
       webSecurity: true,
+      allowRunningInsecureContent: false,
+      experimentalFeatures: false,
+      navigateOnDragDrop: false,
       webviewTag: false,
     },
   });
@@ -51,6 +56,7 @@ export async function createMainWindow(): Promise<BrowserWindow> {
 
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', (event) => event.preventDefault());
+  window.webContents.on('will-redirect', (event) => event.preventDefault());
   window.once('ready-to-show', () => window.show());
   const settings = createSettingsService(window);
   registerSessionIpc(

@@ -1,13 +1,13 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-23. **Marco:** M10 — T061 DONE.
+**Atualizado:** 2026-11-23. **Marco:** T032 DONE.
 
-## Resultado T061
+## Resultado T032
 
-- Catálogo interno fechado oferece modo sem perfil e cinco perfis com objetivo/prioridades. Preferências v4 persistem somente o ID padrão; o diálogo permite override por sessão sob o consentimento existente.
-- IPC v10, core e provider transportam o perfil separado das falas. Prompt e validação impedem tratá-lo como evidência; revogação/parada limpam o estado efêmero. Política em ADR 0028.
-- Recuperação auditou e preservou a árvore interrompida; corrigiu somente fronteiras de teste, tipagem e precisão do novo E2E. `verify` aprovou 943 Vitest, 19 skipped e 19 runner; smoke Electron offline aprovou 30/30, incluindo foco nativo e o novo fluxo de perfis. `git diff --check` aprovado. Evidências em [T061.md](evidence/tasks/T061.md).
+- Electron foi atualizado para 45.4.1; configuração segura da janela, permissões web, navegação/redirect, CSP, preload/IPC, logs, segredos, buffers e dependências receberam auditoria e regressões. Política em ADR 0029.
+- Helper usa bundle ID estável e assinatura direta ad hoc + runtime, sem `--deep` nem entitlements. `verify` aprovou 948 Vitest, 19 skipped, 19 runner e build; Swift aprovou 57, processo real 16 e smoke offline 30/30. `npm audit` final: zero advisories.
+- Ensaio Mac sem captura consultou TCC e validou `Info.plist`/assinatura/lifecycle sem fala, chave ou rede. Developer ID, notarização, Mac limpo e artefato/fuses continuam explicitamente T034/T072. Evidências em [T032.md](evidence/tasks/T032.md).
 
 ## Próximo passo
 
-- Encerrar esta sessão após o commit local T061. Selecionar no máximo uma nova tarefa elegível somente em outra sessão; nenhuma foi iniciada aqui.
+- Encerrar esta sessão após o commit local T032. Nenhuma outra tarefa foi iniciada.
