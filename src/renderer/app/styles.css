@@ -682,6 +682,95 @@ button {
   gap: 8px;
 }
 
+.overlay-mode-picker {
+  min-width: 0;
+  padding: 6px 8px 8px;
+  margin: 0;
+  border: 1px solid #314058;
+  border-radius: 9px;
+}
+
+.overlay-mode-picker legend {
+  padding: 0 5px;
+  color: #b7c4d8;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.overlay-mode-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.overlay-mode-actions button {
+  min-height: 30px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.overlay-mode-actions button[aria-pressed='true'] {
+  color: #081323;
+  background: #b9d4fa;
+  border-color: #b9d4fa;
+  font-weight: 700;
+}
+
+.meeting-workspace-transcript,
+.meeting-workspace-results {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.overlay-mode-compact {
+  gap: 5px;
+}
+
+.overlay-mode-compact .meeting-workspace {
+  min-height: 160px;
+  gap: 6px;
+}
+
+.overlay-mode-compact .local-transcript,
+.overlay-mode-compact .meeting-assistance {
+  padding: 7px;
+  border-radius: 8px;
+}
+
+.overlay-mode-compact .transcript-segment,
+.overlay-mode-compact .suggestion-card,
+.overlay-mode-compact .meeting-result-item {
+  padding: 7px 8px;
+  margin-top: 5px;
+  margin-bottom: 6px;
+}
+
+.app-shell-hidden {
+  max-width: 520px;
+}
+
+.operation-panel:has(.overlay-hidden-summary):not([hidden]) {
+  min-height: 0;
+  height: auto;
+}
+
+.overlay-hidden-summary {
+  align-items: stretch;
+  padding: 10px;
+  border: 1px solid #40516c;
+  border-radius: 12px;
+  background: #101827;
+}
+
+.overlay-hidden-summary .primary-action {
+  align-self: flex-start;
+}
+
+.overlay-limit {
+  margin: 0;
+  color: #9db2ce;
+  font-size: 11px;
+}
+
 .session-toolbar {
   display: flex;
   flex-wrap: wrap;

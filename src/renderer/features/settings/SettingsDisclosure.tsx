@@ -8,10 +8,12 @@ export function SettingsDisclosure({
   onSaved,
   diagnostics,
   connection,
+  showToggle = true,
 }: {
   children?: ReactNode;
   diagnostics?: ReactNode;
   connection?: ReactNode;
+  showToggle?: boolean;
   onSaved?: (preferences: Preferences) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -45,19 +47,21 @@ export function SettingsDisclosure({
     <>
       <div className="operation-panel" hidden={expanded}>
         {children}
-        <div className="settings-disclosure">
-          <button
-            ref={toggle}
-            aria-expanded={expanded}
-            aria-controls="panel-settings"
-            onClick={() => {
-              setVisited(true);
-              setExpanded(true);
-            }}
-          >
-            Preferências
-          </button>
-        </div>
+        {showToggle && (
+          <div className="settings-disclosure">
+            <button
+              ref={toggle}
+              aria-expanded={expanded}
+              aria-controls="panel-settings"
+              onClick={() => {
+                setVisited(true);
+                setExpanded(true);
+              }}
+            >
+              Preferências
+            </button>
+          </div>
+        )}
       </div>
       <div id="panel-settings" hidden={!expanded}>
         <button ref={back} onClick={close}>

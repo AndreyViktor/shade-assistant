@@ -3,7 +3,10 @@ import { TranscriptionDiagnostics } from '../features/meeting/TranscriptionDiagn
 import { SuggestionDiagnosticsPanel } from '../features/suggestions/SuggestionDiagnosticsPanel';
 import { DemoDiagnostics } from '../features/meeting/DemoDiagnostics';
 import type { Preferences } from '../../contracts/settings/preferences';
-import { SessionControls } from '../features/meeting/SessionControls';
+import {
+  SessionControls,
+  type OverlayMode,
+} from '../features/meeting/SessionControls';
 import { SettingsDisclosure } from '../features/settings/SettingsDisclosure';
 import { useEffect, useState } from 'react';
 import { ipcFailure } from '../../contracts/ipc/appStatus';
@@ -13,6 +16,7 @@ export function App() {
   const meeting = useMeetingSession();
   const [preferences, setPreferences] = useState<Preferences | null>(null);
   const [result, setResult] = useState<AppStatusResult | null>(null);
+  const [overlayMode, setOverlayMode] = useState<OverlayMode>('normal');
   useEffect(() => {
     let active = true;
     async function loadStatus() {
@@ -33,8 +37,9 @@ export function App() {
       ? 'Não foi possível verificar o estado do app. Reabra-o.'
       : '';
   return (
-    <main className="app-shell">
+    <main className={`app-shell app-shell-${overlayMode}`}>
       <SettingsDisclosure
+        showToggle={overlayMode !== 'hidden'}
         onSaved={setPreferences}
         connection={
           <SuggestionDiagnosticsPanel snapshot={meeting.suggestions} />
@@ -61,6 +66,8 @@ export function App() {
       >
         <SessionControls
           meeting={meeting}
+          overlayMode={overlayMode}
+          onOverlayModeChange={setOverlayMode}
           savedPreferences={preferences}
           available={result?.ok === true}
           appError={appError}

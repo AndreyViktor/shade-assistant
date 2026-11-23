@@ -1,13 +1,14 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-23. **Marco:** T064 DONE.
+**Atualizado:** 2026-11-23. **Marco:** T067 DONE.
 
-## Resultado T064
+## Resultado parcial T067
 
-- Cartões reais aceitam quatro classificações acessíveis; métricas locais são agregadas, temporárias e exportáveis somente por ação explícita. Nenhuma fala/contexto é persistida ou enviada.
-- `npm run verify` passou: lint, formatação, typecheck, 961 Vitest (19 skipped), 19 testes do runner e build. Playwright focado offline: 3/3; `git diff --check` limpo.
-- Evidência, política e limitações em [T064](evidence/tasks/T064.md) e [ADR 0030](adr/0030-local-suggestion-feedback.md).
+- Os cinco modos efêmeros foram implementados no renderer, sem IPC/persistência; o modo oculto mantém indicador de captura, restauração focada e aviso explícito de que a janela pode aparecer em compartilhamentos.
+- Typecheck, lint, formato, build, 13 testes React focados e smoke Electron offline 1/1 passaram. O smoke foi executado fora do sandbox após autorização explícita do usuário.
+- `npm run verify` passou: lint, formato, typecheck, 962 Vitest (19 skipped), 19 testes do runner e build. Smoke Electron offline 1/1; `git diff --check` limpo.
+- Evidência e limites em [T067](evidence/tasks/T067.md). A exceção fora do sandbox foi autorizada pelo usuário somente para o smoke offline.
 
 ## Próximo passo
 
-- Encerrar a sessão T064 após commit local. Próxima tarefa solicitada: T067, em sessão nova do runner.
+- Encerrar a sessão após o commit local T067; nenhuma outra tarefa foi iniciada.

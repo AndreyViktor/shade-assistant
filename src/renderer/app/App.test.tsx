@@ -146,6 +146,100 @@ describe('App shell', () => {
     ).toBeDisabled();
   });
 
+  it('switches presentation modes without changing the session and restores focus after hiding content', async () => {
+    const session = vi.fn().mockResolvedValue({
+      version: 11,
+      ok: true,
+      demo: emptyDemo(),
+      local: null,
+      suggestions: {
+        items: [],
+        remainingRequests: 1,
+        status: 'ready',
+        diagnostics: null,
+        feedback: emptySuggestionFeedback(),
+      },
+      results: { items: [] },
+      session: {
+        phase: 'running',
+        mode: 'apple-local',
+        consent: { capture: true, context: true, remoteAudio: false },
+      },
+    });
+    vi.stubGlobal('meetingCopilot', {
+      getStatus,
+      getSettings: vi.fn().mockResolvedValue({
+        version: 1,
+        ok: true,
+        settings: {
+          preferences: defaultPreferences('darwin'),
+          credential: 'stored',
+        },
+      }),
+      session,
+    });
+    render(<App />);
+
+    const modes = await screen.findByRole('group', {
+      name: 'Modo do overlay',
+    });
+    expect(
+      within(modes).getByRole('button', { name: 'Normal' }),
+    ).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(within(modes).getByRole('button', { name: 'Compacto' }));
+    expect(
+      screen.getByRole('region', { name: 'Controles da reunião' }),
+    ).toHaveClass('overlay-mode-compact');
+    expect(
+      screen.getByRole('region', { name: 'Transcrição ao vivo' }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole('region', { name: 'Assistência da reunião' }),
+    ).toBeVisible();
+
+    fireEvent.click(
+      within(modes).getByRole('button', { name: 'Só transcrição' }),
+    );
+    expect(
+      screen.getByRole('region', { name: 'Transcrição ao vivo' }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole('region', { name: 'Assistência da reunião' }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(
+      within(modes).getByRole('button', { name: 'Só resultados' }),
+    );
+    expect(
+      screen.queryByRole('region', { name: 'Transcrição ao vivo' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('region', { name: 'Resultados da reunião' }),
+    ).toBeVisible();
+
+    fireEvent.click(within(modes).getByRole('button', { name: 'Compacto' }));
+    fireEvent.click(
+      within(modes).getByRole('button', { name: 'Ocultar conteúdo' }),
+    );
+    expect(
+      screen.getByRole('region', { name: 'Overlay temporariamente oculto' }),
+    ).toHaveTextContent('Captura ativa');
+    expect(screen.queryByText('Preferências')).not.toBeInTheDocument();
+    const restore = screen.getByRole('button', {
+      name: 'Restaurar conteúdo',
+    });
+    expect(restore).toHaveFocus();
+    fireEvent.click(restore);
+    const compact = screen.getByRole('button', { name: 'Compacto' });
+    expect(compact).toHaveAttribute('aria-pressed', 'true');
+    expect(compact).toHaveFocus();
+    expect(session).toHaveBeenCalledExactlyOnceWith({
+      version: 11,
+      action: 'read',
+    });
+  });
+
   it('shows a safe accessible error when the bridge fails', async () => {
     getStatus.mockResolvedValue(ipcFailure('TIMEOUT'));
     render(<App />);
