@@ -1,6 +1,9 @@
 import { ContextManager } from './ContextManager';
 import type { MeetingContext } from './ContextManager';
-import { SuggestionScheduler } from '../suggestions/SuggestionScheduler';
+import {
+  SUGGESTION_DEADLINE,
+  SuggestionScheduler,
+} from '../suggestions/SuggestionScheduler';
 import { TriggerEngine } from '../suggestions/TriggerEngine';
 import type { Trigger } from '../suggestions/TriggerEngine';
 import type {
@@ -73,7 +76,12 @@ export class MeetingSuggestions {
       {
         generate: async (request) => {
           const provider = this.provider;
-          if (!this.authorized() || !provider || this.remaining <= 0)
+          if (
+            !this.authorized() ||
+            !provider ||
+            this.remaining <= 0 ||
+            this.failed
+          )
             return { ok: false, code: 'not-authorized' };
           const videoSegments =
             this.meetingProfile === 'video-fact-check'
@@ -112,7 +120,12 @@ export class MeetingSuggestions {
             generation === this.generation && this.lastAttempt === attempt;
           const cancel = () => {
             if (!current()) return;
-            attempt.result = 'cancelled';
+            const timedOut = request.signal.reason === SUGGESTION_DEADLINE;
+            attempt.result = timedOut ? 'timeout' : 'cancelled';
+            if (timedOut) {
+              this.failed = true;
+              this.scheduler.discardPending();
+            }
             attempt.durationMs = Math.max(0, Date.now() - attempt.startedAt);
           };
           request.signal.addEventListener('abort', cancel, { once: true });
@@ -148,6 +161,7 @@ export class MeetingSuggestions {
           }
           if (current() && !request.signal.aborted) {
             this.failed = !result.ok;
+            if (this.failed) this.scheduler.discardPending();
             attempt.result = result.ok
               ? result.suggestions.length
                 ? 'success'
@@ -219,7 +233,7 @@ export class MeetingSuggestions {
   }
 
   requestManual(): void {
-    if (!this.authorized() || this.remaining <= 0) return;
+    if (!this.authorized() || this.remaining <= 0 || this.failed) return;
     const context = this.context.snapshot();
     if (!context) return;
     this.lastTrigger = 'manual';
@@ -285,7 +299,7 @@ export class MeetingSuggestions {
     this.scheduler.submit(
       finalContext,
       ++this.revision,
-      this.remaining > 0 ? trigger : 'none',
+      this.remaining > 0 && !this.failed ? trigger : 'none',
     );
   }
 
@@ -316,6 +330,7 @@ export class MeetingSuggestions {
       if (
         this.meetingProfile === 'video-fact-check' &&
         this.remaining > 0 &&
+        !this.failed &&
         now >= this.videoCheckAt &&
         this.signature !== this.videoSignature
       ) {

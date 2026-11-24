@@ -62,6 +62,12 @@ function response(
   };
 }
 describe('video fact checks from synthetic search responses', () => {
+  it('distinguishes an incomplete API response from an invalid format', () => {
+    expect(parseVideoFactCheck({ status: 'incomplete' }, context)).toEqual({
+      ok: false,
+      code: 'incomplete',
+    });
+  });
   it('resolves the transcript and cited source for a correction', () => {
     expect(parseVideoFactCheck(response([correction]), context)).toEqual({
       ok: true,

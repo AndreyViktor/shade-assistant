@@ -44,6 +44,8 @@ export function parseVideoFactCheck(
   context: MeetingContext,
 ): SuggestionResult {
   const invalid: SuggestionResult = { ok: false, code: 'invalid-response' };
+  if (record(value) && value.status === 'incomplete')
+    return { ok: false, code: 'incomplete' };
   if (
     !record(value) ||
     value.status !== 'completed' ||

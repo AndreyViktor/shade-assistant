@@ -26,7 +26,10 @@ for (const outcome of ['authentication', 'empty'] as const) {
       });
       if (outcome === 'authentication') {
         await expect(assistance.getByRole('alert')).toContainText(
-          'Falha nas sugestões',
+          'Autenticação ou acesso negado',
+        );
+        await expect(assistance.getByRole('alert')).toContainText(
+          'Novas tentativas suspensas',
         );
         await expect(assistance).toHaveCSS(
           'border-top-color',

@@ -10,6 +10,7 @@ import type { useMeetingSession } from './useMeetingSession';
 import { LocalTranscriptPreview } from './LocalTranscriptPreview';
 import { TranscriptionDiagnostics } from './TranscriptionDiagnostics';
 import { emptySuggestionFeedback } from '../../../contracts/meeting/suggestionFeedback';
+import { suggestionFailureMessages } from '../suggestions/SuggestionDiagnosticsPanel';
 
 const transcript: LocalTranscriptSnapshot = {
   failed: false,
@@ -115,7 +116,10 @@ it.each<SuggestionAttempt['result']>([
     if (failure) {
       expect(assistance).toHaveClass('area-failed');
       expect(within(assistance).getByRole('alert')).toHaveTextContent(
-        'Falha nas sugestões. Consulte Preferências.',
+        `Falha nas sugestões. ${suggestionFailureMessages[result as keyof typeof suggestionFailureMessages]}`,
+      );
+      expect(within(assistance).getByRole('alert')).toHaveTextContent(
+        'Novas tentativas suspensas.',
       );
       expect(within(assistance).getByText('⚠')).toHaveAttribute(
         'aria-hidden',

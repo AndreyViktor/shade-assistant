@@ -134,6 +134,12 @@ Planejado após o relato de uso real: transcrição precisa permanecer visível 
 | --- | --- | --- | --- | --- |
 | T078 | BLOCKED | T057,T058,T061,T075 | Perfil de verificação factual para áudio de vídeos | Implementação e gates offline concluídos; smoke Electron 1/1. Falta validar a resposta real da API de busca com Structured Outputs e citações e avaliar respostas em casos sintéticos. Desbloqueio: autorização explícita para chamadas pagas e credencial; não há alegação de qualidade ou funcionamento real antes do ensaio. [Evidências e plano](evidence/tasks/T078.md). |
 
+## M15 — Falhas nas sugestões
+
+| ID | Estado | Depende de | Implementação | Critério de aceite/evidência |
+| --- | --- | --- | --- | --- |
+| T079 | DONE | T021,T024,T060 | Investigar falhas e consumo de tentativas sem cartões | Falhas suspendem novas tentativas e exibem motivo sanitizado; deadline agora é timeout e respostas incompletas de vídeo são identificadas. Respostas vazias válidas continuam permitidas e o orçamento conta tentativas. Verify: 1.021 Vitest, 20 ignorados, 19 runner e build; smoke Electron offline 2/2. A causa do relato e o funcionamento real do perfil de vídeo seguem não comprovados em T078. [Evidências](evidence/tasks/T079.md). |
+
 ## Critérios gerais
 
 Uma tarefa só pode ser `DONE` quando cumprir seus critérios específicos e os gates aplicáveis definidos em [ENGINEERING-STANDARDS.md](ENGINEERING-STANDARDS.md), com resultados e limitações registrados na própria linha ou em evidência especializada linkada. [PROGRESS.md](PROGRESS.md) mantém apenas o snapshot/handoff atual; o histórico antigo está em [PROGRESS-HISTORY.md](PROGRESS-HISTORY.md). Regras técnicas globais estão em [AGENTS.md](../AGENTS.md) e o fluxo de sessão/Git está em [WORKFLOW.md](WORKFLOW.md).

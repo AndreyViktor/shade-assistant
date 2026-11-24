@@ -1,5 +1,6 @@
 import type { Preferences } from '../../../contracts/settings/preferences';
 import { SuggestionCards } from '../suggestions/SuggestionCards';
+import { suggestionFailureMessages } from '../suggestions/SuggestionDiagnosticsPanel';
 import { StartSessionDialog } from './StartSessionDialog';
 import type { SuggestionAuthorization } from '../../../contracts/meeting/suggestionSession';
 import { LocalTranscriptPreview } from './LocalTranscriptPreview';
@@ -285,8 +286,15 @@ export function SessionControls({
           >
             {suggestionsFailed && (
               <p className="area-error" role="alert">
-                <span aria-hidden="true">⚠</span> Falha nas sugestões. Consulte
-                Preferências.
+                <span aria-hidden="true">⚠</span> Falha nas sugestões.{' '}
+                {attempt &&
+                attempt.result !== 'pending' &&
+                attempt.result !== 'success' &&
+                attempt.result !== 'empty'
+                  ? suggestionFailureMessages[attempt.result]
+                  : suggestionFailureMessages.unavailable}{' '}
+                Novas tentativas suspensas. Consulte Preferências e inicie uma
+                nova sessão para tentar novamente.
               </p>
             )}
             {localActive && suggestions.status !== 'disabled' ? (

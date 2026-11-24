@@ -29,6 +29,8 @@ type Pending = {
   dueAt: number;
 };
 
+export const SUGGESTION_DEADLINE = 'suggestion-deadline';
+
 /** Host supplies validated, bounded context and a monotonically increasing
  * revision for each new final/context change (not partials or silence).
  * Authorization must include active session, consent and budget; manual is no
@@ -126,11 +128,16 @@ export class SuggestionScheduler {
 
   /** Hides current cards and cancels work; bounded duplicate suppression survives. */
   invalidate(): void {
+    this.discardPending();
+    this.active?.abort();
+    this.store.invalidate();
+  }
+
+  /** Stop queued work without removing already published cards. */
+  discardPending(): void {
     clearTimeout(this.timer);
     this.timer = undefined;
     this.pending = undefined;
-    this.active?.abort();
-    this.store.invalidate();
   }
 
   /** Also used for pause/revocation. Resume starts a fresh session generation. */
@@ -196,7 +203,7 @@ export class SuggestionScheduler {
   ): Promise<void> {
     const deadline = Date.now() + this.policy.maxResponseAgeMs;
     const timeout = setTimeout(
-      () => controller.abort(),
+      () => controller.abort(SUGGESTION_DEADLINE),
       this.policy.maxResponseAgeMs,
     );
     const clearDeadline = () => clearTimeout(timeout);

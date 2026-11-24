@@ -15,7 +15,7 @@ const activities: Record<SuggestionDiagnostics['activity'], string> = {
   requesting: 'Requisição em andamento. Aguardando a resposta da OpenAI.',
   paused: 'Sessão pausada. Novas chamadas estão suspensas.',
 };
-const failures: Record<SuggestionFailure, string> = {
+export const suggestionFailureMessages: Record<SuggestionFailure, string> = {
   'not-authorized': 'Envio não autorizado nesta sessão.',
   'credentials-unavailable':
     'Chave indisponível. Confira OPENAI_API_KEY no .env e reinicie o app, ou importe a chave em Preferências.',
@@ -66,7 +66,7 @@ export function SuggestionDiagnosticsPanel({
   const pending = attempt?.result === 'pending';
   const result = !attempt
     ? snapshot.status === 'unavailable'
-      ? failures.unavailable
+      ? suggestionFailureMessages.unavailable
       : 'Conexão ainda não testada nesta sessão.'
     : attempt.result === 'pending'
       ? 'Tentativa em andamento.'
@@ -74,18 +74,20 @@ export function SuggestionDiagnosticsPanel({
         ? `Resposta válida: ${attempt.suggestionCount} sugestão(ões) recebida(s).`
         : attempt.result === 'empty'
           ? 'Resposta válida, sem sugestões para esse contexto.'
-          : failures[attempt.result];
+          : suggestionFailureMessages[attempt.result];
   return (
     <section className="suggestion-diagnostics" aria-label="Estado da OpenAI">
       <h3>Estado da OpenAI</h3>
       <p role="status">
         {!diagnostic
           ? 'Sugestões desativadas. Inicie uma nova sessão com “Adicionar sugestões de IA” para autorizar o envio.'
-          : pending
-            ? activities[diagnostic.activity]
-            : snapshot.remainingRequests === 0
-              ? 'Limite atingido. Nenhuma nova chamada será feita nesta sessão.'
-              : activities[diagnostic.activity]}
+          : snapshot.status === 'unavailable'
+            ? 'Novas sugestões suspensas após falha. Confira o erro e inicie uma nova sessão para tentar novamente.'
+            : pending
+              ? activities[diagnostic.activity]
+              : snapshot.remainingRequests === 0
+                ? 'Limite atingido. Nenhuma nova chamada será feita nesta sessão.'
+                : activities[diagnostic.activity]}
       </p>
       {diagnostic && <p>{result}</p>}
       <p>

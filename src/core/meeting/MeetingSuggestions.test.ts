@@ -245,26 +245,51 @@ describe('session suggestion integration with synthetic speech', () => {
     expect(pipeline.snapshot().diagnostics).toBeNull();
   });
 
-  it('records safe HTTP failures, replaces only the latest attempt, and reports cooldown', async () => {
+  it('records a safe HTTP failure and stops queued, automatic and manual attempts', async () => {
     const { pipeline, generate } = setup();
-    generate.mockImplementation((input) => {
+    let finish: (result: SuggestionResult) => void = () => {};
+    generate.mockImplementationOnce((input) => {
       input.onDispatch?.('{"input":"synthetic"}');
       input.onHttpResponse?.(401);
-      return Promise.resolve({ ok: false, code: 'authentication' });
+      return new Promise((resolve) => {
+        finish = resolve;
+      });
     });
     pipeline.receive(speech());
     await vi.advanceTimersByTimeAsync(2_000);
+    pipeline.receive(speech(2));
+    finish({ ok: false, code: 'authentication' });
+    await vi.advanceTimersByTimeAsync(0);
     expect(pipeline.snapshot().diagnostics?.lastAttempt).toMatchObject({
       number: 1,
       result: 'authentication',
       httpStatus: 401,
     });
-    pipeline.receive(speech(2));
+    pipeline.receive(speech(3));
+    pipeline.requestManual();
+    await vi.advanceTimersByTimeAsync(20_000);
+    expect(generate).toHaveBeenCalledOnce();
+    expect(pipeline.snapshot()).toMatchObject({
+      status: 'unavailable',
+      remainingRequests: 1,
+    });
+    expect(pipeline.snapshot().diagnostics?.lastAttempt?.number).toBe(1);
+  });
+
+  it('classifies the scheduler deadline as a timeout and stops queued work', async () => {
+    const { pipeline, generate } = setup();
+    generate.mockImplementationOnce(() => new Promise(() => {}));
+    pipeline.receive(speech());
     await vi.advanceTimersByTimeAsync(2_000);
-    expect(pipeline.snapshot().diagnostics?.activity).toBe('cooldown');
-    await vi.advanceTimersByTimeAsync(9500);
-    expect(pipeline.snapshot().diagnostics?.lastAttempt?.number).toBe(2);
-    expect(pipeline.snapshot().remainingRequests).toBe(0);
+    pipeline.receive(speech(2));
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(pipeline.snapshot()).toMatchObject({
+      status: 'unavailable',
+      remainingRequests: 1,
+      diagnostics: { lastAttempt: { result: 'timeout' } },
+    });
+    await vi.advanceTimersByTimeAsync(20_000);
+    expect(generate).toHaveBeenCalledOnce();
   });
 
   it('marks invalidated attempts cancelled immediately and ignores late transport callbacks after restart', async () => {
@@ -812,4 +837,33 @@ it('periodically checks final system speech in video mode without mic speech or 
   pipeline.stop();
   await vi.advanceTimersByTimeAsync(30_000);
   expect(generate).toHaveBeenCalledTimes(2);
+});
+
+it('suspends periodic video checks after an error, even with new system speech', async () => {
+  const session = new MeetingSession();
+  const generate = vi
+    .fn()
+    .mockResolvedValue({ ok: false, code: 'invalid-response' });
+  const pipeline = new MeetingSuggestions(session, () => ({ generate }));
+  const system = { ...config, sources: ['system'] as ['system'] };
+  session.start({
+    mode: 'apple-local',
+    ...system,
+    consent: { capture: true, context: true, remoteAudio: false },
+  });
+  pipeline.start(system, {
+    ...authorization,
+    meetingProfile: 'video-fact-check',
+    webSearchConsent: true,
+  });
+  pipeline.receive({ ...speech(1), source: 'system' });
+  await vi.advanceTimersByTimeAsync(22_000);
+  pipeline.receive({ ...speech(2), source: 'system' });
+  await vi.advanceTimersByTimeAsync(40_000);
+  expect(generate).toHaveBeenCalledOnce();
+  expect(pipeline.snapshot()).toMatchObject({
+    status: 'unavailable',
+    remainingRequests: 1,
+    diagnostics: { lastAttempt: { result: 'invalid-response' } },
+  });
 });
