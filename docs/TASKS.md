@@ -132,7 +132,7 @@ Planejado após o relato de uso real: transcrição precisa permanecer visível 
 
 | ID | Estado | Depende de | Implementação | Critério de aceite/evidência |
 | --- | --- | --- | --- | --- |
-| T078 | BLOCKED | T057,T058,T061,T075 | Perfil de verificação factual para áudio de vídeos | Implementação e gates offline concluídos; smoke Electron 1/1. Falta validar a resposta real da API de busca com Structured Outputs e citações e avaliar respostas em casos sintéticos. Desbloqueio: autorização explícita para chamadas pagas e credencial; não há alegação de qualidade ou funcionamento real antes do ensaio. [Evidências e plano](evidence/tasks/T078.md). |
+| T078 | BLOCKED | T057,T058,T061,T075 | Perfil de verificação factual para áudio de vídeos | Três chamadas sintéticas autorizadas: correção com fonte consultada aceita após ajuste, mas frase correta gerou card inesperado. Instrução de abstenção reforçada sem validação real posterior; falta avaliar o conteúdo e repetir os casos com nova autorização para chamadas pagas. [Evidências e limites](evidence/tasks/T078.md). |
 
 ## M15 — Falhas nas sugestões
 

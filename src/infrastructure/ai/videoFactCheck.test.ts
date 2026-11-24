@@ -88,6 +88,41 @@ describe('video fact checks from synthetic search responses', () => {
       ],
     });
   });
+  it('accepts an exact consulted HTTPS source when structured output has no annotations', () => {
+    const input = response([correction], []);
+    input.output[0] = {
+      type: 'web_search_call',
+      status: 'completed',
+      action: {
+        type: 'search',
+        sources: [{ type: 'url', url: correction.url }],
+      },
+    } as (typeof input.output)[number];
+    expect(parseVideoFactCheck(input, context)).toMatchObject({
+      ok: true,
+      suggestions: [
+        { citation: { url: correction.url, title: 'example.org' } },
+      ],
+    });
+  });
+  it('rejects unconsulted, failed-search and unsafe source URLs', () => {
+    for (const [url, status, sourceUrl] of [
+      [correction.url, 'completed', 'https://example.org/other'],
+      [correction.url, 'failed', correction.url],
+      ['http://example.org/agua', 'completed', 'http://example.org/agua'],
+    ]) {
+      const input = response([{ ...correction, url }], []);
+      input.output[0] = {
+        type: 'web_search_call',
+        status,
+        action: { type: 'search', sources: [{ type: 'url', url: sourceUrl }] },
+      } as (typeof input.output)[number];
+      expect(parseVideoFactCheck(input, context)).toEqual({
+        ok: false,
+        code: 'invalid-response',
+      });
+    }
+  });
   it('accepts silence without search for correct or unverifiable claims', () => {
     expect(parseVideoFactCheck(response([], [], false), context)).toEqual({
       ok: true,

@@ -249,7 +249,11 @@ export class OpenAISuggestionProvider implements SuggestionProvider {
         ],
         text: { format: video ? videoFactCheckFormat : suggestionFormat },
         ...(video
-          ? { tools: [{ type: 'web_search' }], max_tool_calls: 2 }
+          ? {
+              tools: [{ type: 'web_search' }],
+              max_tool_calls: 2,
+              include: ['web_search_call.action.sources'],
+            }
           : {}),
       });
       request.onDispatch?.(body);

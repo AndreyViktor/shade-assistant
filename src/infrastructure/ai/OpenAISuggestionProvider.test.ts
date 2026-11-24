@@ -732,12 +732,15 @@ it('enables web search only for the video profile and bounds tool calls', async 
   const body = JSON.parse(rawBody) as {
     tools: unknown;
     max_tool_calls: number;
+    include: unknown;
     instructions: string;
     store: boolean;
   };
   expect(body.tools).toEqual([{ type: 'web_search' }]);
   expect(body.max_tool_calls).toBe(2);
+  expect(body.include).toEqual(['web_search_call.action.sources']);
   expect(body.instructions).toContain('Never fabricate a URL');
+  expect(body.instructions).toContain('when the claim is true');
   expect(body.store).toBe(false);
 });
 
