@@ -4,6 +4,11 @@
   "conversation": "Precisamos decidir como avançar, mas ainda há pontos em aberto.",
   "cases": [
     {
+      "profile": "video-fact-check",
+      "expectedObjective": "Identificar e corrigir afirmações factuais falsas em vídeos com fontes.",
+      "expectedFocus": "verificação de afirmações"
+    },
+    {
       "profile": "discovery",
       "expectedObjective": "Entender necessidades, contexto e critérios de sucesso.",
       "expectedFocus": "lacunas relevantes a investigar"

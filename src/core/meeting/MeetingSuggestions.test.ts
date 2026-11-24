@@ -766,3 +766,50 @@ it('switches focused profiles between sessions and clears the previous runtime c
   await vi.advanceTimersByTimeAsync(2_000);
   expect(generate.mock.calls[2]?.[0]).not.toHaveProperty('meetingProfile');
 });
+
+it('periodically checks final system speech in video mode without mic speech or repeated calls', async () => {
+  const session = new MeetingSession();
+  const generate = vi
+    .fn<(request: SuggestionRequest) => Promise<SuggestionResult>>()
+    .mockResolvedValue({ ok: true, suggestions: [] });
+  const pipeline = new MeetingSuggestions(session, () => ({ generate }));
+  const both = {
+    ...config,
+    sources: ['mic', 'system'] as ('mic' | 'system')[],
+  };
+  session.start({
+    mode: 'apple-local',
+    ...both,
+    consent: { capture: true, context: true, remoteAudio: false },
+  });
+  pipeline.start(both, {
+    ...authorization,
+    meetingProfile: 'video-fact-check',
+    webSearchConsent: true,
+  });
+  pipeline.receive(speech(1, 'Fala privada do microfone.'));
+  pipeline.receive({
+    ...speech(2, 'A informação factual do vídeo.'),
+    source: 'system',
+  });
+  await vi.advanceTimersByTimeAsync(21_999);
+  expect(generate).not.toHaveBeenCalled();
+  await vi.advanceTimersByTimeAsync(1);
+  expect(generate).toHaveBeenCalledTimes(1);
+  expect(
+    generate.mock.calls[0]?.[0].context.recent.map((item) => item.text),
+  ).toEqual(['A informação factual do vídeo.']);
+  await vi.advanceTimersByTimeAsync(30_000);
+  expect(generate).toHaveBeenCalledTimes(1);
+  pipeline.receive({
+    ...speech(3, 'Outra afirmação do vídeo.'),
+    source: 'system',
+  });
+  await vi.advanceTimersByTimeAsync(3_000);
+  expect(generate).toHaveBeenCalledTimes(2);
+  expect(generate.mock.calls[1]?.[0].videoNewSegmentIds).toEqual(['s3']);
+  session.revokeContext();
+  pipeline.stop();
+  await vi.advanceTimersByTimeAsync(30_000);
+  expect(generate).toHaveBeenCalledTimes(2);
+});

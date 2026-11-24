@@ -9,6 +9,11 @@ import { isValidSecret } from '../settings/SecretStore';
 import { parseSuggestionResponse } from './parseSuggestionResponse';
 import { suggestionFormat, suggestionInstructions } from './suggestionFormat';
 import {
+  parseVideoFactCheck,
+  videoFactCheckFormat,
+  videoFactCheckInstructions,
+} from './videoFactCheck';
+import {
   getMeetingProfile,
   parseMeetingProfileId,
 } from '../../contracts/meeting/meetingProfile';
@@ -140,6 +145,7 @@ export class OpenAISuggestionProvider implements SuggestionProvider {
       if (meetingProfileId === 'none' && request.meetingProfile !== undefined)
         return { ok: false, code: 'invalid-request' };
       const meetingProfile = getMeetingProfile(meetingProfileId);
+      const video = meetingProfileId === 'video-fact-check';
       const context = {
         recent: request.context.recent
           .filter((item) => item.type === 'final')
@@ -166,6 +172,17 @@ export class OpenAISuggestionProvider implements SuggestionProvider {
       const serialize = () =>
         JSON.stringify({
           ...context,
+          ...(video
+            ? {
+                videoNewSegmentIds: context.recent
+                  .filter(
+                    (item) =>
+                      !request.videoNewSegmentIds ||
+                      request.videoNewSegmentIds.includes(item.segmentId),
+                  )
+                  .map((item) => item.segmentId),
+              }
+            : {}),
           existingResults: (request.existingResults ?? []).map(
             ({ key, kind, text, groundedIn, evidence }) => ({
               key,
@@ -226,11 +243,14 @@ export class OpenAISuggestionProvider implements SuggestionProvider {
         store: false,
         stream: false,
         max_output_tokens: maxOutputTokens,
-        instructions: `${suggestionInstructions}\nRequested language: ${request.language}.`,
+        instructions: `${video ? videoFactCheckInstructions : suggestionInstructions}\nRequested language: ${request.language}.`,
         input: [
           { role: 'user', content: [{ type: 'input_text', text: input }] },
         ],
-        text: { format: suggestionFormat },
+        text: { format: video ? videoFactCheckFormat : suggestionFormat },
+        ...(video
+          ? { tools: [{ type: 'web_search' }], max_tool_calls: 2 }
+          : {}),
       });
       request.onDispatch?.(body);
       const response = await (this.options.fetch ?? globalThis.fetch)(
@@ -265,7 +285,22 @@ export class OpenAISuggestionProvider implements SuggestionProvider {
       }
       let result: SuggestionResult;
       try {
-        result = parseSuggestionResponse(await readResponse(response, signal));
+        const data = await readResponse(response, signal);
+        result = video
+          ? parseVideoFactCheck(data, {
+              recent: request.context.recent.filter(
+                (item) =>
+                  context.recent.some(
+                    (sent) =>
+                      sent.source === item.source &&
+                      sent.segmentId === item.segmentId,
+                  ) &&
+                  (!request.videoNewSegmentIds ||
+                    request.videoNewSegmentIds.includes(item.segmentId)),
+              ),
+              summary: [],
+            })
+          : parseSuggestionResponse(data);
       } catch {
         result = { ok: false, code: 'invalid-response' };
       }

@@ -12,7 +12,7 @@ test('settings navigation preserves a running and paused session; saved choices 
     const page = await test.step('open panel', () => app.firstWindow());
     const read = () =>
       page.evaluate(() =>
-        window.meetingCopilot.session({ version: 11, action: 'read' }),
+        window.meetingCopilot.session({ version: 12, action: 'read' }),
       );
     const open = () =>
       page.getByRole('button', { name: 'Preferências', exact: true }).click();

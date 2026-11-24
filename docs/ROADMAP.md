@@ -22,12 +22,12 @@ O produto evolui de uma base local e segura para transcrição confiável, assis
 | Fundação e arquitetura | **100%** | 6 | 0 | 0 |
 | Ferramentas e documentação | **100%** | 6 | 0 | 0 |
 | Transcrição e áudio | **100%** | 10 | 0 | 2 |
-| Sugestões de IA e qualidade | **93%** | 13 | 1 | 0 |
+| Sugestões de IA e qualidade | **87%** | 13 | 2 | 0 |
 | UI/UX e overlay | **100%** | 13 | 0 | 4 |
 | Resultados e fluxo da reunião | **60%** | 3 | 2 | 0 |
 | Segurança, privacidade e distribuição | **33%** | 3 | 6 | 4 |
 | Windows futuro | **—** | 0 | 0 | 4 |
-| **Total ativo** | **86%** | **54** | **9** | **14** |
+| **Total ativo** | **84%** | **54** | **10** | **14** |
 
 ## Fase atual e sequência protegida
 
@@ -61,7 +61,7 @@ Próxima evolução arquitetural ocorre apenas quando uma tarefa concreta exigir
 | Avaliar e melhorar STT | T057 | DONE | 100% | Avaliação offline e ensaio físico registrados, com limites do corpus. |
 | STT remoto e troca de idiomas | T016, T026 | DEFERRED | — | Só reativar com decisão de produto, custo e consentimento. |
 
-## 4. Sugestões de IA e qualidade — 93%
+## 4. Sugestões de IA e qualidade — 87%
 
 | Funcionalidade | Tarefas | Estado | Progresso | Próximo resultado |
 | --- | --- | --- | ---: | --- |
@@ -71,6 +71,7 @@ Próxima evolução arquitetural ocorre apenas quando uma tarefa concreta exigir
 | Orçamento por modalidade | T025 | TODO | 0% | Estimar e limitar custo de texto, imagem e áudio remoto. A execução depende da T016, que está adiada. |
 | Avaliação de qualidade e uso | T027 | DONE | 100% | Protocolo offline e comparação real limitada registrados. |
 | Feedback local dos cartões | T064 | DONE | 100% | Classificações e métricas locais sem persistir conteúdo sensível. |
+| Verificação factual de vídeos | T078 | BLOCKED | 0% | Implementação offline e smoke concluídos; ensaio real com busca e citações aguarda autorização para custo e credencial. |
 
 ## 5. UI/UX e overlay — 100%
 

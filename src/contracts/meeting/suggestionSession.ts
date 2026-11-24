@@ -31,6 +31,7 @@ export type SuggestionAuthorization = {
   maxRequests: number;
   userContext?: string;
   meetingProfile?: FocusedMeetingProfileId;
+  webSearchConsent?: true;
 };
 export type SuggestionSessionSnapshot = {
   items: Suggestion[];
@@ -60,6 +61,19 @@ export function parseSuggestionAuthorization(
       !hasExactKeys(value, [
         'model',
         'maxRequests',
+        'meetingProfile',
+        'webSearchConsent',
+      ]) &&
+      !hasExactKeys(value, [
+        'model',
+        'maxRequests',
+        'userContext',
+        'meetingProfile',
+        'webSearchConsent',
+      ]) &&
+      !hasExactKeys(value, [
+        'model',
+        'maxRequests',
         'userContext',
         'meetingProfile',
       ])) ||
@@ -80,11 +94,20 @@ export function parseSuggestionAuthorization(
       : 'none';
   if (meetingProfile === null) return null;
   if ('meetingProfile' in value && meetingProfile === 'none') return null;
+  if (
+    meetingProfile === 'video-fact-check'
+      ? value.webSearchConsent !== true
+      : 'webSearchConsent' in value
+  )
+    return null;
   return {
     model: value.model,
     maxRequests: value.maxRequests,
     ...(userContext ? { userContext } : {}),
     ...(meetingProfile !== 'none' ? { meetingProfile } : {}),
+    ...(meetingProfile === 'video-fact-check'
+      ? { webSearchConsent: true as const }
+      : {}),
   };
 }
 

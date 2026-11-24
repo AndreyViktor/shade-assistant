@@ -5,6 +5,7 @@ export const MEETING_PROFILE_IDS = [
   'interview',
   'negotiation',
   'technical-review',
+  'video-fact-check',
 ] as const;
 
 export type MeetingProfileId = (typeof MEETING_PROFILE_IDS)[number];
@@ -66,6 +67,17 @@ export const MEETING_PROFILES: readonly MeetingProfile[] = [
       'premissas e trade-offs',
       'falhas, riscos e casos-limite',
       'evidências e verificações pendentes',
+    ],
+  },
+  {
+    id: 'video-fact-check',
+    label: 'Verificação de vídeos',
+    objective:
+      'Identificar e corrigir afirmações factuais falsas em vídeos com fontes.',
+    priorities: [
+      'verificação de afirmações',
+      'fontes consultadas',
+      'silêncio diante de incerteza',
     ],
   },
 ];

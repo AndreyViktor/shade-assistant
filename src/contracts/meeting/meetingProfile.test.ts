@@ -14,7 +14,7 @@ describe('meeting profile catalog', () => {
   });
 
   it('defines one explicit objective and bounded priority list per focused profile', () => {
-    expect(MEETING_PROFILES).toHaveLength(5);
+    expect(MEETING_PROFILES).toHaveLength(6);
     for (const profile of MEETING_PROFILES) {
       expect(getMeetingProfile(profile.id)).toEqual(profile);
       expect(profile.objective.length).toBeGreaterThan(0);

@@ -26,6 +26,7 @@ import type { MeetingResultsSnapshot } from '../../contracts/meeting/meetingResu
 import type { FocusedMeetingProfileId } from '../../contracts/meeting/meetingProfile';
 import { SuggestionFeedbackStore } from '../suggestions/SuggestionFeedbackStore';
 import type { SuggestionFeedbackValue } from '../../contracts/meeting/suggestionFeedback';
+import { parseCitation } from '../../contracts/meeting/suggestion';
 
 export type SuggestionProviderFactory = (
   authorization: SuggestionAuthorization,
@@ -60,6 +61,9 @@ export class MeetingSuggestions {
   private lastTrigger: Trigger = 'none';
   private hasFinal = false;
   private lastAttempt: SuggestionAttempt | null = null;
+  private videoSignature = '';
+  private videoCheckAt = 0;
+  private readonly videoSeen = new Set<string>();
 
   constructor(
     private readonly session: MeetingSession,
@@ -71,6 +75,27 @@ export class MeetingSuggestions {
           const provider = this.provider;
           if (!this.authorized() || !provider || this.remaining <= 0)
             return { ok: false, code: 'not-authorized' };
+          const videoSegments =
+            this.meetingProfile === 'video-fact-check'
+              ? request.context.recent.filter(
+                  (part) =>
+                    !this.videoSeen.has(
+                      JSON.stringify([part.segmentId, part.text]),
+                    ),
+                )
+              : [];
+          if (
+            this.meetingProfile === 'video-fact-check' &&
+            videoSegments.length === 0
+          )
+            return { ok: true, suggestions: [], resultUpdates: [] };
+          for (const part of videoSegments)
+            this.videoSeen.add(JSON.stringify([part.segmentId, part.text]));
+          while (this.videoSeen.size > 2000) {
+            const oldest = this.videoSeen.values().next().value;
+            if (oldest === undefined) break;
+            this.videoSeen.delete(oldest);
+          }
           const generation = this.generation;
           this.remaining -= 1;
           const attempt: SuggestionAttempt = {
@@ -99,6 +124,13 @@ export class MeetingSuggestions {
               ...(this.userContext ? { userContext: this.userContext } : {}),
               ...(this.meetingProfile
                 ? { meetingProfile: this.meetingProfile }
+                : {}),
+              ...(this.meetingProfile === 'video-fact-check'
+                ? {
+                    videoNewSegmentIds: videoSegments.map(
+                      (part) => part.segmentId,
+                    ),
+                  }
                 : {}),
               onDispatch: (body) => {
                 if (current() && !request.signal.aborted)
@@ -153,6 +185,9 @@ export class MeetingSuggestions {
     this.model = authorization.model;
     this.userContext = authorization.userContext ?? '';
     this.meetingProfile = authorization.meetingProfile;
+    this.scheduler.setResponseTimeout(
+      this.meetingProfile === 'video-fact-check' ? 60_000 : 15_000,
+    );
     this.maxRequests = authorization.maxRequests;
     const generation = this.generation;
     try {
@@ -166,6 +201,8 @@ export class MeetingSuggestions {
     }
     this.context.start(config);
     this.lastClock = Date.now();
+    if (this.meetingProfile === 'video-fact-check')
+      this.videoCheckAt = this.lastClock + 20_000;
     this.resume();
   }
 
@@ -188,8 +225,17 @@ export class MeetingSuggestions {
     this.lastTrigger = 'manual';
     this.scheduler.submit(
       {
-        recent: context.recent.filter((segment) => segment.type === 'final'),
-        summary: context.summary,
+        recent: context.recent.filter(
+          (segment) =>
+            segment.type === 'final' &&
+            (this.meetingProfile !== 'video-fact-check' ||
+              segment.source === 'system'),
+        ),
+        summary: context.summary.filter(
+          (segment) =>
+            this.meetingProfile !== 'video-fact-check' ||
+            segment.source === 'system',
+        ),
       },
       this.revision,
       'manual',
@@ -201,8 +247,17 @@ export class MeetingSuggestions {
     if (!context) return;
     // Partial hypotheses never trigger requests or enter the provider context.
     const finalContext: MeetingContext = {
-      recent: context.recent.filter((segment) => segment.type === 'final'),
-      summary: context.summary,
+      recent: context.recent.filter(
+        (segment) =>
+          segment.type === 'final' &&
+          (this.meetingProfile !== 'video-fact-check' ||
+            segment.source === 'system'),
+      ),
+      summary: context.summary.filter(
+        (segment) =>
+          this.meetingProfile !== 'video-fact-check' ||
+          segment.source === 'system',
+      ),
     };
     const signature = JSON.stringify({
       recent: finalContext.recent.map(
@@ -222,8 +277,11 @@ export class MeetingSuggestions {
     this.hasFinal =
       finalContext.recent.length > 0 || finalContext.summary.length > 0;
     const trigger =
-      event?.type === 'final' ? this.trigger.evaluate(event) : 'none';
+      event?.type === 'final' && this.meetingProfile !== 'video-fact-check'
+        ? this.trigger.evaluate(event)
+        : 'none';
     if (event?.type === 'final') this.lastTrigger = trigger;
+    if (this.meetingProfile === 'video-fact-check') return;
     this.scheduler.submit(
       finalContext,
       ++this.revision,
@@ -255,6 +313,34 @@ export class MeetingSuggestions {
       this.lastClock = now;
       this.context.advanceTo(this.elapsed);
       this.publishContext();
+      if (
+        this.meetingProfile === 'video-fact-check' &&
+        this.remaining > 0 &&
+        now >= this.videoCheckAt &&
+        this.signature !== this.videoSignature
+      ) {
+        const context = this.context.snapshot();
+        const recent =
+          context?.recent.filter(
+            (segment) =>
+              segment.type === 'final' && segment.source === 'system',
+          ) ?? [];
+        if (recent.length > 0) {
+          this.videoSignature = this.signature;
+          this.videoCheckAt = now + 20_000;
+          this.scheduler.submit(
+            {
+              recent,
+              summary:
+                context?.summary.filter(
+                  (segment) => segment.source === 'system',
+                ) ?? [],
+            },
+            ++this.revision,
+            'automatic',
+          );
+        }
+      }
     }, 1000);
   }
 
@@ -276,11 +362,22 @@ export class MeetingSuggestions {
     this.lastTrigger = 'none';
     this.hasFinal = false;
     this.lastAttempt = null;
+    this.videoSignature = '';
+    this.videoCheckAt = 0;
+    this.videoSeen.clear();
     this.results.clear();
   }
 
   dismiss(id: string): void {
     this.scheduler.dismiss(id);
+  }
+
+  citationUrl(id: string): string | undefined {
+    if (!this.authorized()) return undefined;
+    const citation = this.scheduler
+      .snapshot()
+      .find((item) => item.id === id)?.citation;
+    return parseCitation(citation)?.url;
   }
 
   rate(id: string, value: SuggestionFeedbackValue): void {

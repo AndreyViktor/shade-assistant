@@ -78,6 +78,12 @@ export class SuggestionScheduler {
     signal.addEventListener('abort', this.stop, { once: true });
   }
 
+  setResponseTimeout(ms: number): void {
+    if (!Number.isSafeInteger(ms) || ms < 1 || ms > 60_000)
+      throw new Error('Invalid response timeout');
+    this.policy.maxResponseAgeMs = ms;
+  }
+
   /** In continuous mode, retain active work and coalesce newer final contexts.
    * In the original mode, a newer revision invalidates older work.
    * Manual may reuse the current revision but never an older one.

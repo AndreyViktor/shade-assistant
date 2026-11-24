@@ -12,6 +12,32 @@ const card: Suggestion = {
 };
 
 describe('suggestion cards', () => {
+  it('shows the speech and a clickable citation that opens only the card ID', () => {
+    const onOpenCitation = vi.fn();
+    render(
+      <SuggestionCards
+        suggestions={[
+          {
+            ...card,
+            expiresAt: null,
+            citation: {
+              url: 'https://example.org/',
+              title: 'Fonte',
+              startMs: 65_000,
+              excerpt: 'Uma fala do vídeo',
+            },
+          },
+        ]}
+        demo={false}
+        busy={false}
+        onDismiss={vi.fn()}
+        onOpenCitation={onOpenCitation}
+      />,
+    );
+    expect(screen.getByText('Fala (1:05): Uma fala do vídeo')).toBeVisible();
+    fireEvent.click(screen.getByRole('link', { name: 'Fonte: Fonte' }));
+    expect(onOpenCitation).toHaveBeenCalledExactlyOnceWith(card.id);
+  });
   it.each([
     ['answer', 'Resposta'],
     ['question', 'Pergunta'],

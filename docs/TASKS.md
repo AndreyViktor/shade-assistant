@@ -128,6 +128,12 @@ Planejado após o relato de uso real: transcrição precisa permanecer visível 
 | --- | --- | --- | --- | --- |
 | T077 | DONE | T067 | Simplificar os modos do overlay após avaliação de uso | Três visualizações efêmeras, seletor SVG acessível e layout responsivo; assistência reúne resultados e cartões. `npm run verify` e Electron offline 1/1 aprovados, com foco, conteúdo, snapshot, resize e zoom; inspeção visual e limites em [T077](evidence/tasks/T077.md). |
 
+## M14 — Verificação factual de vídeos
+
+| ID | Estado | Depende de | Implementação | Critério de aceite/evidência |
+| --- | --- | --- | --- | --- |
+| T078 | BLOCKED | T057,T058,T061,T075 | Perfil de verificação factual para áudio de vídeos | Implementação e gates offline concluídos; smoke Electron 1/1. Falta validar a resposta real da API de busca com Structured Outputs e citações e avaliar respostas em casos sintéticos. Desbloqueio: autorização explícita para chamadas pagas e credencial; não há alegação de qualidade ou funcionamento real antes do ensaio. [Evidências e plano](evidence/tasks/T078.md). |
+
 ## Critérios gerais
 
 Uma tarefa só pode ser `DONE` quando cumprir seus critérios específicos e os gates aplicáveis definidos em [ENGINEERING-STANDARDS.md](ENGINEERING-STANDARDS.md), com resultados e limitações registrados na própria linha ou em evidência especializada linkada. [PROGRESS.md](PROGRESS.md) mantém apenas o snapshot/handoff atual; o histórico antigo está em [PROGRESS-HISTORY.md](PROGRESS-HISTORY.md). Regras técnicas globais estão em [AGENTS.md](../AGENTS.md) e o fluxo de sessão/Git está em [WORKFLOW.md](WORKFLOW.md).

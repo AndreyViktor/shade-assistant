@@ -77,6 +77,7 @@ export async function createMainWindow(): Promise<BrowserWindow> {
       createSuggestionProvider: (authorization, isAuthorized) =>
         new OpenAISuggestionProvider({
           model: authorization.model,
+          timeoutMs: 60_000,
           getApiKey: () => settings.getApiKey(),
           isAuthorized,
         }),
@@ -86,6 +87,7 @@ export async function createMainWindow(): Promise<BrowserWindow> {
       createAppleProvider: createAppleNativeTranscriptionProvider,
       exportSuggestionFeedback: (feedback) =>
         exportSuggestionFeedback(window, feedback),
+      openCitation: (url) => shell.openExternal(url),
     },
   );
   const rendererUrl = developmentUrl ?? pathToFileURL(rendererFile).href;

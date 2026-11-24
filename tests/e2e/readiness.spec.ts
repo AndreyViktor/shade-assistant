@@ -50,7 +50,7 @@ test('checks readiness through the UI without starting capture or using the netw
     await expect.poll(() => readFile(calls, 'utf8')).toBe('check\ncheck\n');
     expect(
       await page.evaluate(() =>
-        window.meetingCopilot.session({ version: 11, action: 'read' }),
+        window.meetingCopilot.session({ version: 12, action: 'read' }),
       ),
     ).toMatchObject({ session: { phase: 'idle' } });
     expect(

@@ -1,4 +1,5 @@
 import { hasExactKeys } from '../validation';
+import { isProtocolTime } from '../native/protocol';
 
 export const SUGGESTION_CATEGORIES = [
   'answer',
@@ -12,6 +13,7 @@ export type SuggestionContent = {
   title: string;
   body: string;
   groundedIn: 'meeting' | 'inference';
+  citation?: { url: string; title: string; startMs: number; excerpt: string };
 };
 // null retains the card until explicit dismissal or session lifecycle cleanup.
 export type Suggestion = SuggestionContent & {
@@ -20,6 +22,42 @@ export type Suggestion = SuggestionContent & {
 };
 export const SUGGESTION_TITLE_LIMIT = 80;
 export const SUGGESTION_BODY_LIMIT = 300;
+
+export function parseCitation(
+  value: unknown,
+): SuggestionContent['citation'] | null {
+  if (
+    !hasExactKeys(value, ['url', 'title', 'startMs', 'excerpt']) ||
+    typeof value.url !== 'string' ||
+    value.url.length > 2048 ||
+    typeof value.title !== 'string' ||
+    !value.title.trim() ||
+    value.title.length > 200 ||
+    typeof value.excerpt !== 'string' ||
+    !value.excerpt.trim() ||
+    value.excerpt.length > 500 ||
+    !isProtocolTime(value.startMs)
+  )
+    return null;
+  try {
+    const url = new URL(value.url);
+    if (
+      url.protocol !== 'https:' ||
+      url.username ||
+      url.password ||
+      !url.hostname
+    )
+      return null;
+  } catch {
+    return null;
+  }
+  return {
+    url: value.url,
+    title: value.title,
+    startMs: value.startMs,
+    excerpt: value.excerpt,
+  };
+}
 export const SUGGESTION_BATCH_LIMIT = 8;
 export const SUGGESTION_SESSION_REQUEST_LIMIT = 100;
 export const SUGGESTION_SESSION_CARD_LIMIT =
@@ -29,7 +67,14 @@ export function parseSuggestionContent(
   value: unknown,
 ): SuggestionContent | null {
   if (
-    !hasExactKeys(value, ['category', 'title', 'body', 'groundedIn']) ||
+    (!hasExactKeys(value, ['category', 'title', 'body', 'groundedIn']) &&
+      !hasExactKeys(value, [
+        'category',
+        'title',
+        'body',
+        'groundedIn',
+        'citation',
+      ])) ||
     !SUGGESTION_CATEGORIES.some((category) => category === value.category) ||
     typeof value.title !== 'string' ||
     !value.title.trim() ||
@@ -40,11 +85,15 @@ export function parseSuggestionContent(
     (value.groundedIn !== 'meeting' && value.groundedIn !== 'inference')
   )
     return null;
+  const citation =
+    'citation' in value ? parseCitation(value.citation) : undefined;
+  if (citation === null) return null;
   return {
     category: value.category as SuggestionCategory,
     title: value.title,
     body: value.body,
     groundedIn: value.groundedIn,
+    ...(citation ? { citation } : {}),
   };
 }
 
@@ -73,14 +122,23 @@ export function isSuggestionId(value: unknown): value is string {
 
 export function parseSuggestion(value: unknown): Suggestion | null {
   if (
-    !hasExactKeys(value, [
+    (!hasExactKeys(value, [
       'id',
       'category',
       'title',
       'body',
       'groundedIn',
       'expiresAt',
-    ]) ||
+    ]) &&
+      !hasExactKeys(value, [
+        'id',
+        'category',
+        'title',
+        'body',
+        'groundedIn',
+        'expiresAt',
+        'citation',
+      ])) ||
     !isSuggestionId(value.id) ||
     (value.expiresAt !== null &&
       (typeof value.expiresAt !== 'number' ||
@@ -93,6 +151,7 @@ export function parseSuggestion(value: unknown): Suggestion | null {
     title: value.title,
     body: value.body,
     groundedIn: value.groundedIn,
+    ...('citation' in value ? { citation: value.citation } : {}),
   });
   if (!content) return null;
   return {

@@ -21,7 +21,7 @@ describe('App shell', () => {
         },
       }),
       session: vi.fn().mockResolvedValue({
-        version: 11,
+        version: 12,
         ok: true,
         demo: emptyDemo(),
         local: null,
@@ -100,7 +100,7 @@ describe('App shell', () => {
       screen.queryByRole('button', { name: 'Iniciar transcrição local' }),
     ).not.toBeInTheDocument();
     expect(window.meetingCopilot.session).toHaveBeenCalledExactlyOnceWith({
-      version: 11,
+      version: 12,
       action: 'read',
     });
     fireEvent.keyDown(screen.getByRole('button', { name: 'Iniciar DEMO' }), {
@@ -148,7 +148,7 @@ describe('App shell', () => {
 
   it('switches presentation views without changing the session', async () => {
     const session = vi.fn().mockResolvedValue({
-      version: 11,
+      version: 12,
       ok: true,
       demo: emptyDemo(),
       local: null,
@@ -234,7 +234,7 @@ describe('App shell', () => {
     expect(screen.getByRole('button', { name: 'Pausar' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Parar' })).toBeVisible();
     expect(session).toHaveBeenCalledExactlyOnceWith({
-      version: 11,
+      version: 12,
       action: 'read',
     });
   });

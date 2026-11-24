@@ -28,6 +28,7 @@ type SessionIpcDependencies = {
   exportSuggestionFeedback: (
     feedback: SuggestionFeedbackExport,
   ) => Promise<void>;
+  openCitation?: (url: string) => Promise<void>;
 };
 
 export function registerSessionIpc(
@@ -322,6 +323,16 @@ export function registerSessionIpc(
       if (request.action === 'dismiss-suggestion') {
         if (session.snapshot().mode === 'demo') demo.dismiss(request.id);
         else suggestions.dismiss(request.id);
+      }
+      if (request.action === 'open-citation') {
+        const url = suggestions.citationUrl(request.id);
+        if (!url || !dependencies.openCitation)
+          return failure('INVALID_REQUEST');
+        try {
+          await dependencies.openCitation(url);
+        } catch {
+          return failure('UNAVAILABLE');
+        }
       }
       if (request.action === 'rate-suggestion') {
         if (session.snapshot().mode !== 'demo')

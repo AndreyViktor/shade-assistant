@@ -16,6 +16,7 @@ import {
 
 type Props = {
   source: string;
+  hasSystemAudio?: boolean;
   language: string;
   onCancel: () => void;
   onStart: (authorization?: SuggestionAuthorization) => void;
@@ -23,6 +24,7 @@ type Props = {
 
 export function StartSessionDialog({
   source,
+  hasSystemAudio = true,
   language,
   onCancel,
   onStart,
@@ -33,6 +35,7 @@ export function StartSessionDialog({
   const [userContext, setUserContext] = useState('');
   const [meetingProfile, setMeetingProfile] =
     useState<MeetingProfileId>('none');
+  const [webSearchConsent, setWebSearchConsent] = useState(false);
   const [credential, setCredential] = useState<
     SettingsSnapshot['credential'] | null
   >(null);
@@ -46,10 +49,17 @@ export function StartSessionDialog({
         maxRequests,
         userContext,
         ...(meetingProfile === 'none' ? {} : { meetingProfile }),
+        ...(meetingProfile === 'video-fact-check' && webSearchConsent
+          ? { webSearchConsent: true }
+          : {}),
       })
     : null;
   const hasKey = credential === 'stored' || credential === 'development';
-  const ready = hasKey && authorization !== null && !checking;
+  const ready =
+    hasKey &&
+    authorization !== null &&
+    !checking &&
+    (meetingProfile !== 'video-fact-check' || hasSystemAudio);
 
   useEffect(() => {
     mounted.current = true;
@@ -140,6 +150,7 @@ export function StartSessionDialog({
                   if (!event.target.checked) {
                     setUserContext('');
                     setMeetingProfile('none');
+                    setWebSearchConsent(false);
                   }
                 }}
                 aria-controls="suggestion-setup-fields"
@@ -204,6 +215,32 @@ export function StartSessionDialog({
                     </label>
                   ))}
                 </fieldset>
+                {meetingProfile === 'video-fact-check' && (
+                  <>
+                    {!hasSystemAudio && (
+                      <p role="alert">
+                        Selecione áudio do sistema nas Preferências para
+                        verificar vídeos.
+                      </p>
+                    )}
+                    <label className="suggestion-toggle">
+                      <input
+                        type="checkbox"
+                        checked={webSearchConsent}
+                        onChange={(event) =>
+                          setWebSearchConsent(event.target.checked)
+                        }
+                      />
+                      <span>
+                        Autorizo consultas na web pela OpenAI para verificar
+                        afirmações. Consultas podem conter informações da
+                        transcrição ou do contexto e gerar custos adicionais de
+                        busca, além dos tokens. O limite abaixo conta pedidos,
+                        não o valor gasto nem buscas individuais.
+                      </span>
+                    </label>
+                  </>
+                )}
                 <label htmlFor="suggestion-context">
                   Contexto da reunião (opcional)
                 </label>
@@ -295,7 +332,7 @@ export function StartSessionDialog({
               {!hasKey
                 ? 'Configure a chave para usar sugestões.'
                 : !authorization
-                  ? 'Confira o limite de 1 a 100 pedidos e o contexto de até 2.000 caracteres.'
+                  ? 'Confira o limite, o contexto e a autorização de busca para vídeos.'
                   : 'Aguarde a configuração da chave.'}{' '}
               A transcrição local já pode começar.
             </p>

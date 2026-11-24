@@ -16,7 +16,7 @@ import { isSuggestionFeedbackValue } from '../meeting/suggestionFeedback';
 import type { SuggestionFeedbackValue } from '../meeting/suggestionFeedback';
 
 export const SESSION_CHANNEL = 'meeting-copilot:session';
-export const SESSION_IPC_VERSION = 11;
+export const SESSION_IPC_VERSION = 12;
 export type SessionRequest =
   | {
       version: typeof SESSION_IPC_VERSION;
@@ -29,7 +29,7 @@ export type SessionRequest =
     }
   | {
       version: typeof SESSION_IPC_VERSION;
-      action: 'dismiss-suggestion';
+      action: 'dismiss-suggestion' | 'open-citation';
       id: string;
     }
   | {
@@ -84,12 +84,13 @@ export function parseSessionRequest(value: unknown): SessionRequest | null {
   if (
     hasExactKeys(value, ['version', 'action', 'id']) &&
     value.version === SESSION_IPC_VERSION &&
-    value.action === 'dismiss-suggestion' &&
+    (value.action === 'dismiss-suggestion' ||
+      value.action === 'open-citation') &&
     isSuggestionId(value.id)
   ) {
     return {
       version: SESSION_IPC_VERSION,
-      action: 'dismiss-suggestion',
+      action: value.action,
       id: value.id,
     };
   }

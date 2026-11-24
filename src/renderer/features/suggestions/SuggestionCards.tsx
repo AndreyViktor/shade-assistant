@@ -27,6 +27,7 @@ export function SuggestionCards({
   onDismiss,
   ratings = [],
   onRate,
+  onOpenCitation,
   demo = true,
 }: {
   suggestions: readonly Suggestion[];
@@ -35,6 +36,7 @@ export function SuggestionCards({
   onDismiss: (id: string) => void;
   ratings?: readonly SuggestionRating[];
   onRate?: (id: string, feedback: SuggestionFeedbackValue) => void;
+  onOpenCitation?: (id: string) => void;
 }) {
   const displayedSuggestions = demo ? suggestions : [...suggestions].reverse();
   return (
@@ -70,6 +72,26 @@ export function SuggestionCards({
                 </p>
                 <h4>{card.title}</h4>
                 <p>{card.body}</p>
+                {card.citation && (
+                  <div>
+                    <p>
+                      Fala ({Math.floor(card.citation.startMs / 60000)}:
+                      {String(
+                        Math.floor(card.citation.startMs / 1000) % 60,
+                      ).padStart(2, '0')}
+                      ): {card.citation.excerpt}
+                    </p>
+                    <a
+                      href={card.citation.url}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        if (!busy) onOpenCitation?.(card.id);
+                      }}
+                    >
+                      Fonte: {card.citation.title}
+                    </a>
+                  </div>
+                )}
                 <p className="suggestion-grounding">
                   {card.groundedIn === 'meeting'
                     ? demo

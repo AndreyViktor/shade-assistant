@@ -125,7 +125,7 @@ for (const filled of [false, true]) {
       ).toBeVisible();
       const state = await page.evaluate(async () => ({
         session: await window.meetingCopilot.session({
-          version: 11,
+          version: 12,
           action: 'read',
         }),
         settings: await window.meetingCopilot.getSettings(),
@@ -153,7 +153,7 @@ for (const filled of [false, true]) {
       expect(
         JSON.stringify(
           await page.evaluate(() =>
-            window.meetingCopilot.session({ version: 11, action: 'read' }),
+            window.meetingCopilot.session({ version: 12, action: 'read' }),
           ),
         ),
       ).not.toContain(sentinel);

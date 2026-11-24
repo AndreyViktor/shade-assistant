@@ -46,7 +46,7 @@ for (const empty of [false, true]) {
       } else await expect(log.locator('.transcript-segment')).toHaveCount(8);
       const read = () =>
         page.evaluate(() =>
-          window.meetingCopilot.session({ version: 11, action: 'read' }),
+          window.meetingCopilot.session({ version: 12, action: 'read' }),
         );
       const before = await read();
       for (const [width, height] of [

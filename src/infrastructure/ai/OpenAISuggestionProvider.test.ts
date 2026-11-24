@@ -665,7 +665,9 @@ it.each([
   },
 );
 
-it.each(MEETING_PROFILES)(
+it.each(
+  MEETING_PROFILES.filter((profile) => profile.id !== 'video-fact-check'),
+)(
   'serializes the $id profile separately from meeting evidence',
   async (profile) => {
     const { provider, transport } = setup(envelope([]));
@@ -700,6 +702,44 @@ it.each(MEETING_PROFILES)(
     );
   },
 );
+
+it('enables web search only for the video profile and bounds tool calls', async () => {
+  const { provider, transport } = setup({
+    status: 'completed',
+    output: [
+      {
+        type: 'message',
+        role: 'assistant',
+        status: 'completed',
+        content: [
+          {
+            type: 'output_text',
+            text: JSON.stringify({ corrections: [] }),
+            annotations: [],
+          },
+        ],
+      },
+    ],
+  });
+  expect(
+    await provider.generate({
+      ...request(),
+      meetingProfile: 'video-fact-check',
+    }),
+  ).toMatchObject({ ok: true, suggestions: [] });
+  const rawBody = transport.mock.calls[0]?.[1]?.body;
+  if (typeof rawBody !== 'string') throw new Error('Missing body');
+  const body = JSON.parse(rawBody) as {
+    tools: unknown;
+    max_tool_calls: number;
+    instructions: string;
+    store: boolean;
+  };
+  expect(body.tools).toEqual([{ type: 'web_search' }]);
+  expect(body.max_tool_calls).toBe(2);
+  expect(body.instructions).toContain('Never fabricate a URL');
+  expect(body.store).toBe(false);
+});
 
 it('omits no profile and rejects identifiers outside the internal catalog', async () => {
   const { provider, transport, getApiKey } = setup(envelope([]));

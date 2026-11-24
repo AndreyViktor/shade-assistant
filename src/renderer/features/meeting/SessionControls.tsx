@@ -297,6 +297,13 @@ export function SessionControls({
                   suggestions={suggestions.items}
                   busy={busy}
                   ratings={suggestions.feedback.ratings}
+                  onOpenCitation={(id) => {
+                    void command({
+                      version: SESSION_IPC_VERSION,
+                      action: 'open-citation',
+                      id,
+                    });
+                  }}
                   onRate={(id, feedback) => {
                     void command({
                       version: SESSION_IPC_VERSION,
@@ -365,6 +372,7 @@ export function SessionControls({
       {confirming && (
         <StartSessionDialog
           source={sourceNames[source]}
+          hasSystemAudio={source !== 'mic'}
           language={locale === 'pt-BR' ? 'Português (Brasil)' : 'Inglês (EUA)'}
           onCancel={() => {
             setConfirming(false);

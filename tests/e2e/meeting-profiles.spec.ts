@@ -68,6 +68,16 @@ test('uses a fresh session focus and clears it on stop', async () => {
     await page
       .getByRole('checkbox', { name: /Adicionar sugestões de IA/ })
       .check();
+    await page.getByRole('radio', { name: /Verificação de vídeos/ }).check();
+    await expect(
+      page.getByRole('button', { name: 'Iniciar com sugestões' }),
+    ).toBeDisabled();
+    await page
+      .getByRole('checkbox', { name: /Autorizo consultas na web/ })
+      .check();
+    await expect(
+      page.getByRole('button', { name: 'Iniciar com sugestões' }),
+    ).toBeEnabled();
     await page.getByRole('radio', { name: /Status/ }).check();
     await app.evaluate(({ BrowserWindow }) =>
       BrowserWindow.getAllWindows()[0]?.setContentSize(640, 480),
@@ -173,7 +183,7 @@ function profileInput(value: unknown): unknown {
 async function sessionJson(page: Page): Promise<string> {
   return JSON.stringify(
     await page.evaluate(() =>
-      window.meetingCopilot.session({ version: 11, action: 'read' }),
+      window.meetingCopilot.session({ version: 12, action: 'read' }),
     ),
   );
 }

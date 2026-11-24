@@ -54,7 +54,11 @@ export function parseSessionStart(value: unknown): SessionStart | null {
     value.sources.length >= 1 &&
     value.sources.length <= 2 &&
     value.sources.every(isAudioSource) &&
-    new Set(value.sources).size === value.sources.length
+    new Set(value.sources).size === value.sources.length &&
+    (!('suggestions' in value) ||
+      parseSuggestionAuthorization(value.suggestions)?.meetingProfile !==
+        'video-fact-check' ||
+      value.sources.includes('system'))
   )
     return {
       mode: 'apple-local',

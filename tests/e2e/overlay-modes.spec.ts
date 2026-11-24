@@ -25,7 +25,7 @@ test('overlay views preserve the session and reflow offline', async () => {
 
     const read = () =>
       page.evaluate(() =>
-        window.meetingCopilot.session({ version: 11, action: 'read' }),
+        window.meetingCopilot.session({ version: 12, action: 'read' }),
       );
     const before = await read();
     const modes = page.getByRole('group', { name: 'Visualização do overlay' });

@@ -13,6 +13,7 @@ export type SuggestionRequest = {
   existingResults?: MeetingResultItem[];
   userContext?: string;
   meetingProfile?: FocusedMeetingProfileId;
+  videoNewSegmentIds?: string[];
   language: 'pt-BR' | 'en-US';
   signal: AbortSignal;
   onDispatch?: (body: string) => void;

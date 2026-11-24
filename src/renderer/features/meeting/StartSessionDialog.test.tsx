@@ -141,6 +141,26 @@ it('shows all session-only focus choices and selects one without starting', asyn
   });
 });
 
+it('requires explicit web search consent for the video profile', async () => {
+  const { onStart } = setup('stored');
+  fireEvent.click(screen.getByRole('checkbox'));
+  await screen.findByText('Chave configurada');
+  fireEvent.click(screen.getByRole('radio', { name: /Verificação de vídeos/ }));
+  const start = screen.getByRole('button', { name: 'Iniciar com sugestões' });
+  expect(start).toBeDisabled();
+  fireEvent.click(
+    screen.getByRole('checkbox', { name: /Autorizo consultas na web/ }),
+  );
+  expect(start).toBeEnabled();
+  fireEvent.click(start);
+  expect(onStart).toHaveBeenCalledExactlyOnceWith({
+    model: 'gpt-5.4-mini',
+    maxRequests: 10,
+    meetingProfile: 'video-fact-check',
+    webSearchConsent: true,
+  });
+});
+
 it('sends optional context only with explicit suggestions consent and clears it when disabled', async () => {
   const { onStart } = setup('stored');
   fireEvent.click(screen.getByRole('checkbox'));
