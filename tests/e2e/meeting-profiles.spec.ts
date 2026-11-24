@@ -18,14 +18,16 @@ test('reuses a safe default profile, supports session overrides and clears runti
   try {
     const page = await app.firstWindow();
     await page.getByRole('button', { name: 'Preferências' }).click();
+    await page.getByRole('button', { name: /Sugestões de IA/ }).click();
     await page.getByLabel('Perfil padrão da reunião').selectOption('status');
     await page.getByRole('button', { name: 'Salvar preferências' }).click();
     await expect(
       page
-        .getByRole('region', { name: 'Preferências', exact: true })
+        .getByRole('region', { name: 'Sugestões de IA', exact: true })
         .getByRole('status')
         .filter({ hasText: 'Preferências e estado da chave atualizados' }),
     ).toContainText('Nenhum serviço foi iniciado');
+    await page.getByRole('button', { name: 'Voltar às preferências' }).click();
     await page.getByRole('button', { name: 'Voltar ao painel' }).click();
 
     const requests = () =>

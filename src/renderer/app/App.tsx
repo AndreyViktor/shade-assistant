@@ -40,6 +40,28 @@ export function App() {
     <main className={`app-shell app-shell-${overlayMode}`}>
       <SettingsDisclosure
         showToggle={overlayMode !== 'hidden'}
+        demoSummary={
+          !result?.ok || !meeting.session
+            ? 'DEMO indisponível'
+            : meeting.session.phase === 'running' ||
+                meeting.session.phase === 'paused'
+              ? meeting.session.mode === 'demo'
+                ? 'DEMO offline em andamento'
+                : 'DEMO indisponível durante a sessão'
+              : 'DEMO offline disponível'
+        }
+        sessionSummary={
+          meeting.session
+            ? (
+                {
+                  idle: 'Sessão inativa',
+                  running: 'Sessão em andamento',
+                  paused: 'Sessão pausada',
+                  stopped: 'Sessão encerrada',
+                } as const
+              )[meeting.session.phase]
+            : 'Sessão indisponível'
+        }
         onSaved={setPreferences}
         connection={
           <SuggestionDiagnosticsPanel snapshot={meeting.suggestions} />

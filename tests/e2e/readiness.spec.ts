@@ -37,6 +37,7 @@ test('checks readiness through the UI without starting capture or using the netw
     await page
       .getByRole('button', { name: 'Preferências', exact: true })
       .click();
+    await page.getByRole('button', { name: /Permissões e prontidão/ }).click();
     await page.getByRole('button', { name: 'Verificar prontidão' }).click();
     const readiness = page.getByRole('region', { name: 'Prontidão da sessão' });
     await expect(readiness).toContainText('Não solicitado');

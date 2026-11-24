@@ -97,6 +97,7 @@ for (const filled of [false, true]) {
       await page
         .getByRole('button', { name: 'Preferências', exact: true })
         .click();
+      await page.getByRole('button', { name: /Diagnóstico/ }).click();
       await expect(
         page.getByText('Resposta válida, sem sugestões'),
       ).toBeVisible();
@@ -106,6 +107,9 @@ for (const filled of [false, true]) {
         await expect(
           page.getByLabel('Corpo da requisição OpenAI'),
         ).toContainText(sentinel);
+      await page
+        .getByRole('button', { name: 'Voltar às preferências' })
+        .click();
       await page.getByRole('button', { name: 'Voltar ao painel' }).click();
       await expect(
         page

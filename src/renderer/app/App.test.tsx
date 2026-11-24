@@ -71,30 +71,29 @@ describe('App shell', () => {
     ).not.toBeInTheDocument();
     const preferences = screen.getByRole('button', { name: 'Preferências' });
     fireEvent.click(preferences);
-    expect(screen.getByText('Sobre o histórico de transcrição')).toBeVisible();
+    fireEvent.click(
+      await screen.findByRole('button', { name: /Áudio e transcrição/ }),
+    );
     expect(
-      await screen.findByRole('group', { name: 'Transcrição de áudio' }),
+      screen.getByRole('group', { name: 'Transcrição de áudio' }),
     ).toContainElement(screen.getByLabelText('Fonte de áudio'));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Voltar às preferências' }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Sugestões de IA/ }));
     const ai = screen.getByRole('group', { name: 'Sugestões de IA' });
     expect(within(ai).getByLabelText('Modelo para as sugestões')).toBeVisible();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Voltar às preferências' }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Diagnóstico/ }));
     expect(
-      within(ai).getByText('Chave OpenAI (não usada na transcrição local)'),
+      screen.getByRole('region', { name: 'Estado da OpenAI' }),
     ).toBeVisible();
+    expect(screen.getByText('Sobre o histórico de transcrição')).toBeVisible();
     expect(
-      within(ai).getByRole('region', { name: 'Estado da OpenAI' }),
+      screen.getByRole('button', { name: 'Voltar às preferências' }),
     ).toBeVisible();
-    expect(
-      screen.getByRole('region', { name: 'Permissões e privacidade' }),
-    ).toBeVisible();
-    expect(
-      within(screen.getByRole('region', { name: 'Diagnóstico' })).getByText(
-        'Diagnóstico · DEMO offline',
-      ),
-    ).toBeVisible();
-
-    expect(
-      screen.getByRole('button', { name: 'Voltar ao painel' }),
-    ).toHaveFocus();
     fireEvent.click(screen.getByText('Diagnóstico · DEMO offline'));
     expect(screen.getByRole('button', { name: 'Iniciar DEMO' })).toBeVisible();
     expect(
@@ -107,6 +106,7 @@ describe('App shell', () => {
     fireEvent.keyDown(screen.getByRole('button', { name: 'Iniciar DEMO' }), {
       key: 'Escape',
     });
+    fireEvent.keyDown(document.body, { key: 'Escape' });
     expect(preferences).toHaveFocus();
     expect(
       screen.queryByRole('button', { name: 'Iniciar DEMO' }),
@@ -119,7 +119,7 @@ describe('App shell', () => {
     const preferences = screen.getByRole('button', { name: 'Preferências' });
     fireEvent.click(preferences);
     const back = screen.getByRole('button', { name: 'Voltar ao painel' });
-    await screen.findByLabelText('Fonte de áudio');
+    await screen.findByRole('button', { name: /Áudio e transcrição/ });
     back.blur();
     expect(document.body).toHaveFocus();
     const handledEscape = new KeyboardEvent('keydown', {
@@ -247,6 +247,7 @@ describe('App shell', () => {
       'Falha na transcrição. Consulte Preferências.',
     );
     fireEvent.click(screen.getByRole('button', { name: 'Preferências' }));
+    fireEvent.click(await screen.findByRole('button', { name: /Diagnóstico/ }));
     expect(
       screen.getByRole('region', { name: 'Estado da transcrição' }),
     ).toHaveTextContent(

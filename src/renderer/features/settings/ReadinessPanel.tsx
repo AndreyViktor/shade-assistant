@@ -36,7 +36,11 @@ const ITEMS: Array<{
   { key: 'helper', label: 'Helper assinado' },
 ];
 
-export function ReadinessPanel() {
+export function ReadinessPanel({
+  onSummaryChange,
+}: {
+  onSummaryChange?: (summary: string) => void;
+}) {
   const [snapshot, setSnapshot] = useState<ReadinessSnapshot | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(
@@ -51,8 +55,10 @@ export function ReadinessPanel() {
       if (!result.ok || result.action !== 'check')
         throw new Error('UNAVAILABLE');
       setSnapshot(result.readiness);
+      onSummaryChange?.('Verificado');
       setMessage('Prontidão rechecada. Nenhuma captura foi iniciada.');
     } catch {
+      onSummaryChange?.('Falha na verificação');
       setMessage('Não foi possível rechecá-la. Nenhuma captura foi iniciada.');
     } finally {
       setBusy(false);

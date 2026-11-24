@@ -36,6 +36,8 @@ test('opens the real Electron build with an isolated offline renderer', async ()
         'savePreferences',
         'importSecret',
         'removeSecret',
+        'getReadiness',
+        'openPermissionSettings',
       ],
       frozen: true,
     });

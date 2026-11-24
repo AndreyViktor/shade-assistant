@@ -10,6 +10,7 @@ test('shows two DEMO cards, dismisses by keyboard and expires the remaining card
     await page
       .getByRole('button', { name: 'Preferências', exact: true })
       .click();
+    await page.getByRole('button', { name: /Diagnóstico/ }).click();
     await page.getByText('Diagnóstico · DEMO offline').click();
     await page.getByRole('button', { name: 'Iniciar DEMO' }).click();
     const cards = page.getByRole('region', { name: 'Sugestões DEMO' });

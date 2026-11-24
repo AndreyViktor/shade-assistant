@@ -42,6 +42,7 @@ for (const outcome of ['authentication', 'empty'] as const) {
       await page
         .getByRole('button', { name: 'Preferências', exact: true })
         .click();
+      await page.getByRole('button', { name: /Diagnóstico/ }).click();
       const diagnostics = page.getByRole('region', {
         name: 'Estado da OpenAI',
       });
@@ -85,6 +86,9 @@ for (const outcome of ['authentication', 'empty'] as const) {
             ).syntheticSuggestionRequests.length,
         ),
       ).toBe(1);
+      await page
+        .getByRole('button', { name: 'Voltar às preferências' })
+        .click();
       await page.getByRole('button', { name: 'Voltar ao painel' }).click();
       await page.getByRole('button', { name: 'Desativar sugestões' }).click();
       await expect(assistance.getByRole('alert')).toHaveCount(0);

@@ -34,10 +34,11 @@ test('DEMO stays in diagnostics across preferences, keyboard navigation and sess
       page.getByRole('button', { name: 'Iniciar DEMO' }),
     ).toHaveCount(0);
     const idle = await read();
+    await page.getByRole('button', { name: /Diagnóstico/ }).click();
     await diagnostic.focus();
     await page.keyboard.press('Enter');
-    await page.keyboard.press('Tab');
     const start = page.getByRole('button', { name: 'Iniciar DEMO' });
+    await start.focus();
     await expect(start).toBeFocused();
     expect(await read()).toEqual(idle);
     await page.keyboard.press('Space');
@@ -58,10 +59,16 @@ test('DEMO stays in diagnostics across preferences, keyboard navigation and sess
       local: null,
       suggestions: { status: 'disabled' },
     });
+    await page.getByRole('button', { name: 'Voltar às preferências' }).click();
+    await page.getByRole('button', { name: /Áudio e transcrição/ }).click();
     await page
       .locator('#panel-settings')
       .getByLabel('Idioma')
       .selectOption('en-US');
+    await page.getByRole('button', { name: 'Salvar preferências' }).click();
+    await expect(page.getByText(/Nenhum serviço foi iniciado/)).toBeVisible();
+    await page.getByRole('button', { name: 'Voltar às preferências' }).click();
+    await page.getByRole('button', { name: /Sugestões de IA/ }).click();
     await page.getByLabel('Modelo para as sugestões').selectOption('gpt-5.4');
     await page.getByRole('button', { name: 'Salvar preferências' }).click();
     await expect(page.getByText(/Nenhum serviço foi iniciado/)).toBeVisible();
@@ -71,6 +78,8 @@ test('DEMO stays in diagnostics across preferences, keyboard navigation and sess
       fullPage: true,
     });
 
+    await page.getByRole('button', { name: 'Voltar às preferências' }).click();
+    await page.getByRole('button', { name: /Diagnóstico/ }).click();
     const nativeWindow = await app.browserWindow(page);
     await nativeWindow.evaluate((win: BrowserWindow) => {
       win.setSize(640, 480);
@@ -93,6 +102,7 @@ test('DEMO stays in diagnostics across preferences, keyboard navigation and sess
       fullPage: true,
     });
     await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
     await expect(preferences).toBeFocused();
     await expect(
       page.getByRole('heading', { name: 'DEMO · simulação offline' }),
@@ -111,11 +121,13 @@ test('DEMO stays in diagnostics across preferences, keyboard navigation and sess
       fullPage: true,
     });
     await preferences.click();
+    await page.getByRole('button', { name: /Diagnóstico/ }).click();
     await expect(preview.getByRole('article')).toHaveCount(1);
     await resume.click();
     await expect(
       page.getByRole('status').filter({ hasText: /^Em andamento$/ }),
     ).toBeVisible();
+    await page.getByRole('button', { name: 'Voltar às preferências' }).click();
     await back.click();
     await page.getByRole('button', { name: 'Parar DEMO', exact: true }).click();
     await expect(
@@ -132,6 +144,7 @@ test('DEMO stays in diagnostics across preferences, keyboard navigation and sess
     await expect(page.getByRole('checkbox')).not.toBeChecked();
     await page.getByRole('button', { name: 'Cancelar' }).click();
     await preferences.click();
+    await page.getByRole('button', { name: /Diagnóstico/ }).click();
     await start.click();
     await expect(preview.getByText('Aguardando fala simulada…')).toBeVisible();
     await page.getByRole('button', { name: 'Parar', exact: true }).click();

@@ -117,12 +117,14 @@ test('native failure marks only transcription and exposes safe details in prefer
     await page
       .getByRole('button', { name: 'Preferências', exact: true })
       .click();
+    await page.getByRole('button', { name: /Diagnóstico/ }).click();
     const details = page.getByRole('region', { name: 'Estado da transcrição' });
     await expect(details).toContainText('A captura de áudio falhou.');
     await details.scrollIntoViewIfNeeded();
     await page.screenshot({
       path: test.info().outputPath('transcription-details.png'),
     });
+    await page.keyboard.press('Escape');
     await page.keyboard.press('Escape');
     await expect(
       page.getByRole('button', { name: 'Preferências', exact: true }),

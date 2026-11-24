@@ -42,6 +42,7 @@ test('settings navigation preserves a running and paused session; saved choices 
 
     await open();
     await expect(back).toBeFocused();
+    await page.getByRole('button', { name: /Diagnóstico/ }).click();
     await page.getByText('Diagnóstico · DEMO offline').click();
     await expect(
       page.getByRole('button', { name: 'Iniciar DEMO' }),
@@ -50,6 +51,8 @@ test('settings navigation preserves a running and paused session; saved choices 
       page.getByText('Pare a transcrição no painel antes de iniciar a DEMO.'),
     ).toBeVisible();
     await page.getByText('Diagnóstico · DEMO offline').click();
+    await page.getByRole('button', { name: 'Voltar às preferências' }).click();
+    await page.getByRole('button', { name: /Áudio e transcrição/ }).click();
     await expect(page.getByRole('log')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Pausar' })).toHaveCount(0);
     await page
@@ -57,6 +60,10 @@ test('settings navigation preserves a running and paused session; saved choices 
       .getByLabel('Idioma')
       .selectOption('en-US');
     await page.getByLabel('Fonte de áudio').selectOption('mic');
+    await page.getByRole('button', { name: 'Salvar preferências' }).click();
+    await expect(page.getByText(/Nenhum serviço foi iniciado/)).toBeVisible();
+    await page.getByRole('button', { name: 'Voltar às preferências' }).click();
+    await page.getByRole('button', { name: /Sugestões de IA/ }).click();
     await page.getByLabel('Modelo para as sugestões').selectOption('gpt-5.4');
     await page.getByRole('button', { name: 'Salvar preferências' }).click();
     await expect(page.getByText(/Nenhum serviço foi iniciado/)).toBeVisible();
@@ -65,6 +72,7 @@ test('settings navigation preserves a running and paused session; saved choices 
       path: 'test-results/settings-session.png',
       fullPage: true,
     });
+    await page.getByRole('button', { name: 'Voltar às preferências' }).click();
     await back.click();
     await expect(
       page.getByRole('button', { name: 'Preferências', exact: true }),
@@ -74,10 +82,12 @@ test('settings navigation preserves a running and paused session; saved choices 
     await page.getByRole('button', { name: 'Pausar' }).click();
     const paused = await read();
     await open();
+    await page.getByRole('button', { name: /Áudio e transcrição/ }).click();
     await page.getByLabel('Fonte de áudio').selectOption('system');
     await page.getByRole('button', { name: 'Salvar preferências' }).click();
     await expect(page.getByText(/Nenhum serviço foi iniciado/)).toBeVisible();
     expect(await read()).toEqual(paused);
+    await page.keyboard.press('Escape');
     await page.keyboard.press('Escape');
     await expect(page.getByRole('button', { name: 'Retomar' })).toBeVisible();
     expect(await read()).toEqual(paused);

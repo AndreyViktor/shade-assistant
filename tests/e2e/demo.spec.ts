@@ -9,6 +9,7 @@ test('plays deterministic demo transcription and suggestions without credentials
     await page
       .getByRole('button', { name: 'Preferências', exact: true })
       .click();
+    await page.getByRole('button', { name: /Diagnóstico/ }).click();
     await page.getByText('Diagnóstico · DEMO offline').click();
     const start = page.getByRole('button', { name: 'Iniciar DEMO' });
     await expect(start).toBeEnabled();

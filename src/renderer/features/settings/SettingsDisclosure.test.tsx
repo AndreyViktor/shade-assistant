@@ -3,11 +3,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { SettingsDisclosure } from './SettingsDisclosure';
 
 vi.mock('./SettingsPanel', () => ({
-  SettingsPanel: () => (
-    <label>
-      Exemplo
-      <input defaultValue="rascunho" />
-    </label>
+  SettingsPanel: ({ onClose }: { onClose: () => void }) => (
+    <>
+      <button onClick={onClose}>Voltar ao painel</button>
+      <label>
+        Exemplo
+        <input defaultValue="rascunho" />
+      </label>
+    </>
   ),
 }));
 
@@ -27,13 +30,10 @@ describe('separate preferences screen', () => {
     expect(
       screen.queryByRole('button', { name: 'Controle da reunião' }),
     ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Voltar ao painel' }),
-    ).toHaveFocus();
+
     const input = screen.getByRole('textbox', { name: 'Exemplo' });
     fireEvent.change(input, { target: { value: 'alterado' } });
-    input.focus();
-    fireEvent.keyDown(input, { key: 'Escape' });
+    fireEvent.click(screen.getByRole('button', { name: 'Voltar ao painel' }));
     expect(toggle).toHaveFocus();
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     fireEvent.click(toggle);

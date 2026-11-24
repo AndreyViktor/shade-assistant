@@ -17,6 +17,7 @@ test('loads a development .env without passing its secrets to renderer or proces
     await page
       .getByRole('button', { name: 'Preferências', exact: true })
       .click();
+    await page.getByRole('button', { name: /Sugestões de IA/ }).click();
     await page
       .getByText('Chave OpenAI (não usada na transcrição local)')
       .click();
@@ -78,6 +79,7 @@ for (const version of [1, 2, 3]) {
       await page
         .getByRole('button', { name: 'Preferências', exact: true })
         .click();
+      await page.getByRole('button', { name: /Áudio e transcrição/ }).click();
       const outgoing: string[] = [];
       page.on('request', (request) => {
         if (/^https?:/.test(request.url())) outgoing.push(request.url());
@@ -88,6 +90,12 @@ for (const version of [1, 2, 3]) {
         .selectOption('en-US');
       await expect(page.getByLabel('Fonte de áudio')).toHaveValue('both');
       await page.getByLabel('Fonte de áudio').selectOption('system');
+      await page.getByRole('button', { name: 'Salvar preferências' }).click();
+      await expect(page.getByText(/Nenhum serviço foi iniciado/)).toBeVisible();
+      await page
+        .getByRole('button', { name: 'Voltar às preferências' })
+        .click();
+      await page.getByRole('button', { name: /Sugestões de IA/ }).click();
       await page.getByLabel('Modelo para as sugestões').selectOption('gpt-5.4');
       await page
         .getByLabel('Perfil padrão da reunião')
@@ -95,7 +103,7 @@ for (const version of [1, 2, 3]) {
       await page.getByRole('button', { name: 'Salvar preferências' }).click();
       await expect(
         page
-          .getByRole('region', { name: 'Preferências', exact: true })
+          .getByRole('region', { name: 'Sugestões de IA', exact: true })
           .getByRole('status')
           .filter({ hasText: 'Nenhum serviço foi iniciado' }),
       ).toContainText('Nenhum serviço foi iniciado');
@@ -120,13 +128,18 @@ for (const version of [1, 2, 3]) {
       await page
         .getByRole('button', { name: 'Preferências', exact: true })
         .click();
+      await page.getByRole('button', { name: /Áudio e transcrição/ }).click();
       await expect(
         page.locator('#panel-settings').getByLabel('Idioma'),
       ).toHaveValue('en-US');
+      await expect(page.getByLabel('Fonte de áudio')).toHaveValue('system');
+      await page
+        .getByRole('button', { name: 'Voltar às preferências' })
+        .click();
+      await page.getByRole('button', { name: /Sugestões de IA/ }).click();
       await expect(page.getByLabel('Modelo para as sugestões')).toHaveValue(
         'gpt-5.4',
       );
-      await expect(page.getByLabel('Fonte de áudio')).toHaveValue('system');
       await expect(page.getByLabel('Perfil padrão da reunião')).toHaveValue(
         'technical-review',
       );
@@ -151,7 +164,7 @@ for (const version of [1, 2, 3]) {
         await readFile(join(fixture.profile, 'preferences.v1.json'), 'utf8'),
       ).not.toContain('key');
       await page
-        .getByRole('heading', { name: 'Preferências', exact: true })
+        .getByRole('heading', { name: 'Sugestões de IA', exact: true })
         .scrollIntoViewIfNeeded();
       await page.screenshot({
         path: 'test-results/settings.png',
@@ -176,6 +189,7 @@ test('Mac SecretStore uses real OS encryption for a synthetic value; renderer se
     await page
       .getByRole('button', { name: 'Preferências', exact: true })
       .click();
+    await page.getByRole('button', { name: /Sugestões de IA/ }).click();
     await page
       .getByText('Chave OpenAI (não usada na transcrição local)')
       .click();

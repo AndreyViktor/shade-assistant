@@ -12,6 +12,7 @@ test('repeats start → speech → card → pause → stop without late events o
     await page
       .getByRole('button', { name: 'Preferências', exact: true })
       .click();
+    await page.getByRole('button', { name: /Diagnóstico/ }).click();
     await page.getByText('Diagnóstico · DEMO offline').click();
     const start = page.getByRole('button', { name: 'Iniciar DEMO' });
     const preview = page.getByRole('region', { name: 'Roteiro DEMO' });

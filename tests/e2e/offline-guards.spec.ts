@@ -9,6 +9,7 @@ test('offline guards reject and count deliberate transport probes before any con
     await page
       .getByRole('button', { name: 'Preferências', exact: true })
       .click();
+    await page.getByRole('button', { name: /Diagnóstico/ }).click();
     await page.getByText('Diagnóstico · DEMO offline').click();
     await expect(
       page.getByRole('button', { name: 'Iniciar DEMO' }),

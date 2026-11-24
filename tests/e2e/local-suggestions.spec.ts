@@ -22,9 +22,17 @@ for (const { consent, model } of [
       await page
         .getByRole('button', { name: 'Preferências', exact: true })
         .click();
+      await page.getByRole('button', { name: /Sugestões de IA/ }).click();
       await page.getByLabel('Modelo para as sugestões').selectOption(model);
-      await page.getByRole('button', { name: 'Salvar preferências' }).click();
-      await expect(page.getByText(/Nenhum serviço foi iniciado/)).toBeVisible();
+      if (model !== 'gpt-5.4-mini') {
+        await page.getByRole('button', { name: 'Salvar preferências' }).click();
+        await expect(
+          page.getByText(/Nenhum serviço foi iniciado/),
+        ).toBeVisible();
+      }
+      await page
+        .getByRole('button', { name: 'Voltar às preferências' })
+        .click();
       await page.getByRole('button', { name: 'Voltar ao painel' }).click();
       await page
         .getByRole('button', { name: 'Iniciar transcrição local' })
@@ -129,6 +137,7 @@ for (const { consent, model } of [
         await page
           .getByRole('button', { name: 'Preferências', exact: true })
           .click();
+        await page.getByRole('button', { name: /Diagnóstico/ }).click();
         const diagnostics = page.getByRole('region', {
           name: 'Estado da OpenAI',
         });
@@ -155,6 +164,9 @@ for (const { consent, model } of [
         await page.screenshot({
           path: test.info().outputPath('openai-diagnostics.png'),
         });
+        await page
+          .getByRole('button', { name: 'Voltar às preferências' })
+          .click();
         await page.getByRole('button', { name: 'Voltar ao painel' }).click();
         if (model === 'gpt-5.4-mini') {
           await cards

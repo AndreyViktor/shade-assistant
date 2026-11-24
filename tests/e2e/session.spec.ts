@@ -13,6 +13,7 @@ test('manual demo session uses real IPC, stops on reload and never enables real 
     await page
       .getByRole('button', { name: 'Preferências', exact: true })
       .click();
+    await page.getByRole('button', { name: /Diagnóstico/ }).click();
     await page.getByText('Diagnóstico · DEMO offline').click();
     const start = page.getByRole('button', { name: 'Iniciar DEMO' });
     await expect(start).toBeEnabled();
@@ -47,6 +48,7 @@ test('manual demo session uses real IPC, stops on reload and never enables real 
     await page
       .getByRole('button', { name: 'Preferências', exact: true })
       .click();
+    await page.getByRole('button', { name: /Diagnóstico/ }).click();
     await page.getByText('Diagnóstico · DEMO offline').click();
     await expect(start).toBeEnabled();
     expect(
@@ -75,9 +77,12 @@ test('manual demo session uses real IPC, stops on reload and never enables real 
         }),
       ),
     ).toEqual({ version: 11, ok: false, code: 'REMOTE_STT_DEFERRED' });
+    await page.getByRole('button', { name: 'Voltar às preferências' }).click();
+    await page.getByRole('button', { name: /Permissões e prontidão/ }).click();
     await expect(
       page.getByText(/O envio de texto à OpenAI exige autorização separada/),
     ).toBeVisible();
+    await page.getByRole('button', { name: 'Voltar às preferências' }).click();
     await page.getByRole('button', { name: 'Voltar ao painel' }).click();
     await page.screenshot({ path: 'test-results/session.png' });
     expect(outgoing).toEqual([]);

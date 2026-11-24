@@ -3,7 +3,7 @@ import {
   SUGGESTION_PROVIDERS,
   TRANSCRIPTION_PROVIDERS,
 } from '../../../contracts/settings/providerOptions';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { parsePreferences } from '../../../contracts/settings/preferences';
 import type { Preferences } from '../../../contracts/settings/preferences';
@@ -17,56 +17,128 @@ import {
 } from '../../../contracts/meeting/meetingProfile';
 import { ReadinessPanel } from './ReadinessPanel';
 
+type Area = 'audio' | 'suggestions' | 'readiness' | 'diagnostics';
+
 export function SettingsPanel({
   active = true,
   onSaved,
   connection,
+  diagnostics,
+  sessionSummary = 'Sessão indisponível',
+  demoSummary = 'DEMO offline disponível',
+  onClose,
 }: {
   active?: boolean;
   connection?: ReactNode;
+  diagnostics?: ReactNode;
+  sessionSummary?: string;
+  demoSummary?: string;
+  onClose?: () => void;
   onSaved?: ((preferences: Preferences) => void) | undefined;
 }) {
   const [snapshot, setSnapshot] = useState<SettingsSnapshot | null>(null);
   const [draft, setDraft] = useState<Preferences | null>(null);
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [area, setArea] = useState<Area | null>(null);
+  const [readinessSummary, setReadinessSummary] = useState('Não verificado');
+  const [confirm, setConfirm] = useState<'area' | 'panel' | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const origin = useRef<Area | null>(null);
+  const root = useRef<HTMLElement>(null);
+  const opener = useRef<HTMLElement | null>(null);
+  const keep = useRef<HTMLButtonElement>(null);
+  const back = useRef<HTMLButtonElement>(null);
+  const dirty =
+    !!snapshot &&
+    !!draft &&
+    JSON.stringify(draft) !== JSON.stringify(snapshot.preferences);
+
   useEffect(() => {
     if (!active) return;
     let current = true;
     async function load() {
+      setLoading(true);
+      setMessage('Carregando preferências…');
       try {
         const result = await window.meetingCopilot.getSettings();
         if (!current) return;
         if (!result.ok) throw new Error('UNAVAILABLE');
         setSnapshot(result.settings);
-        setDraft((previous) => previous ?? result.settings.preferences);
+        setDraft(result.settings.preferences);
+        setMessage('');
       } catch {
         if (current)
           setMessage(
-            'Não foi possível carregar as preferências. Reabra o app.',
+            'Não foi possível carregar as preferências. Tente novamente.',
           );
+      } finally {
+        if (current) setLoading(false);
       }
     }
     void load();
     return () => {
       current = false;
     };
+  }, [active, loadAttempt]);
+
+  useEffect(() => {
+    if (active) back.current?.focus();
   }, [active]);
+  useEffect(() => {
+    if (confirm) keep.current?.focus();
+  }, [confirm]);
+
+  function requestBack(destination: 'area' | 'panel') {
+    if (busy) return;
+    if (dirty) {
+      opener.current = document.activeElement as HTMLElement;
+      setConfirm(destination);
+    } else navigateBack(destination);
+  }
+  function navigateBack(destination: 'area' | 'panel') {
+    if (destination === 'panel') {
+      setMessage('');
+      setArea(null);
+      onClose?.();
+    } else {
+      setArea(null);
+      requestAnimationFrame(() =>
+        root.current
+          ?.querySelector<HTMLButtonElement>(
+            `[data-settings-area="${origin.current}"]`,
+          )
+          ?.focus(),
+      );
+    }
+  }
+  useEffect(() => {
+    if (!active) return;
+    function keydown(event: KeyboardEvent) {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (confirm) {
+        setConfirm(null);
+        opener.current?.focus();
+      } else requestBack(area ? 'area' : 'panel');
+    }
+    document.addEventListener('keydown', keydown);
+    return () => document.removeEventListener('keydown', keydown);
+  });
 
   async function perform(
     action: () => Promise<SettingsResult>,
     saveDraft = false,
   ) {
     setBusy(true);
-    setMessage('');
+    setMessage(
+      saveDraft ? 'Salvando preferências…' : 'Atualizando estado da chave…',
+    );
     try {
       const result = await action();
-      if (!result.ok) {
-        setMessage(
-          'Não foi possível concluir. Reabra o app para conferir o estado salvo.',
-        );
-        return;
-      }
+      if (!result.ok) throw new Error('UNAVAILABLE');
       setSnapshot(result.settings);
       if (saveDraft) setDraft(result.settings.preferences);
       onSaved?.(result.settings.preferences);
@@ -74,42 +146,152 @@ export function SettingsPanel({
         'Preferências e estado da chave atualizados. Nenhum serviço foi iniciado.',
       );
     } catch {
-      setMessage(
-        'Não foi possível concluir. Reabra o app para conferir o estado salvo.',
-      );
+      setMessage('Não foi possível concluir. Confira e tente novamente.');
     } finally {
       setBusy(false);
     }
   }
-
   function change(field: keyof Preferences, value: string) {
     const parsed = parsePreferences({ ...draft, [field]: value });
     if (parsed) setDraft(parsed);
   }
-
+  function openArea(next: Area) {
+    origin.current = next;
+    setArea(next);
+    setMessage('');
+    requestAnimationFrame(() => back.current?.focus());
+  }
+  const saved = snapshot?.preferences;
+  const source = !saved
+    ? 'Indisponível'
+    : saved.audioSource === 'both'
+      ? 'Microfone + sistema'
+      : saved?.audioSource === 'mic'
+        ? 'Microfone'
+        : 'Áudio do sistema';
+  const credential =
+    snapshot?.credential === 'stored'
+      ? 'Chave no cofre do Mac'
+      : snapshot?.credential === 'development'
+        ? 'Chave de desenvolvimento'
+        : snapshot
+          ? 'Chave não configurada'
+          : 'Estado da chave indisponível';
+  const items: {
+    id: Area;
+    title: string;
+    description: string;
+    summary: string;
+    detail: string;
+    icon: string;
+  }[] = [
+    {
+      id: 'audio',
+      title: 'Áudio e transcrição',
+      description: 'Fonte, idioma e fornecedor',
+      summary:
+        TRANSCRIPTION_PROVIDERS.find(
+          (p) => p.id === saved?.sttProvider,
+        )?.label.split(' — ')[0] ?? 'Indisponível',
+      detail: `${source} · ${saved?.language ?? '—'}`,
+      icon: '◉',
+    },
+    {
+      id: 'suggestions',
+      title: 'Sugestões de IA',
+      description: 'Fornecedor, modelo e chave',
+      summary: `${SUGGESTION_PROVIDERS.find((p) => p.id === saved?.suggestionProvider)?.label.split(' — ')[0] ?? 'Indisponível'} · ${SUGGESTION_MODELS.find((m) => m.id === saved?.suggestionModel)?.label.split(' — ')[0] ?? '—'}`,
+      detail: credential,
+      icon: '✦',
+    },
+    {
+      id: 'readiness',
+      title: 'Permissões e prontidão',
+      description: 'Verificação no macOS',
+      summary: readinessSummary,
+      detail: 'Consultar antes da reunião',
+      icon: '◇',
+    },
+    {
+      id: 'diagnostics',
+      title: 'Diagnóstico',
+      description: 'Estado da sessão e demonstração offline',
+      summary: sessionSummary,
+      detail: demoSummary,
+      icon: '▣',
+    },
+  ];
   return (
-    <section className="settings" aria-labelledby="settings-title">
-      <h2 id="settings-title">Preferências</h2>
+    <section ref={root} className="settings" aria-labelledby="settings-title">
+      <button
+        ref={back}
+        type="button"
+        className="settings-back"
+        onClick={() => requestBack(area ? 'area' : 'panel')}
+      >
+        {area ? 'Voltar às preferências' : 'Voltar ao painel'}
+      </button>
+      <h2 id="settings-title">
+        {area ? items.find((item) => item.id === area)?.title : 'Preferências'}
+      </h2>
       <p>
-        Fonte, idioma, fornecedores, modelo e perfil padrão ficam salvos para a
-        próxima sessão. Isso não inicia captura ou envio e não altera uma sessão
-        em andamento. Para trocar a fonte agora, pare a sessão e inicie outra
-        com nova confirmação.
+        As escolhas salvas valem para a próxima sessão e não alteram a sessão
+        atual. Salvar não autoriza captura, envio ou cobrança.
       </p>
-      <p role="status">{message}</p>
-      {!draft || !snapshot ? (
-        <p>Preferências indisponíveis até concluir a leitura.</p>
-      ) : (
+      <p role="status" aria-live="polite">
+        {message}
+      </p>
+      {!loading && !snapshot && (
+        <button type="button" onClick={() => setLoadAttempt((n) => n + 1)}>
+          Tentar novamente
+        </button>
+      )}
+      {!loading && !area && (
         <>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
+          <div className="settings-areas">
+            {items.map((item) => (
+              <button
+                type="button"
+                key={item.id}
+                data-settings-area={item.id}
+                className="settings-area"
+                disabled={
+                  (!snapshot || !draft) &&
+                  (item.id === 'audio' || item.id === 'suggestions')
+                }
+                onClick={() => openArea(item.id)}
+              >
+                <span className="settings-area-icon" aria-hidden="true">
+                  {item.icon}
+                </span>
+                <span className="settings-area-name">
+                  <strong>{item.title}</strong>
+                  <small>{item.description}</small>
+                </span>
+                <span className="settings-area-summary">
+                  <span>{item.summary}</span>
+                  <small>{item.detail}</small>
+                </span>
+                <span aria-hidden="true">›</span>
+              </button>
+            ))}
+          </div>
+          <p>A transcrição local mantém o áudio neste Mac.</p>
+        </>
+      )}
+      {draft && snapshot && (
+        <form
+          hidden={area !== 'audio' && area !== 'suggestions'}
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (dirty)
               void perform(
                 () => window.meetingCopilot.savePreferences(draft),
                 true,
               );
-            }}
-          >
+          }}
+        >
+          <div hidden={area !== 'audio'}>
             <fieldset disabled={busy}>
               <legend>Transcrição de áudio</legend>
               <label>
@@ -159,6 +341,8 @@ export function SettingsPanel({
                 </select>
               </label>
             </fieldset>
+          </div>
+          <div hidden={area !== 'suggestions'}>
             <fieldset disabled={busy}>
               <legend>Sugestões de IA</legend>
               <label>
@@ -291,29 +475,104 @@ export function SettingsPanel({
                   </p>
                 )}
               </details>
-              {connection}
             </fieldset>
-            <button type="submit" disabled={busy}>
+          </div>
+          <div className="settings-actions">
+            <span role="status">
+              {dirty ? 'Alterações pendentes' : 'Nenhuma alteração pendente'}
+            </span>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => requestBack('area')}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="primary-action"
+              disabled={busy || !dirty}
+            >
               Salvar preferências
             </button>
-          </form>
-        </>
+          </div>
+        </form>
       )}
-      <section aria-labelledby="privacy-title">
-        <h3 id="privacy-title">Permissões e privacidade</h3>
-        <p>
-          A captura da fonte selecionada exige confirmação ao iniciar cada
-          sessão. O macOS também controla as permissões de microfone e gravação
-          de tela/áudio do sistema. Confirme que os demais participantes
-          autorizaram a transcrição.
-        </p>
-        <p>
-          O envio de texto à OpenAI exige autorização separada a cada sessão. As
-          falas recentes ficam em memória e são limpas ao parar. Áudio nunca é
-          enviado no modo local.
-        </p>
-        <ReadinessPanel />
+      <div hidden={area !== 'readiness'}>
+        <section aria-labelledby="privacy-title">
+          <h3 id="privacy-title">Permissões e privacidade</h3>
+          <p>
+            A captura da fonte selecionada exige confirmação ao iniciar cada
+            sessão. O macOS também controla as permissões de microfone e
+            gravação de tela/áudio do sistema. Confirme que os demais
+            participantes autorizaram a transcrição.
+          </p>
+          <p>
+            O envio de texto à OpenAI exige autorização separada a cada sessão.
+            As falas recentes ficam em memória e são limpas ao parar. Áudio
+            nunca é enviado no modo local.
+          </p>
+          <ReadinessPanel onSummaryChange={setReadinessSummary} />
+        </section>
+      </div>
+      <section hidden={area !== 'diagnostics'} aria-label="Diagnóstico">
+        {connection}
+        {diagnostics}
       </section>
+      {confirm && (
+        <div className="settings-confirm-backdrop">
+          <div
+            className="settings-confirm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="discard-title"
+            onKeyDown={(event) => {
+              if (event.key === 'Tab') {
+                const buttons =
+                  event.currentTarget.querySelectorAll<HTMLButtonElement>(
+                    'button',
+                  );
+                if (event.shiftKey && document.activeElement === buttons[0]) {
+                  event.preventDefault();
+                  buttons[buttons.length - 1]?.focus();
+                } else if (
+                  !event.shiftKey &&
+                  document.activeElement === buttons[buttons.length - 1]
+                ) {
+                  event.preventDefault();
+                  buttons[0]?.focus();
+                }
+              }
+            }}
+          >
+            <h3 id="discard-title">Descartar alterações?</h3>
+            <p>As alterações pendentes não foram salvas.</p>
+            <div className="settings-actions">
+              <button
+                ref={keep}
+                type="button"
+                onClick={() => {
+                  setConfirm(null);
+                  opener.current?.focus();
+                }}
+              >
+                Continuar editando
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (snapshot) setDraft(snapshot.preferences);
+                  const destination = confirm;
+                  setConfirm(null);
+                  navigateBack(destination);
+                }}
+              >
+                Descartar alterações
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

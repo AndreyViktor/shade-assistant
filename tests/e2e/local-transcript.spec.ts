@@ -46,12 +46,14 @@ test('reconciles synthetic revisions and echo through the provider, IPC and rend
     await page
       .getByRole('button', { name: 'Preferências', exact: true })
       .click();
+    await page.getByRole('button', { name: /Diagnóstico/ }).click();
     await page
       .getByText('Sobre o histórico de transcrição', { exact: true })
       .click();
     await expect(
       page.getByText(/A fonte de áudio não identifica a pessoa/),
     ).toBeVisible();
+    await page.getByRole('button', { name: 'Voltar às preferências' }).click();
     await page.getByRole('button', { name: 'Voltar ao painel' }).click();
     await page.screenshot({
       path: 'test-results/transcript-reconciliation-synthetic.png',

@@ -58,20 +58,25 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
       page.getByRole('button', { name: 'Voltar ao painel' }),
     ).toBeFocused();
     // Preferences are loaded only after explicit navigation.
+    const audio = page.getByRole('button', { name: /Áudio e transcrição/ });
+    await expect(audio).toBeVisible();
+    await page.keyboard.press('Tab');
+    await expect(audio).toBeFocused();
+    await page.keyboard.press('Enter');
     await expect(page.getByLabel('Fornecedor de transcrição')).toHaveValue(
       'apple-local',
     );
-    await page.keyboard.press('Tab');
-    await expect(
-      page.locator('#panel-settings').getByLabel('Fonte de áudio'),
-    ).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(audio).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(toggle).toBeFocused();
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
     await page.keyboard.press('Space');
+    await page.getByRole('button', { name: /Áudio e transcrição/ }).click();
     await expect(
       page.locator('#panel-settings').getByLabel('Idioma'),
     ).toBeVisible();
+    await page.getByRole('button', { name: 'Voltar às preferências' }).click();
     await page.getByRole('button', { name: 'Voltar ao painel' }).click();
     await expect(toggle).toBeFocused();
     await page.screenshot({ path: 'test-results/panel.png' });
@@ -135,6 +140,8 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
       win.webContents.setZoomFactor(2),
     );
     await toggle.click();
+    await page.getByRole('button', { name: /Áudio e transcrição/ }).click();
+    await page.getByLabel('Idioma').selectOption('en-US');
     await page
       .getByRole('button', { name: 'Salvar preferências' })
       .scrollIntoViewIfNeeded();
@@ -153,6 +160,8 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
       'test-results/panel-zoom.png',
       Buffer.from(zoomImage, 'base64'),
     );
+    await page.getByRole('button', { name: 'Cancelar' }).click();
+    await page.getByRole('button', { name: 'Descartar alterações' }).click();
     await page.getByRole('button', { name: 'Voltar ao painel' }).click();
     await expect(toggle).toBeFocused();
     await nativeWindow.evaluate((win: BrowserWindow) =>

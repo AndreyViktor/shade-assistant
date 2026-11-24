@@ -245,9 +245,19 @@ test('active meeting keeps preferences reachable and all panes usable at 200% zo
       suggestionRegion.getByRole('article').first().getByRole('heading'),
     ).toBeInViewport({ ratio: 1 });
     await captureWindow(win, page, 'zoom-suggestions-start.png');
-    for (const dismiss of await assistance
-      .getByRole('button', { name: /Descartar/ })
-      .all()) {
+    for (const card of await suggestionList.getByRole('article').all()) {
+      for (const label of [
+        /^Útil:/,
+        /^Irrelevante:/,
+        /^Incorreto:/,
+        /^Repetido:/,
+      ]) {
+        const feedback = card.getByRole('button', { name: label });
+        await page.keyboard.press('Tab');
+        await expect(feedback).toBeFocused();
+        await expectVisibleBounds(feedback);
+      }
+      const dismiss = card.getByRole('button', { name: /^Descartar:/ });
       await page.keyboard.press('Tab');
       await expect(dismiss).toBeFocused();
       await captureWindow(
@@ -280,32 +290,46 @@ test('active meeting keeps preferences reachable and all panes usable at 200% zo
     await page.keyboard.press('Enter');
     await captureWindow(win, page, 'zoom-settings-top.png');
 
+    await page.getByRole('button', { name: /Áudio e transcrição/ }).click();
+    const backToPreferences = page.getByRole('button', {
+      name: 'Voltar às preferências',
+    });
+    await expect(backToPreferences).toBeFocused();
     for (const name of [
       'Fonte de áudio',
       'Fornecedor de transcrição',
       'Idioma',
+    ]) {
+      const control = page.getByRole('combobox', { name, exact: true });
+      await page.keyboard.press('Tab');
+      await expect(control).toBeFocused();
+      await expectVisibleBounds(control);
+    }
+    await backToPreferences.click();
+    await page.getByRole('button', { name: /Sugestões de IA/ }).click();
+    await expect(backToPreferences).toBeFocused();
+    for (const name of [
       'Fornecedor de sugestões',
       'Modelo para as sugestões',
     ]) {
+      const control = page.getByRole('combobox', { name, exact: true });
       await page.keyboard.press('Tab');
-      await expect(
-        page.getByRole('combobox', { name, exact: true }),
-      ).toBeFocused();
-      await expectVisibleBounds(
-        page.getByRole('combobox', { name, exact: true }),
-      );
+      await expect(control).toBeFocused();
+      await expectVisibleBounds(control);
     }
     await captureWindow(win, page, 'zoom-settings-model.png');
-    await page.getByRole('button', { name: 'Salvar preferências' }).focus();
-    await expectVisibleBounds(
-      page.getByRole('button', { name: 'Salvar preferências' }),
-    );
+    await backToPreferences.click();
+    await page.getByRole('button', { name: /Permissões e prontidão/ }).click();
     const privacy = page.getByRole('region', {
       name: 'Permissões e privacidade',
     });
     await privacy.locator('p').last().scrollIntoViewIfNeeded();
     await expectVisibleBounds(privacy.locator('p').last());
     await captureWindow(win, page, 'zoom-settings-privacy.png');
+    await backToPreferences.click();
+    const diagnostics = page.getByRole('button', { name: /^Diagnóstico/ });
+    await diagnostics.click();
+    await expect(backToPreferences).toBeFocused();
     const demo = page.getByText('Diagnóstico · DEMO offline');
     await demo.focus();
     await page.keyboard.press('Enter');
@@ -324,6 +348,8 @@ test('active meeting keeps preferences reachable and all panes usable at 200% zo
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
     ).toBe(true);
+    await page.keyboard.press('Escape');
+    await expect(diagnostics).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(preferences).toBeFocused();
     await page.getByRole('button', { name: 'Pausar', exact: true }).click();

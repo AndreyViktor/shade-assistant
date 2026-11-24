@@ -1,5 +1,12 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Preferences } from '../../../contracts/settings/preferences';
 import { defaultPreferences } from '../../../contracts/settings/preferences';
 import { SettingsPanel } from './SettingsPanel';
 
@@ -25,55 +32,95 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-describe('settings interface', () => {
-  it('offers implemented providers by capability and model choices without claiming remote STT', async () => {
+async function open(name: string) {
+  fireEvent.click(
+    await screen.findByRole('button', { name: new RegExp(name) }),
+  );
+}
+
+describe('settings areas', () => {
+  it('announces loading and saving and prevents duplicate writes', async () => {
+    let finishLoad: (value: typeof initial) => void = () => {};
+    api.getSettings.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishLoad = resolve;
+      }),
+    );
     render(<SettingsPanel />);
-    expect(await screen.findByLabelText('Idioma')).toHaveValue('pt-BR');
-    expect(screen.queryByLabelText('Modo preferido')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Carregando preferências',
+    );
+    finishLoad(initial);
+    await open('Áudio e transcrição');
+    let finishSave: (value: typeof initial) => void = () => {};
+    api.savePreferences.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishSave = resolve;
+      }),
+    );
+    fireEvent.change(screen.getByLabelText('Idioma'), {
+      target: { value: 'en-US' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Salvar preferências' }),
+    );
+    expect(screen.getByText('Salvando preferências…')).toBeVisible();
     expect(
-      screen.queryByLabelText('Provedor STT preferido'),
-    ).not.toBeInTheDocument();
+      screen.getByRole('button', { name: 'Salvar preferências' }),
+    ).toBeDisabled();
+    finishSave(initial);
     expect(
-      screen.getByText('Chave OpenAI (não usada na transcrição local)'),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    expect(
-      screen.getByText(/Fonte, idioma, fornecedores, modelo e perfil padrão/),
+      await screen.findByText(/Nenhum serviço foi iniciado/),
     ).toBeVisible();
+  });
+  it('summarizes saved values and preserves provider and profile controls', async () => {
+    render(<SettingsPanel />);
+    const audio = await screen.findByRole('button', {
+      name: /Áudio e transcrição/,
+    });
+    expect(audio).toHaveTextContent('pt-BR');
+    expect(
+      screen.getByRole('button', { name: /Sugestões de IA/ }),
+    ).toHaveTextContent('Chave não configurada');
+    expect(
+      screen.getByRole('button', { name: /Permissões e prontidão/ }),
+    ).toHaveTextContent('Não verificado');
+    expect(
+      screen.getByRole('button', { name: /Diagnóstico/ }),
+    ).toHaveTextContent('DEMO offline');
+    fireEvent.click(audio);
     expect(screen.getByLabelText('Fornecedor de transcrição')).toHaveValue(
       'apple-local',
     );
     expect(screen.getByRole('option', { name: /OpenAI STT/ })).toBeDisabled();
-    expect(screen.getByLabelText('Fornecedor de sugestões')).toHaveValue(
-      'openai',
+    expect(
+      screen.getByRole('button', { name: 'Salvar preferências' }),
+    ).toBeDisabled();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Voltar às preferências' }),
     );
+    await open('Sugestões de IA');
     expect(screen.getByLabelText('Modelo para as sugestões')).toHaveValue(
       'gpt-5.4-mini',
     );
     expect(screen.getByLabelText('Perfil padrão da reunião')).toHaveValue(
       'none',
     );
-    expect(
-      screen.getByText(/Somente este identificador interno/),
-    ).toBeVisible();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
-  it('saves edited preferences only on explicit submit and renders the canonical response', async () => {
+  it('saves only changed values and uses canonical response in summary', async () => {
+    api.savePreferences.mockImplementation((preferences: Preferences) =>
+      Promise.resolve({
+        ...initial,
+        settings: { ...initial.settings, preferences },
+      }),
+    );
     render(<SettingsPanel />);
-    fireEvent.change(await screen.findByLabelText('Idioma'), {
+    await open('Áudio e transcrição');
+    fireEvent.change(screen.getByLabelText('Idioma'), {
       target: { value: 'en-US' },
     });
-    fireEvent.change(screen.getByLabelText('Modelo para as sugestões'), {
-      target: { value: 'gpt-5.4' },
-    });
-    fireEvent.change(screen.getByLabelText('Fonte de áudio'), {
-      target: { value: 'system' },
-    });
-    fireEvent.change(screen.getByLabelText('Perfil padrão da reunião'), {
-      target: { value: 'technical-review' },
-    });
-    expect(screen.getByText(/Examinar decisões técnicas/)).toBeVisible();
-    expect(screen.getByText(/premissas e trade-offs/)).toBeVisible();
-    expect(api.savePreferences).not.toHaveBeenCalled();
+    expect(screen.getByText('Alterações pendentes')).toBeVisible();
     fireEvent.click(
       screen.getByRole('button', { name: 'Salvar preferências' }),
     );
@@ -81,91 +128,113 @@ describe('settings interface', () => {
       expect(api.savePreferences).toHaveBeenCalledExactlyOnceWith({
         ...initial.settings.preferences,
         language: 'en-US',
-        audioSource: 'system',
-        suggestionModel: 'gpt-5.4',
-        meetingProfile: 'technical-review',
       }),
     );
     expect(
       await screen.findByText(/Nenhum serviço foi iniciado/),
     ).toBeVisible();
-    expect(screen.getByLabelText('Idioma')).toHaveValue('pt-BR');
-    expect(screen.getByLabelText('Fonte de áudio')).toHaveValue('both');
-  });
-  it('imports and removes with no secret or path arguments; disables actions while pending', async () => {
-    let finish: (value: unknown) => void = () => {
-      throw new Error('not started');
-    };
-    api.importSecret.mockReturnValue(
-      new Promise((resolve) => {
-        finish = resolve;
-      }),
-    );
-    api.removeSecret.mockResolvedValue(initial);
-    render(<SettingsPanel />);
-    fireEvent.change(await screen.findByLabelText('Fonte de áudio'), {
-      target: { value: 'mic' },
-    });
-    fireEvent.click(
-      await screen.findByText('Chave OpenAI (não usada na transcrição local)'),
-    );
-    fireEvent.click(
-      await screen.findByRole('button', { name: 'Importar chave' }),
-    );
-    expect(api.importSecret).toHaveBeenCalledExactlyOnceWith();
     expect(
       screen.getByRole('button', { name: 'Salvar preferências' }),
     ).toBeDisabled();
-    finish({
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Voltar às preferências' }),
+    );
+    expect(
+      screen.getByRole('button', { name: /Áudio e transcrição/ }),
+    ).toHaveTextContent('en-US');
+  });
+  it('confirms discard, Escape returns focus, and cancel keeps the draft', async () => {
+    render(<SettingsPanel />);
+    const origin = await screen.findByRole('button', {
+      name: /Áudio e transcrição/,
+    });
+    fireEvent.click(origin);
+    fireEvent.change(screen.getByLabelText('Idioma'), {
+      target: { value: 'en-US' },
+    });
+    const cancel = screen.getByRole('button', { name: 'Cancelar' });
+    cancel.focus();
+    fireEvent.click(cancel);
+    const dialog = screen.getByRole('dialog', {
+      name: 'Descartar alterações?',
+    });
+    expect(
+      within(dialog).getByRole('button', { name: 'Continuar editando' }),
+    ).toHaveFocus();
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    expect(cancel).toHaveFocus();
+    expect(screen.getByLabelText('Idioma')).toHaveValue('en-US');
+    fireEvent.click(cancel);
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', {
+        name: 'Descartar alterações',
+      }),
+    );
+    const restored = await screen.findByRole('button', {
+      name: /Áudio e transcrição/,
+    });
+    await waitFor(() => expect(restored).toHaveFocus());
+    fireEvent.click(restored);
+    expect(screen.getByLabelText('Idioma')).toHaveValue('pt-BR');
+    expect(api.savePreferences).not.toHaveBeenCalled();
+  });
+  it('retains the draft after save failure and permits retry without exposing errors', async () => {
+    api.savePreferences
+      .mockRejectedValueOnce(new Error('synthetic-private-key'))
+      .mockResolvedValue(initial);
+    render(<SettingsPanel />);
+    await open('Áudio e transcrição');
+    fireEvent.change(screen.getByLabelText('Idioma'), {
+      target: { value: 'en-US' },
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Salvar preferências' }),
+    );
+    expect(await screen.findByText(/Não foi possível concluir/)).toBeVisible();
+    expect(screen.queryByText(/synthetic-private-key/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Idioma')).toHaveValue('en-US');
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Salvar preferências' }),
+    );
+    expect(
+      await screen.findByText(/Nenhum serviço foi iniciado/),
+    ).toBeVisible();
+  });
+  it('retries failed loading', async () => {
+    api.getSettings
+      .mockResolvedValueOnce({ ok: false })
+      .mockResolvedValue(initial);
+    render(<SettingsPanel />);
+    expect(await screen.findByText(/Não foi possível carregar/)).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }));
+    expect(
+      await screen.findByRole('button', { name: /Áudio e transcrição/ }),
+    ).toBeVisible();
+  });
+  it('imports and removes secrets with no arguments without saving a pending draft', async () => {
+    api.importSecret.mockResolvedValue({
       ...initial,
       settings: { ...initial.settings, credential: 'stored' },
     });
-    await screen.findByText(/armazenada no cofre do Mac/);
+    api.removeSecret.mockResolvedValue(initial);
+    render(<SettingsPanel />);
+    await open('Sugestões de IA');
+    fireEvent.change(screen.getByLabelText('Perfil padrão da reunião'), {
+      target: { value: 'technical-review' },
+    });
+    fireEvent.click(
+      screen.getByText('Chave OpenAI (não usada na transcrição local)'),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Importar chave' }));
+    expect(await screen.findByText(/armazenada no cofre do Mac/)).toBeVisible();
+    expect(api.importSecret).toHaveBeenCalledExactlyOnceWith();
     fireEvent.click(screen.getByRole('button', { name: 'Remover chave' }));
     await waitFor(() =>
       expect(api.removeSecret).toHaveBeenCalledExactlyOnceWith(),
     );
-    await screen.findByText(/não configurada/);
-    expect(api.savePreferences).not.toHaveBeenCalled();
-    expect(screen.getByLabelText('Fonte de áudio')).toHaveValue('mic');
-  });
-  it('reports failed saves without claiming persistence or echoing transport errors', async () => {
-    api.savePreferences.mockRejectedValue(new Error('synthetic-private-key'));
-    render(<SettingsPanel />);
-    fireEvent.click(
-      await screen.findByRole('button', { name: 'Salvar preferências' }),
+    expect(screen.getByLabelText('Perfil padrão da reunião')).toHaveValue(
+      'technical-review',
     );
-    expect(await screen.findByText(/Não foi possível concluir/)).toBeVisible();
-    expect(screen.queryByText(/synthetic-private-key/)).not.toBeInTheDocument();
+    expect(api.savePreferences).not.toHaveBeenCalled();
   });
-  it('shows read failures without enabling actions', async () => {
-    api.getSettings.mockResolvedValue({
-      version: 1,
-      ok: false,
-      code: 'UNAVAILABLE',
-    });
-    render(<SettingsPanel />);
-    expect(await screen.findByText(/Não foi possível carregar/)).toBeVisible();
-    expect(
-      screen.queryByRole('button', { name: 'Salvar preferências' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Verificar prontidão' }),
-    ).toBeEnabled();
-  });
-});
-
-it('refreshes key metadata when reopened without losing an unsaved language draft', async () => {
-  const { rerender } = render(<SettingsPanel active />);
-  fireEvent.change(await screen.findByLabelText('Idioma'), {
-    target: { value: 'en-US' },
-  });
-  rerender(<SettingsPanel active={false} />);
-  api.getSettings.mockResolvedValue({
-    ...initial,
-    settings: { ...initial.settings, credential: 'stored' },
-  });
-  rerender(<SettingsPanel active />);
-  await screen.findByText(/armazenada no cofre do Mac/);
-  expect(screen.getByLabelText('Idioma')).toHaveValue('en-US');
 });
