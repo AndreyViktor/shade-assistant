@@ -1,6 +1,6 @@
 # Roadmap por áreas — Meeting Copilot
 
-**Atualizado:** 2026-11-19. **Fonte de verdade:** [TASKS.md](TASKS.md).
+**Atualizado:** 2026-11-24. **Fonte de verdade:** [TASKS.md](TASKS.md).
 
 O produto evolui de uma base local e segura para transcrição confiável, assistência avaliada, resultados estruturados, fluxos de reunião reutilizáveis e distribuição macOS endurecida. Marcos e percentuais representam escopo verificável, não estimativas de data.
 
@@ -21,24 +21,17 @@ O produto evolui de uma base local e segura para transcrição confiável, assis
 | --- | ---: | ---: | ---: | ---: |
 | Fundação e arquitetura | **100%** | 6 | 0 | 0 |
 | Ferramentas e documentação | **100%** | 6 | 0 | 0 |
-| Transcrição e áudio | **80%** | 8 | 2 | 2 |
-| Sugestões de IA e qualidade | **71%** | 10 | 4 | 0 |
-| UI/UX e overlay | **80%** | 8 | 2 | 4 |
-| Resultados e fluxo da reunião | **0%** | 0 | 4 | 0 |
-| Segurança, privacidade e distribuição | **22%** | 2 | 7 | 4 |
+| Transcrição e áudio | **100%** | 10 | 0 | 2 |
+| Sugestões de IA e qualidade | **93%** | 13 | 1 | 0 |
+| UI/UX e overlay | **77%** | 10 | 3 | 4 |
+| Resultados e fluxo da reunião | **40%** | 2 | 3 | 0 |
+| Segurança, privacidade e distribuição | **33%** | 3 | 6 | 4 |
 | Windows futuro | **—** | 0 | 0 | 4 |
-| **Total ativo** | **68%** | **40** | **19** | **14** |
+| **Total ativo** | **79%** | **50** | **13** | **14** |
 
 ## Fase atual e sequência protegida
 
-1. **Prontidão das sugestões — T058 (retomada).** Definir quando há contexto suficiente para chamar a IA; um debounce fixo não substitui prontidão semântica, e toda fala final não deve disparar automaticamente.
-2. **Confiabilidade da publicação — T056 (pausada).** Retomar a supressão textual de finais duplicados em alto-falantes externos com `mic + system`, sem ocultar fala distinta.
-3. **Qualidade do sinal — T057.** Depois de T056, medir o STT Apple com corpus autorizado/sintético e referência reproduzível.
-4. **Qualidade da assistência — T027.** Avaliar valor incremental, abstenção, irrelevância, repetição semântica, latência e aderência às evidências em cenários diversos.
-5. **Resultados estruturados — T060.** Manter tópico, decisões, ações, perguntas e riscos com fala/horário de suporte e distinção entre fato e inferência.
-6. **Perfis reutilizáveis — T061.** Adaptar prioridades a descoberta, status, entrevista, negociação e revisão técnica sem transformar perfil em evidência.
-
-As novas frentes não alteram essa ordem. Dependências foram escolhidas para que recursos de expansão não ultrapassem a validação do núcleo.
+A sequência T058 → T056 → T057 → T027 → T060 → T061 foi concluída; critérios e limites estão em [TASKS.md](TASKS.md). T065 foi aceita para uso local; os ensaios de Mac limpo e mudança de assinatura seguem em T034. As novas tarefas de design e reformulação estão planejadas, sem antecipar seu início.
 
 ## 1. Fundação e arquitetura — 100%
 
@@ -58,53 +51,55 @@ Próxima evolução arquitetural ocorre apenas quando uma tarefa concreta exigir
 | Runner com tarefas/sessões isoladas | T044 | DONE | 100% | Uma tarefa por sessão e commit local verificável. |
 | Roadmap e evidências rastreáveis | T059, T062, T063, T073 | DONE | 100% | Manter áreas, definições e percentuais derivados do backlog em cada mudança de estado/escopo. |
 
-## 3. Transcrição e áudio — 80%
+## 3. Transcrição e áudio — 100%
 
 | Funcionalidade | Tarefas | Estado | Progresso | Próximo resultado |
 | --- | --- | --- | ---: | --- |
 | Viabilidade Apple e captura mic/system | T005, T006 | DONE | 100% | Evidência real já registrada; hardware/rota continuam variáveis. |
-| Helper Swift, provider e ciclo local | T013–T019 | DONE | 100% | Captura/transcrição local integrada ao Electron e exibida ao vivo. |
-| Remover eco/duplicação | T056 | TODO | 0% | Pausada enquanto T058 é retomada; ao voltar, tratar finais duplicados reportados com alto-falantes externos e `mic + system`, preservando fala distinta. |
-| Avaliar e melhorar STT | T057 | TODO | 0% | Métrica, corpus, referência e comparação antes/depois em áudio/vídeos autorizados. |
+| Helper Swift, provider e ciclo local | T013–T015, T017–T019 | DONE | 100% | Captura/transcrição local integrada ao Electron e exibida ao vivo. |
+| Remover eco/duplicação | T056 | DONE | 100% | Supressão textual validada no cenário registrado, sem alegar cancelamento acústico universal. |
+| Avaliar e melhorar STT | T057 | DONE | 100% | Avaliação offline e ensaio físico registrados, com limites do corpus. |
 | STT remoto e troca de idiomas | T016, T026 | DEFERRED | — | Só reativar com decisão de produto, custo e consentimento. |
 
-## 4. Sugestões de IA e qualidade — 71%
+## 4. Sugestões de IA e qualidade — 93%
 
 | Funcionalidade | Tarefas | Estado | Progresso | Próximo resultado |
 | --- | --- | --- | ---: | --- |
 | Contexto, provider, gatilhos e scheduler | T020–T024 | DONE | 100% | Núcleo fala→contexto→OpenAI→cartões integrado. |
 | Retenção, contexto opcional e ruído de ASR | T040, T052–T055 | DONE | 100% | Cartões mantidos, contexto opcional consentido e proteção contra ruído de ASR. |
-| Prontidão de contexto e agendamento | T058 | IN_PROGRESS | 0% | Evitar chamada após qualquer fala final; definir suficiência geral, preservar pedido manual e compartilhar a duração real do debounce com a UI. |
+| Prontidão de contexto e agendamento | T058 | DONE | 100% | Gatilhos locais e debounce compartilhado, com pedido manual preservado. |
 | Orçamento por modalidade | T025 | TODO | 0% | Estimar/limitar custo de texto, imagem e eventual áudio remoto sem autorizar cobrança. |
-| Avaliação de qualidade e uso | T027 | TODO | 0% | Corpus diverso; medir valor incremental, abstenção, falsos positivos, repetição semântica, latência e suporte nas evidências; comparar modelos sem custo não autorizado. |
-| Feedback local dos cartões | T064 | TODO | 0% | Útil, irrelevante, incorreto ou repetido; métricas sem persistir conteúdo sensível. |
+| Avaliação de qualidade e uso | T027 | DONE | 100% | Protocolo offline e comparação real limitada registrados. |
+| Feedback local dos cartões | T064 | DONE | 100% | Classificações e métricas locais sem persistir conteúdo sensível. |
 
-## 5. UI/UX e overlay — 80%
+## 5. UI/UX e overlay — 77%
 
 | Funcionalidade | Tarefas | Estado | Progresso | Próximo resultado |
 | --- | --- | --- | ---: | --- |
 | Painel, cartões, preferências e layout compacto | T007, T010, T041–T043, T046–T048 | DONE | 100% | Base acessível, redimensionável e utilizável durante sessão. |
-| Modos de overlay | T067 | TODO | 0% | Normal, compacto, transcrição, resultados e ocultação temporária com indicador de captura. |
-| Atalhos globais configuráveis | T068 | TODO | 0% | Mostrar/ocultar, pausar/retomar, parar e pedido manual com conflito e cleanup. |
+| Visualizações do overlay | T067, T077 | TODO | 50% | Simplificar para completa, transcrição e assistência, com ícones acessíveis e layout responsivo; remover compacto e pseudo-ocultação. |
+| Atalhos globais configuráveis | T068 | TODO | 0% | Mostrar/ocultar a janela nativa, pausar/retomar, parar e pedido manual com conflito e cleanup. |
+| Design e reformulação de preferências | T074, T076 | TODO | 50% | Design aprovado; implementar as áreas de configuração preservando a prontidão local. |
 | Múltiplos monitores, histórico, troca de fonte e controles separados | T045, T049–T051 | DEFERRED | — | Retomar somente após evidência de prioridade de uso. |
 
-## 6. Resultados e fluxo da reunião — 0%
+## 6. Resultados e fluxo da reunião — 40%
 
 | Funcionalidade | Tarefas | Estado | Progresso | Próximo resultado |
 | --- | --- | --- | ---: | --- |
-| Live Meeting Brief com evidências | T060 | TODO | 0% | Tópico, decisões, ações, perguntas e riscos ligados à fala/horário. |
-| Perfis de reunião | T061 | TODO | 0% | Descoberta, status, entrevista, negociação e revisão técnica; modo sem perfil preservado. |
+| Live Meeting Brief com evidências | T060 | DONE | 100% | Tópico, decisões, ações, perguntas e riscos ligados à fala/horário. |
+| Perfis de reunião | T061 | DONE | 100% | Descoberta, status, entrevista, negociação e revisão técnica; modo sem perfil preservado. |
+| Escolha do assistente por sessão | T075 | TODO | 0% | Escolha no início da sessão, sem padrão nas preferências gerais. |
 | Ações/decisões revisáveis | T066 | TODO | 0% | Confirmar, corrigir ou descartar itens; responsável/prazo só com suporte explícito. |
 | Exportação explícita | T069 | TODO | 0% | Prévia e seleção para Markdown, texto ou JSON; cancelamento não escreve nem envia. |
 
 O histórico continua temporário por padrão. Persistência permanente ou sincronização exige tarefa e consentimento próprios.
 
-## 7. Segurança, privacidade e distribuição — 22%
+## 7. Segurança, privacidade e distribuição — 33%
 
 | Funcionalidade | Tarefas | Estado | Progresso | Próximo resultado |
 | --- | --- | --- | ---: | --- |
 | Consentimento reversível por sessão | T008 | DONE | 100% | Preservar captura/envio separados e cleanup no stop/revogação. |
-| Baseline Electron + helper | T032 | TODO | 0% | Auditar TCC, IPC, CSP, sandbox, segredos, buffers, dependências e entitlements sem esperar recursos remotos adiados. |
+| Baseline Electron + helper | T032 | DONE | 100% | Auditoria e evidências do baseline registradas; distribuição endurecida segue T072. |
 | Prontidão e permissões | T065 | DONE | 100% | Aceita para uso local; ensaios em Mac limpo e após mudança de assinatura permanecem em T034. |
 | Regressão prolongada | T033 | TODO | 0% | Sessão mock de 30 min e sessão Mac real autorizada, com métricas e sem helper/buffer residual. |
 | Pacote macOS | T034 | TODO | 0% | Incluir e assinar helper próprio; validar Mac limpo e mudança de identidade/TCC antes de entregar o pacote. |
@@ -124,12 +119,13 @@ A antiga dependência de T032 em fallback remoto e screenshot foi removida: o ba
 
 ## Ordem posterior à fase atual
 
-Após T058→T056→T057→T027→T060→T061, o trabalho pode seguir em trilhas dependentes:
+Após a sequência já concluída, o trabalho pode seguir em trilhas dependentes:
 
 1. **Segurança/distribuição:** T032 → T033 → T034; T065 → T070; depois T072 → T035. T071 pode vir após o pacote endurecido sem bloquear o primeiro aceite local.
-2. **Qualidade orientada pelo usuário:** T064, alimentando métricas locais e a revisão dos resultados.
+2. **Qualidade orientada pelo usuário:** T064 concluída, alimentando métricas locais e a revisão dos resultados.
 3. **Resultados acionáveis:** T066 → T069.
-4. **Operação do overlay:** T067 → T068.
+4. **Operação do overlay:** T067 → T077 → T068.
+5. **Preferências e início da sessão:** T074 → T075; T074 e T065 → T076.
 
 O runner ainda escolhe apenas tarefas elegíveis e uma por sessão. Esta ordem não autoriza captura, rede, custo, assinatura, notarização, deploy ou atualização automática.
 

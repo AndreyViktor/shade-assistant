@@ -59,6 +59,26 @@
             "target": "MeetingCopilotTranscriber",
             "configuration": "release",
             "preLaunchTask": "swift: Build Release MeetingCopilotTranscriber (native/macos)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:meeting-copilot-codex}/native/macos",
+            "name": "Debug MeetingCopilotSTTEvaluator (native/macos)",
+            "target": "MeetingCopilotSTTEvaluator",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug MeetingCopilotSTTEvaluator (native/macos)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:meeting-copilot-codex}/native/macos",
+            "name": "Release MeetingCopilotSTTEvaluator (native/macos)",
+            "target": "MeetingCopilotSTTEvaluator",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release MeetingCopilotSTTEvaluator (native/macos)"
         }
     ]
 }
