@@ -4,14 +4,13 @@ import { parseSettingsRequest, parseSettingsResult } from '../ipc/settings';
 
 const defaults = defaultPreferences('darwin');
 
-describe('settings envelope v1 with preferences v4 contract', () => {
+describe('settings envelope v1 with preferences v5 contract', () => {
   it('defaults to demo, Apple Swift on Mac and pt-BR; never remote on other platforms', () => {
     expect(defaults).toEqual({
-      version: 4,
+      version: 5,
       audioSource: 'both',
       suggestionProvider: 'openai',
       suggestionModel: 'gpt-5.4-mini',
-      meetingProfile: 'none',
       mode: 'demo',
       sttProvider: 'apple-local',
       language: 'pt-BR',
@@ -40,7 +39,7 @@ describe('settings envelope v1 with preferences v4 contract', () => {
     null,
     [],
     {},
-    { ...defaults, version: 5 },
+    { ...defaults, version: 4 },
     { ...defaults, version: 2 },
     { ...defaults, audioSource: undefined },
     { ...defaults, audioSource: 'unknown' },

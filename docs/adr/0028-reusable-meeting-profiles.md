@@ -2,6 +2,12 @@
 
 Data: 2026-11-23. Escopo: T061.
 
+## Atualização T075 — 2026-11-24
+
+A decisão de persistir um perfil padrão foi substituída pelo fluxo aprovado em T074: cada diálogo inicia em **Sem perfil**, e o foco é escolhido somente quando sugestões são habilitadas. Desabilitar sugestões descarta a seleção; cancelar ou iniciar outra sessão cria uma escolha nova. Pausa preserva o foco da sessão ativa, e parada ou revogação o limpam. A escolha não autoriza captura, envio ou custo; a confirmação explícita existente continua obrigatória.
+
+Preferências v5 removem `meetingProfile`. A migração apenas em disco valida integralmente a v4, descarta seu identificador e preserva os outros campos; dados inválidos não são sobrescritos. IPC de configurações aceita somente v5. O catálogo fechado e o contrato de autorização de sessão v10 (atualmente v11) permanecem, assim como as regras de grounding e retenção descritas abaixo. As afirmações históricas sobre o padrão persistido nas seções seguintes foram substituídas por esta atualização. Evidências em [T075.md](../evidence/tasks/T075.md).
+
 ## Contexto
 
 O contexto livre da T053 orienta relevância por sessão, mas não oferece focos reutilizáveis e previsíveis. A T061 pede descoberta, status, entrevista, negociação e revisão técnica, preservando o modo sem perfil e sem transformar uma preferência em evidência da conversa ou em nova retenção de conteúdo sensível.

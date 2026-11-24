@@ -65,7 +65,7 @@ for (const version of [1, 2, 3]) {
       JSON.stringify({
         version,
         ...(version >= 2
-          ? { suggestionProvider: 'openai', suggestionModel: 'gpt-5.4' }
+          ? { suggestionProvider: 'openai', suggestionModel: 'gpt-5.4-mini' }
           : {}),
         ...(version === 3 ? { audioSource: 'both' } : {}),
         mode: 'real',
@@ -97,9 +97,7 @@ for (const version of [1, 2, 3]) {
         .click();
       await page.getByRole('button', { name: /Sugestões de IA/ }).click();
       await page.getByLabel('Modelo para as sugestões').selectOption('gpt-5.4');
-      await page
-        .getByLabel('Perfil padrão da reunião')
-        .selectOption('technical-review');
+      await expect(page.getByLabel('Perfil padrão da reunião')).toHaveCount(0);
       await page.getByRole('button', { name: 'Salvar preferências' }).click();
       await expect(
         page
@@ -113,14 +111,13 @@ for (const version of [1, 2, 3]) {
           await readFile(join(fixture.profile, 'preferences.v1.json'), 'utf8'),
         ),
       ).toEqual({
-        version: 4,
+        version: 5,
         audioSource: 'system',
         mode: 'real',
         sttProvider: 'apple-local',
         language: 'en-US',
         suggestionProvider: 'openai',
         suggestionModel: 'gpt-5.4',
-        meetingProfile: 'technical-review',
       });
       await app.close();
       app = await fixture.launch();
@@ -140,9 +137,7 @@ for (const version of [1, 2, 3]) {
       await expect(page.getByLabel('Modelo para as sugestões')).toHaveValue(
         'gpt-5.4',
       );
-      await expect(page.getByLabel('Perfil padrão da reunião')).toHaveValue(
-        'technical-review',
-      );
+      await expect(page.getByLabel('Perfil padrão da reunião')).toHaveCount(0);
       const state = await page.evaluate(async () => ({
         settings: await window.meetingCopilot.getSettings(),
         storage: { ...localStorage },

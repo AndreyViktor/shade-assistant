@@ -971,3 +971,27 @@ button {
     margin: 10px 0;
   }
 }
+
+.profile-options {
+  border: 0;
+  padding: 0;
+  margin: 18px 0;
+  min-width: 0;
+}
+
+.profile-options legend {
+  font-weight: 600;
+}
+
+.profile-option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 0;
+  line-height: 1.4;
+}
+
+.profile-option input {
+  flex: none;
+  margin-top: 4px;
+}

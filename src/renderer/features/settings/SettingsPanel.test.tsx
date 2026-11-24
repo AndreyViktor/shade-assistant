@@ -73,7 +73,7 @@ describe('settings areas', () => {
       await screen.findByText(/Nenhum serviço foi iniciado/),
     ).toBeVisible();
   });
-  it('summarizes saved values and preserves provider and profile controls', async () => {
+  it('summarizes saved values and preserves provider controls', async () => {
     render(<SettingsPanel />);
     const audio = await screen.findByRole('button', {
       name: /Áudio e transcrição/,
@@ -103,9 +103,9 @@ describe('settings areas', () => {
     expect(screen.getByLabelText('Modelo para as sugestões')).toHaveValue(
       'gpt-5.4-mini',
     );
-    expect(screen.getByLabelText('Perfil padrão da reunião')).toHaveValue(
-      'none',
-    );
+    expect(
+      screen.queryByLabelText('Perfil padrão da reunião'),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
   it('saves only changed values and uses canonical response in summary', async () => {
@@ -219,8 +219,8 @@ describe('settings areas', () => {
     api.removeSecret.mockResolvedValue(initial);
     render(<SettingsPanel />);
     await open('Sugestões de IA');
-    fireEvent.change(screen.getByLabelText('Perfil padrão da reunião'), {
-      target: { value: 'technical-review' },
+    fireEvent.change(screen.getByLabelText('Modelo para as sugestões'), {
+      target: { value: 'gpt-5.4' },
     });
     fireEvent.click(
       screen.getByText('Chave OpenAI (não usada na transcrição local)'),
@@ -232,8 +232,8 @@ describe('settings areas', () => {
     await waitFor(() =>
       expect(api.removeSecret).toHaveBeenCalledExactlyOnceWith(),
     );
-    expect(screen.getByLabelText('Perfil padrão da reunião')).toHaveValue(
-      'technical-review',
+    expect(screen.getByLabelText('Modelo para as sugestões')).toHaveValue(
+      'gpt-5.4',
     );
     expect(api.savePreferences).not.toHaveBeenCalled();
   });

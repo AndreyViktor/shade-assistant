@@ -1,32 +1,27 @@
 import { hasExactKeys } from '../validation';
 import { DEFAULT_SUGGESTION_MODEL, SUGGESTION_MODELS } from './providerOptions';
 import type { SuggestionModel } from './providerOptions';
-import {
-  parseMeetingProfileId,
-  type MeetingProfileId,
-} from '../meeting/meetingProfile';
+import { parseMeetingProfileId } from '../meeting/meetingProfile';
 
 export type Preferences = {
-  version: 4;
+  version: 5;
   audioSource: 'mic' | 'system' | 'both';
   mode: 'demo' | 'real';
   sttProvider: 'apple-local' | 'mock';
   language: 'pt-BR' | 'en-US';
   suggestionProvider: 'openai';
   suggestionModel: SuggestionModel;
-  meetingProfile: MeetingProfileId;
 };
 
 export function defaultPreferences(platform: string): Preferences {
   return {
-    version: 4,
+    version: 5,
     audioSource: 'both',
     mode: 'demo',
     sttProvider: platform === 'darwin' ? 'apple-local' : 'mock',
     language: 'pt-BR',
     suggestionProvider: 'openai',
     suggestionModel: DEFAULT_SUGGESTION_MODEL,
-    meetingProfile: 'none',
   };
 }
 
@@ -40,9 +35,8 @@ export function parsePreferences(value: unknown): Preferences | null {
       'language',
       'suggestionProvider',
       'suggestionModel',
-      'meetingProfile',
     ]) ||
-    value.version !== 4 ||
+    value.version !== 5 ||
     (value.audioSource !== 'mic' &&
       value.audioSource !== 'system' &&
       value.audioSource !== 'both') ||
@@ -50,19 +44,17 @@ export function parsePreferences(value: unknown): Preferences | null {
     (value.sttProvider !== 'apple-local' && value.sttProvider !== 'mock') ||
     (value.language !== 'pt-BR' && value.language !== 'en-US') ||
     value.suggestionProvider !== 'openai' ||
-    !SUGGESTION_MODELS.some((model) => model.id === value.suggestionModel) ||
-    parseMeetingProfileId(value.meetingProfile) === null
+    !SUGGESTION_MODELS.some((model) => model.id === value.suggestionModel)
   )
     return null;
   return {
-    version: 4,
+    version: 5,
     audioSource: value.audioSource,
     mode: value.mode,
     sttProvider: value.sttProvider,
     language: value.language,
     suggestionProvider: value.suggestionProvider,
     suggestionModel: value.suggestionModel as SuggestionModel,
-    meetingProfile: value.meetingProfile as MeetingProfileId,
   };
 }
 
@@ -79,13 +71,36 @@ export function migratePreferences(value: unknown): Preferences | null {
       'language',
       'suggestionProvider',
       'suggestionModel',
+      'meetingProfile',
+    ]) &&
+    value.version === 4 &&
+    parseMeetingProfileId(value.meetingProfile) !== null
+  ) {
+    return parsePreferences({
+      version: 5,
+      audioSource: value.audioSource,
+      mode: value.mode,
+      sttProvider: value.sttProvider,
+      language: value.language,
+      suggestionProvider: value.suggestionProvider,
+      suggestionModel: value.suggestionModel,
+    });
+  }
+  if (
+    hasExactKeys(value, [
+      'version',
+      'audioSource',
+      'mode',
+      'sttProvider',
+      'language',
+      'suggestionProvider',
+      'suggestionModel',
     ]) &&
     value.version === 3
   ) {
     return parsePreferences({
       ...value,
-      version: 4,
-      meetingProfile: 'none',
+      version: 5,
     });
   }
   if (
@@ -101,9 +116,8 @@ export function migratePreferences(value: unknown): Preferences | null {
   ) {
     return parsePreferences({
       ...value,
-      version: 4,
+      version: 5,
       audioSource: 'both',
-      meetingProfile: 'none',
     });
   }
   if (

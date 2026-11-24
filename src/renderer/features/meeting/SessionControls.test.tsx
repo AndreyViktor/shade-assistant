@@ -142,7 +142,6 @@ it('requires an explicit text/cost opt-in and valid model/budget before sending 
         preferences: {
           ...defaultPreferences('darwin'),
           suggestionModel: 'gpt-5.4',
-          meetingProfile: 'status',
         },
       },
     }),
@@ -172,6 +171,10 @@ it('requires an explicit text/cost opt-in and valid model/budget before sending 
   expect(confirm).toBeDisabled();
   fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '1' } });
   await waitFor(() => expect(confirm).toBeEnabled());
+  fireEvent.click(screen.getByRole('radio', { name: /Status/ }));
+  expect(session).not.toHaveBeenCalledWith(
+    expect.objectContaining({ action: 'start' }),
+  );
   fireEvent.click(confirm);
   await waitFor(() =>
     expect(session).toHaveBeenLastCalledWith({

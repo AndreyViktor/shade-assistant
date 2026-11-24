@@ -11,10 +11,6 @@ import type {
   SettingsResult,
   SettingsSnapshot,
 } from '../../../contracts/ipc/settings';
-import {
-  getMeetingProfile,
-  MEETING_PROFILES,
-} from '../../../contracts/meeting/meetingProfile';
 import { ReadinessPanel } from './ReadinessPanel';
 
 type Area = 'audio' | 'suggestions' | 'readiness' | 'diagnostics';
@@ -388,39 +384,6 @@ export function SettingsPanel({
                 }{' '}
                 O acesso depende da sua conta da API OpenAI.
               </p>
-              <label>
-                Perfil padrão da reunião
-                <select
-                  value={draft.meetingProfile}
-                  onChange={(event) =>
-                    change('meetingProfile', event.target.value)
-                  }
-                  aria-describedby="meeting-profile-help"
-                >
-                  <option value="none">Sem perfil</option>
-                  {MEETING_PROFILES.map((profile) => (
-                    <option key={profile.id} value={profile.id}>
-                      {profile.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div id="meeting-profile-help">
-                {draft.meetingProfile === 'none' ? (
-                  <p>
-                    Sem perfil, a IA prioriza ajuda apenas pela conversa e pelo
-                    contexto opcional da sessão.
-                  </p>
-                ) : (
-                  <ProfileDescription id={draft.meetingProfile} />
-                )}
-                <p>
-                  Somente este identificador interno fica salvo. Objetivos,
-                  prioridades e contexto livre não são evidência do que foi
-                  dito; o envio de texto continua exigindo consentimento a cada
-                  sessão.
-                </p>
-              </div>
               <p>
                 Captura, envio de texto e limite de pedidos são confirmados a
                 cada sessão. Salvar não autoriza cobranças.
@@ -574,20 +537,5 @@ export function SettingsPanel({
         </div>
       )}
     </section>
-  );
-}
-
-function ProfileDescription({ id }: { id: Preferences['meetingProfile'] }) {
-  const profile = getMeetingProfile(id);
-  if (!profile) return null;
-  return (
-    <>
-      <p>
-        <strong>Objetivo:</strong> {profile.objective}
-      </p>
-      <p>
-        <strong>Prioridades:</strong> {profile.priorities.join('; ')}.
-      </p>
-    </>
   );
 }

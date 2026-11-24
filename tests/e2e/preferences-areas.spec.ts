@@ -66,10 +66,8 @@ test('preferences areas work offline at both window sizes and high zoom', async 
       ),
     ).toBe(true);
     await page.getByRole('button', { name: /Sugestões de IA/ }).click();
-    await expect(page.getByLabel('Perfil padrão da reunião')).toBeVisible();
-    await page
-      .getByLabel('Perfil padrão da reunião')
-      .selectOption('technical-review');
+    await expect(page.getByLabel('Perfil padrão da reunião')).toHaveCount(0);
+    await page.getByLabel('Modelo para as sugestões').selectOption('gpt-5.4');
     await page
       .getByRole('button', { name: 'Salvar preferências' })
       .scrollIntoViewIfNeeded();

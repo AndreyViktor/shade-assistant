@@ -661,6 +661,27 @@ it('does not retain or forward optional context without text consent', async () 
   );
 });
 
+it('preserves the session focus across pause and resume', async () => {
+  const { pipeline, session, generate } = setup(
+    true,
+    2,
+    undefined,
+    'pt-BR',
+    'status',
+  );
+  pipeline.receive(speech());
+  await vi.advanceTimersByTimeAsync(2_000);
+  session.pause();
+  pipeline.pause();
+  session.resume();
+  pipeline.resume();
+  pipeline.receive(speech(2));
+  await vi.advanceTimersByTimeAsync(11_000);
+  expect(generate).toHaveBeenCalledTimes(2);
+  expect(generate.mock.calls[1]?.[0].meetingProfile).toBe('status');
+  pipeline.stop();
+});
+
 it('switches focused profiles between sessions and clears the previous runtime choice', async () => {
   const { pipeline, session, generate } = setup(
     true,

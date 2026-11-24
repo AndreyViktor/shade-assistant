@@ -160,11 +160,10 @@ describe('readiness preload boundary', () => {
 
 describe('settings preload boundary', () => {
   const preferences = {
-    version: 4 as const,
+    version: 5 as const,
     audioSource: 'both' as const,
     suggestionProvider: 'openai' as const,
     suggestionModel: 'gpt-5.4-mini' as const,
-    meetingProfile: 'none' as const,
     mode: 'demo' as const,
     sttProvider: 'apple-local' as const,
     language: 'pt-BR' as const,

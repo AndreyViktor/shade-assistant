@@ -45,7 +45,7 @@ describe('preferences on disk', () => {
   });
   it.each([
     '{',
-    JSON.stringify({ ...defaultPreferences('darwin'), version: 5 }),
+    JSON.stringify({ ...defaultPreferences('darwin'), version: 6 }),
     'x'.repeat(4097),
   ])(
     'fails closed on corruption, newer versions or oversize without overwriting',
@@ -95,7 +95,6 @@ describe('preferences on disk', () => {
           'language',
           'suggestionProvider',
           'suggestionModel',
-          'meetingProfile',
         ].sort(),
       );
     },
@@ -115,9 +114,8 @@ describe('preferences on disk', () => {
       await writeFile(path, JSON.stringify(legacy));
       const expected = {
         ...legacy,
-        version: 4,
+        version: 5,
         audioSource: 'both',
-        meetingProfile: 'none',
       };
       expect(await new PreferencesStore(path, 'darwin').read()).toEqual(
         expected,
@@ -143,9 +141,48 @@ describe('preferences on disk', () => {
       suggestionModel: 'gpt-5.4-mini',
     };
     await writeFile(path, JSON.stringify(legacy));
-    const expected = { ...legacy, version: 4, meetingProfile: 'none' };
+    const expected = { ...legacy, version: 5 };
     expect(await new PreferencesStore(path, 'darwin').read()).toEqual(expected);
     expect(JSON.parse(await readFile(path, 'utf8'))).toEqual(expected);
+  });
+  it.each([
+    'none',
+    'discovery',
+    'status',
+    'interview',
+    'negotiation',
+    'technical-review',
+  ])(
+    'migrates v4 %s without persisting the profile',
+    async (meetingProfile) => {
+      const path = join(directory, 'preferences.v1.json');
+      const expected = {
+        ...defaultPreferences('darwin'),
+        audioSource: 'system',
+        mode: 'real',
+        language: 'en-US',
+        suggestionModel: 'gpt-5.4',
+      };
+      await writeFile(
+        path,
+        JSON.stringify({ ...expected, version: 4, meetingProfile }),
+      );
+      expect(await new PreferencesStore(path, 'darwin').read()).toEqual(
+        expected,
+      );
+      expect(JSON.parse(await readFile(path, 'utf8'))).toEqual(expected);
+    },
+  );
+  it('rejects malformed v4 without overwriting it', async () => {
+    const path = join(directory, 'preferences.v1.json');
+    const contents = JSON.stringify({
+      ...defaultPreferences('darwin'),
+      version: 4,
+      meetingProfile: 'unknown',
+    });
+    await writeFile(path, contents);
+    await expect(new PreferencesStore(path, 'darwin').read()).rejects.toThrow();
+    expect(await readFile(path, 'utf8')).toBe(contents);
   });
   it.each([
     { audioSource: 'mic' },
