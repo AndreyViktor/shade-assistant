@@ -1,14 +1,13 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-24. **Marco:** T065 DONE para uso local.
+**Atualizado:** 2026-11-24. **Marco:** T074 DONE.
 
-## Resultado T065
+## Resultado
 
-- Contrato/IPC/UI e modo `--readiness` sem captura do helper foram implementados; `verify:swift` passou (59 testes e build) e `npm run verify` final passou (985 Vitest, 20 skipped; 19 runner; lint/formato/tipos/build).
-- Bundle helper com assinatura ad hoc passou 17 testes de processo; smoke Electron offline da interface e IPC passou 1/1 com helper sintético e rede bloqueada.
-- Probe real sem captura retornou helper permitido, assinatura ad hoc, microfone/Speech negados e screen capture ambíguo/negado; nenhum prompt ou captura foi iniciado.
-- O usuário aceitou o escopo local e transferiu a T034 os ensaios em Mac limpo e após mudança real de assinatura/TCC, antes da entrega do pacote a desenvolvedores confiáveis. Evidências em [T065](evidence/tasks/T065.md); decisão D022.
+- Usuário aprovou a proposta de Preferências no Figma e pediu a implementação. Links, critérios de navegação, estados e limites em [T074](evidence/tasks/T074.md).
+- `npm run verify` passou com 985 testes Vitest e 19 do runner. A T065 está concluída para uso local. Os dois ensaios de TCC do pacote seguem na T034 conforme D022.
 
 ## Próximo passo
 
-- Encerrar T065 após o commit local. Em T034, executar os dois ensaios de TCC antes da entrega do pacote.
+- Abrir sessão própria para a T076. A consulta ao contexto do Figma retornou o limite de chamadas do plano Starter. Retomar quando a leitura estiver disponível.
+- O fluxo de foco por sessão fica na T075. Na T076, manter a configuração de perfil padrão enquanto a T075 estiver pendente.

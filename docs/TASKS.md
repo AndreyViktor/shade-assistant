@@ -114,6 +114,12 @@ Planejado após o relato de uso real: transcrição precisa permanecer visível 
 | T072 | TODO | T034,T070 | Hardening e auditoria reproduzível do artefato macOS | No pacote real, desativar fuses não usados (`RunAsNode`, `NODE_OPTIONS`, Inspector), habilitar integridade ASAR e carregamento exclusivo do `app.asar`, limitar DevTools/protocolo, assinar nested code e notarizar. Gate pós-pacote verifica fuses, plist, entitlements, assinaturas, helpers e inventário; REA pode complementar a evidência, sem virar dependência do produto. |
 | T073 | DONE | T063 | Facilitar a leitura do progresso ativo no roadmap | `Progresso ativo` agora é a segunda coluna do painel; escopo ativo, `IN_PROGRESS`, ativas não concluídas e `DEFERRED` estão definidos separadamente. As 73 tarefas permanecem mapeadas; painel recalculado para 41 `DONE`, 18 ativas não concluídas e 14 `DEFERRED`. `format:check`, `git diff --check` e 19 testes do runner passaram; nenhuma prioridade ou código de produto mudou. |
 
+## M12 — Reformulação de preferências e escolha para a sessão
+
+| ID | Estado | Depende de | Implementação | Critério de aceite/evidência |
+| --- | --- | --- | --- | --- |
+| T074 | DONE | T042,T061 | Projetar a navegação de preferências e a escolha do assistente por sessão | Proposta editável no Figma aprovada pelo usuário. Quatro áreas com resumo, fluxo clicável de salvar e descartar, variantes 960 × 720 e 640 × 480 e escolha de foco por sessão. Notas registram estados, retorno, teclado, zoom e limites para T075/T076. `npm run verify` passou. [Design e evidências](evidence/tasks/T074.md). |
+
 ## Critérios gerais
 
 Uma tarefa só pode ser `DONE` quando cumprir seus critérios específicos e os gates aplicáveis definidos em [ENGINEERING-STANDARDS.md](ENGINEERING-STANDARDS.md), com resultados e limitações registrados na própria linha ou em evidência especializada linkada. [PROGRESS.md](PROGRESS.md) mantém apenas o snapshot/handoff atual; o histórico antigo está em [PROGRESS-HISTORY.md](PROGRESS-HISTORY.md). Regras técnicas globais estão em [AGENTS.md](../AGENTS.md) e o fluxo de sessão/Git está em [WORKFLOW.md](WORKFLOW.md).
