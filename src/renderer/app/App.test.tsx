@@ -146,7 +146,7 @@ describe('App shell', () => {
     ).toBeDisabled();
   });
 
-  it('switches presentation modes without changing the session and restores focus after hiding content', async () => {
+  it('switches presentation views without changing the session', async () => {
     const session = vi.fn().mockResolvedValue({
       version: 11,
       ok: true,
@@ -181,26 +181,32 @@ describe('App shell', () => {
     render(<App />);
 
     const modes = await screen.findByRole('group', {
-      name: 'Modo do overlay',
+      name: 'Visualização do overlay',
     });
-    expect(
-      within(modes).getByRole('button', { name: 'Normal' }),
-    ).toHaveAttribute('aria-pressed', 'true');
-
-    fireEvent.click(within(modes).getByRole('button', { name: 'Compacto' }));
-    expect(
-      screen.getByRole('region', { name: 'Controles da reunião' }),
-    ).toHaveClass('overlay-mode-compact');
+    const complete = within(modes).getByRole('button', {
+      name: 'Visualização completa',
+    });
+    expect(complete).toHaveAttribute('aria-pressed', 'true');
+    expect(within(modes).getAllByRole('button')).toHaveLength(3);
     expect(
       screen.getByRole('region', { name: 'Transcrição ao vivo' }),
     ).toBeVisible();
     expect(
       screen.getByRole('region', { name: 'Assistência da reunião' }),
     ).toBeVisible();
+    expect(
+      screen.getByRole('region', {
+        name: 'Resultados estruturados da reunião',
+      }),
+    ).toBeVisible();
 
-    fireEvent.click(
-      within(modes).getByRole('button', { name: 'Só transcrição' }),
-    );
+    const transcript = within(modes).getByRole('button', {
+      name: 'Só transcrição',
+    });
+    transcript.focus();
+    fireEvent.click(transcript);
+    expect(transcript).toHaveFocus();
+    expect(transcript).toHaveAttribute('aria-pressed', 'true');
     expect(
       screen.getByRole('region', { name: 'Transcrição ao vivo' }),
     ).toBeVisible();
@@ -208,32 +214,25 @@ describe('App shell', () => {
       screen.queryByRole('region', { name: 'Assistência da reunião' }),
     ).not.toBeInTheDocument();
 
-    fireEvent.click(
-      within(modes).getByRole('button', { name: 'Só resultados' }),
-    );
+    const assistance = within(modes).getByRole('button', {
+      name: 'Só assistência',
+    });
+    fireEvent.click(assistance);
+    expect(assistance).toHaveAttribute('aria-pressed', 'true');
     expect(
       screen.queryByRole('region', { name: 'Transcrição ao vivo' }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole('region', { name: 'Resultados da reunião' }),
+      screen.getByRole('region', { name: 'Assistência da reunião' }),
     ).toBeVisible();
-
-    fireEvent.click(within(modes).getByRole('button', { name: 'Compacto' }));
-    fireEvent.click(
-      within(modes).getByRole('button', { name: 'Ocultar conteúdo' }),
-    );
     expect(
-      screen.getByRole('region', { name: 'Overlay temporariamente oculto' }),
-    ).toHaveTextContent('Captura ativa');
-    expect(screen.queryByText('Preferências')).not.toBeInTheDocument();
-    const restore = screen.getByRole('button', {
-      name: 'Restaurar conteúdo',
-    });
-    expect(restore).toHaveFocus();
-    fireEvent.click(restore);
-    const compact = screen.getByRole('button', { name: 'Compacto' });
-    expect(compact).toHaveAttribute('aria-pressed', 'true');
-    expect(compact).toHaveFocus();
+      screen.getByRole('region', {
+        name: 'Resultados estruturados da reunião',
+      }),
+    ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Preferências' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Pausar' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Parar' })).toBeVisible();
     expect(session).toHaveBeenCalledExactlyOnceWith({
       version: 11,
       action: 'read',

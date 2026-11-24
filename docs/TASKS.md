@@ -126,7 +126,7 @@ Planejado após o relato de uso real: transcrição precisa permanecer visível 
 
 | ID | Estado | Depende de | Implementação | Critério de aceite/evidência |
 | --- | --- | --- | --- | --- |
-| T077 | TODO | T067 | Simplificar os modos do overlay após avaliação de uso | Substituir normal, compacto, somente transcrição, somente resultados e conteúdo oculto por três visualizações efêmeras: completa (transcrição + assistência), somente transcrição e somente assistência (resultados estruturados + cartões de sugestão). Remover compacto e oculto; o layout completo deve responder ao tamanho da janela sem um modo redundante, e ocultar a janela de verdade fica para T068. Usar seletor segmentado com SVGs locais para duas colunas, texto e assistência, sem nova dependência; cada botão deve ter nome acessível, dica visível em hover/foco, `aria-pressed`, foco perceptível e teclado nativo. Manter texto nas ações críticas/consentidas, preservar Preferências, captura, sessão, consentimentos, feedback e ausência de IPC/persistência para a escolha. Testar mapeamento de conteúdo, foco, janela normal/estreita, zoom/overflow e snapshot de sessão inalterado; validar visualmente no Electron offline. |
+| T077 | DONE | T067 | Simplificar os modos do overlay após avaliação de uso | Três visualizações efêmeras, seletor SVG acessível e layout responsivo; assistência reúne resultados e cartões. `npm run verify` e Electron offline 1/1 aprovados, com foco, conteúdo, snapshot, resize e zoom; inspeção visual e limites em [T077](evidence/tasks/T077.md). |
 
 ## Critérios gerais
 

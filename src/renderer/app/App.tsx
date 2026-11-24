@@ -16,7 +16,7 @@ export function App() {
   const meeting = useMeetingSession();
   const [preferences, setPreferences] = useState<Preferences | null>(null);
   const [result, setResult] = useState<AppStatusResult | null>(null);
-  const [overlayMode, setOverlayMode] = useState<OverlayMode>('normal');
+  const [overlayMode, setOverlayMode] = useState<OverlayMode>('complete');
   useEffect(() => {
     let active = true;
     async function loadStatus() {
@@ -37,9 +37,8 @@ export function App() {
       ? 'Não foi possível verificar o estado do app. Reabra-o.'
       : '';
   return (
-    <main className={`app-shell app-shell-${overlayMode}`}>
+    <main className="app-shell">
       <SettingsDisclosure
-        showToggle={overlayMode !== 'hidden'}
         demoSummary={
           !result?.ok || !meeting.session
             ? 'DEMO indisponível'

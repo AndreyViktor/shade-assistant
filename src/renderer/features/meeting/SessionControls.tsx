@@ -3,7 +3,7 @@ import { SuggestionCards } from '../suggestions/SuggestionCards';
 import { StartSessionDialog } from './StartSessionDialog';
 import type { SuggestionAuthorization } from '../../../contracts/meeting/suggestionSession';
 import { LocalTranscriptPreview } from './LocalTranscriptPreview';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import type {
   AudioSource,
   TranscriptionLocale,
@@ -15,16 +15,40 @@ import { SuggestionFeedbackSummary } from '../suggestions/SuggestionFeedbackSumm
 
 type SourceChoice = Preferences['audioSource'];
 
-export type OverlayMode =
-  'normal' | 'compact' | 'transcript' | 'results' | 'hidden';
+export type OverlayMode = 'complete' | 'transcript' | 'assistance';
 
-const overlayModeLabels: Record<OverlayMode, string> = {
-  normal: 'Normal',
-  compact: 'Compacto',
-  transcript: 'Só transcrição',
-  results: 'Só resultados',
-  hidden: 'Ocultar conteúdo',
-};
+const overlayModes: { mode: OverlayMode; label: string; icon: string }[] = [
+  { mode: 'complete', label: 'Visualização completa', icon: 'columns' },
+  { mode: 'transcript', label: 'Só transcrição', icon: 'text' },
+  { mode: 'assistance', label: 'Só assistência', icon: 'assistance' },
+];
+
+function ModeIcon({ icon }: { icon: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      aria-hidden="true"
+    >
+      {icon === 'columns' ? (
+        <>
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M12 4v16" />
+        </>
+      ) : icon === 'text' ? (
+        <>
+          <path d="M4 6h16M4 10h16M4 14h12M4 18h14" />
+        </>
+      ) : (
+        <>
+          <path d="M12 3l1.7 4.8L18.5 9.5l-4.8 1.7L12 16l-1.7-4.8-4.8-1.7 4.8-1.7L12 3zM18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8L18 15z" />
+        </>
+      )}
+    </svg>
+  );
+}
 
 const phaseLabels = {
   idle: 'Pronta para iniciar',
@@ -46,7 +70,7 @@ function selectedSources(choice: SourceChoice): AudioSource[] {
 export function SessionControls({
   savedPreferences,
   meeting,
-  overlayMode = 'normal',
+  overlayMode = 'complete',
   onOverlayModeChange,
   available = true,
   appError = '',
@@ -73,12 +97,6 @@ export function SessionControls({
   const source = (savedPreferences ?? preferences)?.audioSource ?? 'both';
   const [confirming, setConfirming] = useState(false);
   const startButton = useRef<HTMLButtonElement>(null);
-  const restoreButton = useRef<HTMLButtonElement>(null);
-  const modeButtons = useRef<
-    Partial<Record<OverlayMode, HTMLButtonElement | null>>
-  >({});
-  const restoreModeFocus = useRef(false);
-  const lastVisibleMode = useRef<Exclude<OverlayMode, 'hidden'>>('normal');
   const canStart =
     available && (session?.phase === 'idle' || session?.phase === 'stopped');
   const localActive =
@@ -92,25 +110,6 @@ export function SessionControls({
         attempt &&
         !['pending', 'success', 'empty', 'cancelled'].includes(attempt.result),
       ));
-
-  useEffect(() => {
-    if (overlayMode === 'hidden') {
-      restoreModeFocus.current = true;
-      restoreButton.current?.focus();
-      return;
-    }
-    lastVisibleMode.current = overlayMode;
-    if (restoreModeFocus.current) {
-      restoreModeFocus.current = false;
-      modeButtons.current[overlayMode]?.focus();
-    }
-  }, [overlayMode]);
-
-  function changeOverlayMode(mode: OverlayMode): void {
-    if (mode === 'hidden' && overlayMode !== 'hidden')
-      lastVisibleMode.current = overlayMode;
-    onOverlayModeChange?.(mode);
-  }
 
   function startLocal(): void {
     if (!canStart || busy) return;
@@ -150,44 +149,22 @@ export function SessionControls({
       </p>
     );
 
-  if (overlayMode === 'hidden') {
-    return (
-      <section
-        className="session-controls overlay-hidden-summary"
-        aria-label="Overlay temporariamente oculto"
-      >
-        <p className="eyebrow">MEETING COPILOT</p>
-        {captureIndicator}
-        <button
-          ref={restoreButton}
-          className="primary-action"
-          onClick={() => changeOverlayMode(lastVisibleMode.current)}
-        >
-          Restaurar conteúdo
-        </button>
-        <p className="overlay-limit">
-          O conteúdo da reunião está oculto, mas esta janela continua visível
-          para o macOS e pode aparecer em compartilhamentos ou gravações.
-        </p>
-      </section>
-    );
-  }
-
   const modePicker = (
     <fieldset className="overlay-mode-picker">
-      <legend>Modo do overlay</legend>
+      <legend>Visualização do overlay</legend>
       <div className="overlay-mode-actions">
-        {(Object.keys(overlayModeLabels) as OverlayMode[]).map((mode) => (
+        {overlayModes.map(({ mode, label, icon }) => (
           <button
             key={mode}
-            ref={(element) => {
-              modeButtons.current[mode] = element;
-            }}
             type="button"
+            aria-label={label}
             aria-pressed={overlayMode === mode}
-            onClick={() => changeOverlayMode(mode)}
+            onClick={() => onOverlayModeChange?.(mode)}
           >
-            {overlayModeLabels[mode]}
+            <ModeIcon icon={icon} />
+            <span className="overlay-mode-tooltip" aria-hidden="true">
+              {label}
+            </span>
           </button>
         ))}
       </div>
@@ -294,27 +271,13 @@ export function SessionControls({
       {captureIndicator}
 
       <div className={`meeting-workspace meeting-workspace-${overlayMode}`}>
-        {overlayMode !== 'results' && (
+        {overlayMode !== 'assistance' && (
           <LocalTranscriptPreview
             transcript={local}
             error={Boolean(error || appError)}
           />
         )}
-        {overlayMode === 'results' ? (
-          <section
-            className={`meeting-assistance${suggestionsFailed ? ' area-failed' : ''}`}
-            aria-label="Resultados da reunião"
-            tabIndex={0}
-          >
-            {suggestionsFailed && (
-              <p className="area-error" role="alert">
-                <span aria-hidden="true">⚠</span> Falha nos resultados. Consulte
-                Preferências.
-              </p>
-            )}
-            <StructuredMeetingResults snapshot={results} />
-          </section>
-        ) : overlayMode !== 'transcript' ? (
+        {overlayMode !== 'transcript' ? (
           <section
             className={`meeting-assistance${suggestionsFailed ? ' area-failed' : ''}`}
             aria-label="Assistência da reunião"
@@ -372,7 +335,7 @@ export function SessionControls({
                 <h3>Assistência</h3>
                 <p>
                   Sugestões e resultados ao vivo desativados. A transcrição
-                  continua disponível neste painel.
+                  continua disponível na visualização de transcrição.
                 </p>
               </>
             )}
@@ -380,7 +343,7 @@ export function SessionControls({
         ) : null}
       </div>
 
-      {overlayMode === 'normal' && (
+      {overlayMode !== 'transcript' && (
         <SuggestionFeedbackSummary
           feedback={suggestions.feedback}
           busy={busy}
