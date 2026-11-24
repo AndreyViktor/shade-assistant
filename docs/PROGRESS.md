@@ -10,5 +10,5 @@
 
 ## Próximo passo
 
-- Abrir sessão própria para a T077 se a revisão do overlay for a prioridade; T076 continua pronta para implementação quando a leitura do Figma estiver disponível.
-- O fluxo de foco por sessão fica na T075. Na T076, manter a configuração de perfil padrão enquanto a T075 estiver pendente.
+- Sequência escolhida para o runner: T076 e depois T075, em sessões separadas. A T076 usa as capturas do Product Design em [T074](evidence/tasks/T074.md#preferências-t076).
+- Na T076, manter o perfil padrão na área de sugestões. A T075 vai mover a escolha de foco para o início de cada sessão com sugestões e tratar a migração. T077 segue como tarefa independente.
