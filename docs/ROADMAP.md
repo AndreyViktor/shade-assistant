@@ -23,15 +23,15 @@ O produto evolui de uma base local e segura para transcrição confiável, assis
 | Ferramentas e documentação | **100%** | 6 | 0 | 0 |
 | Transcrição e áudio | **100%** | 10 | 0 | 2 |
 | Sugestões de IA e qualidade | **93%** | 13 | 1 | 0 |
-| UI/UX e overlay | **77%** | 10 | 3 | 4 |
-| Resultados e fluxo da reunião | **40%** | 2 | 3 | 0 |
+| UI/UX e overlay | **100%** | 13 | 0 | 4 |
+| Resultados e fluxo da reunião | **60%** | 3 | 2 | 0 |
 | Segurança, privacidade e distribuição | **33%** | 3 | 6 | 4 |
 | Windows futuro | **—** | 0 | 0 | 4 |
-| **Total ativo** | **79%** | **50** | **13** | **14** |
+| **Total ativo** | **86%** | **54** | **9** | **14** |
 
 ## Fase atual e sequência protegida
 
-A sequência T058 → T056 → T057 → T027 → T060 → T061 foi concluída; critérios e limites estão em [TASKS.md](TASKS.md). T065 foi aceita para uso local; os ensaios de Mac limpo e mudança de assinatura seguem em T034. As novas tarefas de design e reformulação estão planejadas, sem antecipar seu início.
+A sequência T058 → T056 → T057 → T027 → T060 → T061 foi concluída. Também estão concluídas a reformulação de Preferências, a escolha de foco por sessão, a simplificação do overlay e os atalhos globais (T074–T077 e T068). A T065 foi aceita para uso local. Os ensaios de prontidão em Mac limpo e após mudança de assinatura seguem em T034. Os critérios e limites de cada entrega estão em [TASKS.md](TASKS.md).
 
 ## 1. Fundação e arquitetura — 100%
 
@@ -68,27 +68,27 @@ Próxima evolução arquitetural ocorre apenas quando uma tarefa concreta exigir
 | Contexto, provider, gatilhos e scheduler | T020–T024 | DONE | 100% | Núcleo fala→contexto→OpenAI→cartões integrado. |
 | Retenção, contexto opcional e ruído de ASR | T040, T052–T055 | DONE | 100% | Cartões mantidos, contexto opcional consentido e proteção contra ruído de ASR. |
 | Prontidão de contexto e agendamento | T058 | DONE | 100% | Gatilhos locais e debounce compartilhado, com pedido manual preservado. |
-| Orçamento por modalidade | T025 | TODO | 0% | Estimar/limitar custo de texto, imagem e eventual áudio remoto sem autorizar cobrança. |
+| Orçamento por modalidade | T025 | TODO | 0% | Estimar e limitar custo de texto, imagem e áudio remoto. A execução depende da T016, que está adiada. |
 | Avaliação de qualidade e uso | T027 | DONE | 100% | Protocolo offline e comparação real limitada registrados. |
 | Feedback local dos cartões | T064 | DONE | 100% | Classificações e métricas locais sem persistir conteúdo sensível. |
 
-## 5. UI/UX e overlay — 77%
+## 5. UI/UX e overlay — 100%
 
 | Funcionalidade | Tarefas | Estado | Progresso | Próximo resultado |
 | --- | --- | --- | ---: | --- |
 | Painel, cartões, preferências e layout compacto | T007, T010, T041–T043, T046–T048 | DONE | 100% | Base acessível, redimensionável e utilizável durante sessão. |
-| Visualizações do overlay | T067, T077 | TODO | 50% | Simplificar para completa, transcrição e assistência, com ícones acessíveis e layout responsivo; remover compacto e pseudo-ocultação. |
-| Atalhos globais configuráveis | T068 | TODO | 0% | Mostrar/ocultar a janela nativa, pausar/retomar, parar e pedido manual com conflito e cleanup. |
-| Design e reformulação de preferências | T074, T076 | TODO | 50% | Design aprovado; implementar as áreas de configuração preservando a prontidão local. |
+| Visualizações do overlay | T067, T077 | DONE | 100% | Completa, somente transcrição e somente assistência, com seletor acessível e layout responsivo. [Evidências da T077](evidence/tasks/T077.md). |
+| Atalhos globais configuráveis | T068 | DONE | 100% | Mostrar ou ocultar a janela, pausar ou retomar, parar e pedir ajuda. Configuração com confirmação, detecção de conflitos e suspensão durante edição no painel. [Evidências e limites](evidence/tasks/T068.md). |
+| Design e reformulação de preferências | T074, T076 | DONE | 100% | Áreas com resumo dos valores salvos, confirmação de descarte e prontidão local preservada. [Evidências da T076](evidence/tasks/T076.md). |
 | Múltiplos monitores, histórico, troca de fonte e controles separados | T045, T049–T051 | DEFERRED | — | Retomar somente após evidência de prioridade de uso. |
 
-## 6. Resultados e fluxo da reunião — 40%
+## 6. Resultados e fluxo da reunião — 60%
 
 | Funcionalidade | Tarefas | Estado | Progresso | Próximo resultado |
 | --- | --- | --- | ---: | --- |
 | Live Meeting Brief com evidências | T060 | DONE | 100% | Tópico, decisões, ações, perguntas e riscos ligados à fala/horário. |
 | Perfis de reunião | T061 | DONE | 100% | Descoberta, status, entrevista, negociação e revisão técnica; modo sem perfil preservado. |
-| Escolha do assistente por sessão | T075 | TODO | 0% | Escolha no início da sessão, sem padrão nas preferências gerais. |
+| Escolha do assistente por sessão | T075 | DONE | 100% | Cada sessão começa em **Sem perfil**. O usuário escolhe o foco ao habilitar sugestões, com consentimento separado. [Evidências da T075](evidence/tasks/T075.md). |
 | Ações/decisões revisáveis | T066 | TODO | 0% | Confirmar, corrigir ou descartar itens; responsável/prazo só com suporte explícito. |
 | Exportação explícita | T069 | TODO | 0% | Prévia e seleção para Markdown, texto ou JSON; cancelamento não escreve nem envia. |
 
@@ -117,17 +117,15 @@ A antiga dependência de T032 em fallback remoto e screenshot foi removida: o ba
 | --- | --- | --- | ---: | --- |
 | Pesquisa, arquitetura, POC e distribuição Windows | T036–T039 | DEFERRED | — | Somente nova decisão explícita do usuário; não executar no ciclo macOS. |
 
-## Ordem posterior à fase atual
+## Próximas tarefas
 
-Após a sequência já concluída, o trabalho pode seguir em trilhas dependentes:
+T033, T066 e T070 estão elegíveis. Sem uma seleção explícita, o runner escolhe T033 pela ordem do backlog.
 
-1. **Segurança/distribuição:** T032 → T033 → T034; T065 → T070; depois T072 → T035. T071 pode vir após o pacote endurecido sem bloquear o primeiro aceite local.
-2. **Qualidade orientada pelo usuário:** T064 concluída, alimentando métricas locais e a revisão dos resultados.
-3. **Resultados acionáveis:** T066 → T069.
-4. **Operação do overlay:** T067 → T077 → T068.
-5. **Preferências e início da sessão:** T074 → T075; T074 e T065 → T076.
+1. **T033** valida sessões prolongadas e libera o empacotamento macOS em T034.
+2. **T066** permite revisar os resultados ligados às falas e libera a exportação com prévia em T069.
+3. **T070** entrega o diagnóstico local sanitizado. T034 e T070 liberam o hardening em T072. Depois do hardening, podem avançar a revisão da distribuição (T035) e as atualizações assinadas (T071).
 
-O runner ainda escolhe apenas tarefas elegíveis e uma por sessão. Esta ordem não autoriza captura, rede, custo, assinatura, notarização, deploy ou atualização automática.
+O runner executa tarefas elegíveis em sessões separadas. Captura, envio, custos e distribuição continuam sujeitos às autorizações do projeto.
 
 ## Guardrails de produto
 
