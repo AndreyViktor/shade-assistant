@@ -181,6 +181,21 @@ export class MeetingSuggestions {
     this.publishContext(event);
   }
 
+  requestManual(): void {
+    if (!this.authorized() || this.remaining <= 0) return;
+    const context = this.context.snapshot();
+    if (!context) return;
+    this.lastTrigger = 'manual';
+    this.scheduler.submit(
+      {
+        recent: context.recent.filter((segment) => segment.type === 'final'),
+        summary: context.summary,
+      },
+      this.revision,
+      'manual',
+    );
+  }
+
   private publishContext(event?: TranscriptionEvent): void {
     const context = this.context.snapshot();
     if (!context) return;

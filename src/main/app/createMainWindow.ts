@@ -1,3 +1,4 @@
+import { registerGlobalShortcuts } from './registerGlobalShortcuts';
 import { OpenAISuggestionProvider } from '../../infrastructure/ai/OpenAISuggestionProvider';
 import { registerSessionIpc } from '../ipc/registerSessionIpc';
 import { createSettingsService } from '../settings/createSettingsService';
@@ -69,7 +70,7 @@ export async function createMainWindow(): Promise<BrowserWindow> {
   window.webContents.on('will-redirect', (event) => event.preventDefault());
   window.once('ready-to-show', () => window.show());
   const settings = createSettingsService(window);
-  registerSessionIpc(
+  const sessionControls = registerSessionIpc(
     window,
     developmentUrl ?? pathToFileURL(rendererFile).href,
     {
@@ -106,6 +107,19 @@ export async function createMainWindow(): Promise<BrowserWindow> {
   );
 
   registerSettingsIpc(window, rendererUrl, settings);
+  await registerGlobalShortcuts(window, rendererUrl, (action) => {
+    if (window.isDestroyed()) return;
+    if (action === 'window') {
+      if (window.isVisible() && !window.isMinimized()) window.hide();
+      else {
+        if (window.isMinimized()) window.restore();
+        window.show();
+        window.focus();
+      }
+    } else {
+      void sessionControls.shortcut(action).catch(() => undefined);
+    }
+  });
 
   if (developmentUrl) await window.loadURL(developmentUrl);
   else await window.loadFile(rendererFile);

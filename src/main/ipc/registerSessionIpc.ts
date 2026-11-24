@@ -34,7 +34,7 @@ export function registerSessionIpc(
   window: BrowserWindow,
   rendererUrl: string,
   dependencies: SessionIpcDependencies,
-): void {
+): { shortcut: (action: 'pause' | 'stop' | 'help') => Promise<void> } {
   const session = new MeetingSession();
   const suggestions = new MeetingSuggestions(
     session,
@@ -54,6 +54,8 @@ export function registerSessionIpc(
   let finishInitialization = () => {};
   let stopping: Promise<void> | undefined;
   let lifecycle = 0;
+  let shortcutBusy = false;
+  let transitionBusy = false;
 
   const success = (): SessionResult => ({
     version: SESSION_IPC_VERSION,
@@ -117,6 +119,69 @@ export function registerSessionIpc(
     session.stop();
     demo.stop();
     void stopProvider().catch(() => undefined);
+  }
+
+  async function control(
+    action: 'pause' | 'resume' | 'stop',
+  ): Promise<SessionResult> {
+    if (action !== 'stop' && transitionBusy) return failure('INVALID_REQUEST');
+    if (action === 'stop') return controlTransition(action);
+    transitionBusy = true;
+    try {
+      return await controlTransition(action);
+    } finally {
+      transitionBusy = false;
+    }
+  }
+
+  async function controlTransition(
+    action: 'pause' | 'resume' | 'stop',
+  ): Promise<SessionResult> {
+    if (action === 'pause') {
+      const accepted = session.pause();
+      if (!accepted) return failure('INVALID_REQUEST');
+      suggestions.pause();
+      if (session.snapshot().mode === 'apple-local') {
+        try {
+          if (!provider) return failure('TRANSCRIPTION_START_FAILED');
+          await provider.pause();
+        } catch {
+          await stopSession().catch(() => undefined);
+          return failure('TRANSCRIPTION_START_FAILED');
+        }
+      }
+      if (session.snapshot().mode === 'demo') demo.pause();
+    }
+
+    if (action === 'resume') {
+      if (session.snapshot().phase !== 'paused')
+        return failure('INVALID_REQUEST');
+      const generation = lifecycle;
+      if (session.snapshot().mode === 'apple-local') {
+        try {
+          if (!provider) return failure('TRANSCRIPTION_START_FAILED');
+          await provider.resume();
+        } catch {
+          await stopSession().catch(() => undefined);
+          return failure('TRANSCRIPTION_START_FAILED');
+        }
+      }
+      if (generation !== lifecycle) return failure('INVALID_REQUEST');
+      const accepted = session.resume();
+      if (!accepted) return failure('INVALID_REQUEST');
+      suggestions.resume();
+      if (session.snapshot().mode === 'demo') demo.resume();
+    }
+
+    if (action === 'stop') {
+      try {
+        await stopSession();
+      } catch {
+        return failure('TRANSCRIPTION_START_FAILED');
+      }
+    }
+
+    return success();
   }
 
   ipcMain.handle(
@@ -242,48 +307,13 @@ export function registerSessionIpc(
         }
       }
 
-      if (request.action === 'pause') {
-        const accepted = session.pause();
-        if (!accepted) return failure('INVALID_REQUEST');
-        suggestions.pause();
-        if (session.snapshot().mode === 'apple-local') {
-          try {
-            if (!provider) return failure('TRANSCRIPTION_START_FAILED');
-            await provider.pause();
-          } catch {
-            await stopSession().catch(() => undefined);
-            return failure('TRANSCRIPTION_START_FAILED');
-          }
-        }
-        if (session.snapshot().mode === 'demo') demo.pause();
-      }
-
-      if (request.action === 'resume') {
-        if (session.snapshot().phase !== 'paused')
-          return failure('INVALID_REQUEST');
-        const generation = lifecycle;
-        if (session.snapshot().mode === 'apple-local') {
-          try {
-            if (!provider) return failure('TRANSCRIPTION_START_FAILED');
-            await provider.resume();
-          } catch {
-            await stopSession().catch(() => undefined);
-            return failure('TRANSCRIPTION_START_FAILED');
-          }
-        }
-        if (generation !== lifecycle) return failure('INVALID_REQUEST');
-        const accepted = session.resume();
-        if (!accepted) return failure('INVALID_REQUEST');
-        suggestions.resume();
-        if (session.snapshot().mode === 'demo') demo.resume();
-      }
-
-      if (request.action === 'stop') {
-        try {
-          await stopSession();
-        } catch {
-          return failure('TRANSCRIPTION_START_FAILED');
-        }
+      if (
+        request.action === 'pause' ||
+        request.action === 'resume' ||
+        request.action === 'stop'
+      ) {
+        const result = await control(request.action);
+        if (!result.ok) return result;
       }
       if (request.action === 'revoke-suggestions') {
         session.revokeContext();
@@ -339,6 +369,34 @@ export function registerSessionIpc(
       .finally(untrack);
     ipcMain.removeHandler(SESSION_CHANNEL);
   });
+  return {
+    async shortcut(action) {
+      if (closing || (initializing && action !== 'stop')) return;
+      if (action === 'help') {
+        suggestions.requestManual();
+        return;
+      }
+      if (shortcutBusy && action !== 'stop') return;
+      const phase = session.snapshot().phase;
+      if (action === 'pause' && phase !== 'running' && phase !== 'paused')
+        return;
+      if (
+        action === 'stop' &&
+        phase !== 'running' &&
+        phase !== 'paused' &&
+        !initializing
+      )
+        return;
+      shortcutBusy = true;
+      try {
+        await control(
+          action === 'pause' && phase === 'paused' ? 'resume' : action,
+        );
+      } finally {
+        shortcutBusy = false;
+      }
+    },
+  };
 }
 
 function mapTranscriptionFailure(error: unknown): IpcErrorCode {

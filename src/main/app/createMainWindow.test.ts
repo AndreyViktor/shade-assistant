@@ -52,6 +52,10 @@ vi.mock('electron', () => ({
   },
 }));
 
+vi.mock('./registerGlobalShortcuts', () => ({
+  registerGlobalShortcuts: vi.fn(() => Promise.resolve()),
+}));
+
 describe('secure window composition', () => {
   beforeEach(() => vi.clearAllMocks());
   afterEach(() => vi.unstubAllGlobals());

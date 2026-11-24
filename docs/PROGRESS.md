@@ -1,8 +1,8 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-24. **Próxima tarefa:** T068 TODO.
+**Atualizado:** 2026-11-24. **Tarefa concluída:** T068.
 
 ## Resultado e próximo passo
 
-- O smoke Electron offline de referência passou com execução gráfica aprovada. A primeira execução pelo runner abortou dentro do sandbox antes de alterar código ou testes. [Plano e evidência da T068](evidence/tasks/T068.md).
-- Retomar somente T068 pelo runner. Quando a validação Electron exigir acesso à sessão gráfica, solicitar a execução offline pelo mecanismo de revisão automática já usado em T076 e T077.
+- Atalhos globais restritos, configuráveis e confirmados para janela e sessão; registro, conflitos, suspensão de edição no painel e orçamento validados. Limites de interação com outros aplicativos e evidências em [T068](evidence/tasks/T068.md).
+- Encerrar esta sessão após o commit local da T068; não iniciar outra tarefa.

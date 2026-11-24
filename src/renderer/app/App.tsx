@@ -32,6 +32,41 @@ export function App() {
       active = false;
     };
   }, []);
+  useEffect(() => {
+    const setEditing = window.meetingCopilot?.setShortcutEditing;
+    if (typeof setEditing !== 'function') return;
+    const update = () => {
+      const element = document.activeElement;
+      const editing =
+        document.hasFocus() &&
+        element instanceof HTMLElement &&
+        (element.isContentEditable ||
+          element instanceof HTMLTextAreaElement ||
+          (element instanceof HTMLInputElement &&
+            ![
+              'button',
+              'checkbox',
+              'radio',
+              'submit',
+              'reset',
+              'range',
+              'file',
+              'color',
+            ].includes(element.type)));
+      void setEditing(editing);
+    };
+    document.addEventListener('focusin', update);
+    const afterBlur = () => queueMicrotask(update);
+    document.addEventListener('focusout', afterBlur);
+    window.addEventListener('blur', update);
+    window.addEventListener('focus', update);
+    return () => {
+      document.removeEventListener('focusin', update);
+      document.removeEventListener('focusout', afterBlur);
+      window.removeEventListener('blur', update);
+      window.removeEventListener('focus', update);
+    };
+  }, []);
   const appError =
     result && !result.ok
       ? 'Não foi possível verificar o estado do app. Reabra-o.'

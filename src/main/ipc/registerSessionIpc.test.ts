@@ -78,18 +78,23 @@ function setup(
     },
     once: vi.fn<(event: string, callback: () => void) => void>(),
   };
-  registerSessionIpc(window as unknown as BrowserWindow, frame.url, {
-    platform,
-    createSuggestionProvider,
-    createAppleProvider,
-    requestMicrophoneAccess,
-    exportSuggestionFeedback,
-  });
+  const controls = registerSessionIpc(
+    window as unknown as BrowserWindow,
+    frame.url,
+    {
+      platform,
+      createSuggestionProvider,
+      createAppleProvider,
+      requestMicrophoneAccess,
+      exportSuggestionFeedback,
+    },
+  );
   const listener = mocks.handle.mock.calls.at(-1)?.[1];
   if (!listener) throw new Error('Missing handler');
   const event = { sender: window.webContents, senderFrame: frame };
   return {
     window,
+    controls,
     event,
     listener,
     call: (request: unknown) => listener(event, request),
@@ -110,6 +115,39 @@ afterEach(() => {
 });
 
 describe('session main boundary and provider selection', () => {
+  it('controls an active offline session through shortcuts and ignores idle actions', async () => {
+    const { call, controls } = setup();
+    await controls.shortcut('pause');
+    expect(await read(call)).toMatchObject({ session: { phase: 'idle' } });
+    await call(demoStart);
+    await controls.shortcut('pause');
+    expect(await read(call)).toMatchObject({ session: { phase: 'paused' } });
+    await controls.shortcut('pause');
+    expect(await read(call)).toMatchObject({ session: { phase: 'running' } });
+    await controls.shortcut('help');
+    await controls.shortcut('stop');
+    expect(await read(call)).toMatchObject({ session: { phase: 'stopped' } });
+  });
+
+  it('does not overlap a shortcut resume with an IPC pause in progress', async () => {
+    let finishPause: () => void = () => {};
+    pauseMock.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishPause = resolve;
+        }),
+    );
+    const { call, controls } = setup();
+    await call(appleStart);
+    const pausing = call({ version: 11, action: 'pause' });
+    await controls.shortcut('pause');
+    expect(resumeMock).not.toHaveBeenCalled();
+    await controls.shortcut('stop');
+    finishPause();
+    await pausing;
+    expect(await read(call)).toMatchObject({ session: { phase: 'stopped' } });
+  });
+
   it('keeps deterministic DEMO playback and cleanup available', async () => {
     const { call } = setup();
     await call(demoStart);
@@ -446,6 +484,31 @@ const withSuggestions = {
     },
   },
 };
+
+it('routes manual help through active consent and the session budget', async () => {
+  const generate = vi.fn().mockResolvedValue({ ok: true, suggestions: [] });
+  const { call, controls } = setup('darwin', () => ({ generate }));
+  await controls.shortcut('help');
+  await call(withSuggestions);
+  await controls.shortcut('pause');
+  await controls.shortcut('help');
+  await vi.advanceTimersByTimeAsync(0);
+  expect(generate).not.toHaveBeenCalled();
+  await controls.shortcut('pause');
+  await controls.shortcut('help');
+  await vi.advanceTimersByTimeAsync(0);
+  expect(generate).toHaveBeenCalledOnce();
+  await controls.shortcut('help');
+  await vi.advanceTimersByTimeAsync(0);
+  expect(generate).toHaveBeenCalledOnce();
+  expect(await read(call)).toMatchObject({
+    suggestions: {
+      remainingRequests: 0,
+      diagnostics: { lastTrigger: 'manual' },
+    },
+  });
+  await controls.shortcut('stop');
+});
 function emitQuestion() {
   const start = startMock.mock.calls.at(-1);
   if (!start) throw new Error('Missing synthetic provider');

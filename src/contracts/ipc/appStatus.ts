@@ -1,3 +1,5 @@
+import type { ShortcutConfiguration } from '../shortcuts/configuration';
+import type { ShortcutResult } from './shortcuts';
 import type { SessionRequest, SessionResult } from './session';
 import { hasExactKeys } from '../validation';
 import type { Preferences } from '../settings/preferences';
@@ -37,6 +39,10 @@ export type AppStatusResult =
   | { version: typeof IPC_VERSION; ok: false; code: IpcErrorCode };
 
 export interface MeetingCopilotApi {
+  readonly shortcuts: (
+    action: 'read' | 'restore' | ShortcutConfiguration,
+  ) => Promise<ShortcutResult>;
+  readonly setShortcutEditing: (editing: boolean) => Promise<ShortcutResult>;
   readonly session: (request: SessionRequest) => Promise<SessionResult>;
   readonly getStatus: () => Promise<AppStatusResult>;
   readonly getSettings: () => Promise<SettingsResult>;

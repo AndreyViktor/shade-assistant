@@ -17,6 +17,8 @@ describe('limited preload API', () => {
     const invoke = vi.fn().mockResolvedValue(success);
     const api = createMeetingCopilotApi(invoke);
     expect(Object.keys(api)).toEqual([
+      'setShortcutEditing',
+      'shortcuts',
       'session',
       'getStatus',
       'getSettings',

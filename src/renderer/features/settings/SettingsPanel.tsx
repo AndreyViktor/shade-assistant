@@ -11,9 +11,10 @@ import type {
   SettingsResult,
   SettingsSnapshot,
 } from '../../../contracts/ipc/settings';
+import { ShortcutsPanel } from './ShortcutsPanel';
 import { ReadinessPanel } from './ReadinessPanel';
 
-type Area = 'audio' | 'suggestions' | 'readiness' | 'diagnostics';
+type Area = 'audio' | 'suggestions' | 'readiness' | 'diagnostics' | 'shortcuts';
 
 export function SettingsPanel({
   active = true,
@@ -201,6 +202,14 @@ export function SettingsPanel({
       icon: '✦',
     },
     {
+      id: 'shortcuts',
+      title: 'Atalhos globais',
+      description: 'Combinações para janela e sessão',
+      summary: 'Configurar',
+      detail: 'Atalhos de teclado',
+      icon: '⌘',
+    },
+    {
       id: 'readiness',
       title: 'Permissões e prontidão',
       description: 'Verificação no macOS',
@@ -231,8 +240,9 @@ export function SettingsPanel({
         {area ? items.find((item) => item.id === area)?.title : 'Preferências'}
       </h2>
       <p>
-        As escolhas salvas valem para a próxima sessão e não alteram a sessão
-        atual. Salvar não autoriza captura, envio ou cobrança.
+        As escolhas de áudio e sugestões valem para a próxima sessão. Atalhos
+        são aplicados ao confirmar. Salvar não autoriza captura, envio ou
+        cobrança.
       </p>
       <p role="status" aria-live="polite">
         {message}
@@ -461,6 +471,7 @@ export function SettingsPanel({
           </div>
         </form>
       )}
+      {area === 'shortcuts' && <ShortcutsPanel />}
       <div hidden={area !== 'readiness'}>
         <section aria-labelledby="privacy-title">
           <h3 id="privacy-title">Permissões e privacidade</h3>

@@ -328,6 +328,50 @@ describe('session suggestion integration with synthetic speech', () => {
     ).toContain('Precisamos definir o próximo responsável.');
   });
 
+  it('allows a manual request only while consent and budget remain active', async () => {
+    const { pipeline, session, generate } = setup(true, 1);
+    pipeline.requestManual();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(generate).toHaveBeenCalledOnce();
+    expect(pipeline.snapshot().diagnostics?.lastTrigger).toBe('manual');
+    expect(pipeline.snapshot().remainingRequests).toBe(0);
+    pipeline.requestManual();
+    session.pause();
+    pipeline.pause();
+    pipeline.requestManual();
+    session.revokeContext();
+    pipeline.stop();
+    pipeline.requestManual();
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(generate).toHaveBeenCalledOnce();
+
+    const denied = setup(false);
+    denied.pipeline.requestManual();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(denied.generate).not.toHaveBeenCalled();
+  });
+
+  it('does not request while paused or after revocation and excludes partial speech', async () => {
+    const { pipeline, session, generate } = setup(true, 2);
+    pipeline.receive({ ...speech(), type: 'partial' });
+    session.pause();
+    pipeline.pause();
+    pipeline.requestManual();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(generate).not.toHaveBeenCalled();
+    session.resume();
+    pipeline.resume();
+    pipeline.requestManual();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(generate).toHaveBeenCalledOnce();
+    expect(generate.mock.calls[0]?.[0].context.recent).toEqual([]);
+    session.revokeContext();
+    pipeline.requestManual();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(generate).toHaveBeenCalledOnce();
+    pipeline.stop();
+  });
+
   it('requires text consent before constructing a provider or retaining context', async () => {
     const { pipeline, create, generate } = setup(false);
     pipeline.receive(speech());

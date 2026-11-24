@@ -1,4 +1,10 @@
 import {
+  SHORTCUTS_CHANNEL,
+  parseShortcutRequest,
+  parseShortcutResult,
+} from '../contracts/ipc/shortcuts';
+import type { ShortcutRequest } from '../contracts/ipc/shortcuts';
+import {
   SESSION_CHANNEL,
   SESSION_IPC_VERSION,
   parseSessionRequest,
@@ -36,22 +42,33 @@ import type {
 
 type Invoke = (
   channel:
+    | typeof SHORTCUTS_CHANNEL
     | typeof APP_STATUS_CHANNEL
     | typeof READINESS_CHANNEL
     | typeof SETTINGS_CHANNEL
     | typeof SESSION_CHANNEL,
-  request: { version: 1 } | ReadinessRequest | SettingsRequest | SessionRequest,
+  request:
+    | { version: 1 }
+    | ReadinessRequest
+    | SettingsRequest
+    | SessionRequest
+    | ShortcutRequest,
 ) => Promise<unknown>;
 
 export function createMeetingCopilotApi(invoke: Invoke): MeetingCopilotApi {
   async function call(
     channel:
+      | typeof SHORTCUTS_CHANNEL
       | typeof APP_STATUS_CHANNEL
       | typeof READINESS_CHANNEL
       | typeof SETTINGS_CHANNEL
       | typeof SESSION_CHANNEL,
     request:
-      { version: 1 } | ReadinessRequest | SettingsRequest | SessionRequest,
+      | { version: 1 }
+      | ReadinessRequest
+      | SettingsRequest
+      | SessionRequest
+      | ShortcutRequest,
     timeout: number,
   ): Promise<unknown> {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -93,6 +110,41 @@ export function createMeetingCopilotApi(invoke: Invoke): MeetingCopilotApi {
   }
 
   return Object.freeze({
+    async setShortcutEditing(...args: unknown[]) {
+      const request =
+        args.length === 1
+          ? parseShortcutRequest({
+              version: 1,
+              action: 'editing',
+              editing: args[0],
+            })
+          : null;
+      if (!request)
+        return {
+          version: 1 as const,
+          ok: false as const,
+          code: 'INVALID_REQUEST' as const,
+        };
+      return parseShortcutResult(await call(SHORTCUTS_CHANNEL, request, 5000));
+    },
+    async shortcuts(...args: unknown[]) {
+      const action = args[0];
+      const request =
+        args.length === 1
+          ? parseShortcutRequest(
+              action === 'read' || action === 'restore'
+                ? { version: 1, action }
+                : { version: 1, action: 'save', shortcuts: action },
+            )
+          : null;
+      if (!request)
+        return {
+          version: 1 as const,
+          ok: false as const,
+          code: 'INVALID_REQUEST' as const,
+        };
+      return parseShortcutResult(await call(SHORTCUTS_CHANNEL, request, 5000));
+    },
     async session(...args: unknown[]): Promise<SessionResult> {
       const request = args.length === 1 ? parseSessionRequest(args[0]) : null;
       if (!request)
