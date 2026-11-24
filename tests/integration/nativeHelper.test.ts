@@ -54,6 +54,43 @@ function decode(bytes: Buffer) {
 }
 
 describe.skipIf(!executable)('real Swift helper process (no capture)', () => {
+  it('reports permission and signing readiness without accepting input or starting capture', () => {
+    const result = run('', ['--readiness']);
+    expect(result.status).toBe(0);
+    const report = JSON.parse(result.stdout.toString()) as Record<
+      string,
+      unknown
+    >;
+    expect(report).toMatchObject({
+      reportVersion: 1,
+      scope: 'session-preflight-no-capture',
+      owner: {
+        capture: 'MeetingCopilotTranscriber',
+        host: 'Meeting Copilot',
+      },
+      helper: { state: 'allowed', detail: 'exact' },
+      helperIdentity: {
+        process: 'MeetingCopilotTranscriber',
+        bundleIdentifier: 'local.meetingcopilot.transcriber',
+        signingIdentifier: 'local.meetingcopilot.transcriber',
+        signature: 'no-team',
+      },
+    });
+    for (const key of [
+      'microphone',
+      'systemAudio',
+      'speechRecognition',
+      'helper',
+    ])
+      expect([
+        'not-requested',
+        'allowed',
+        'denied',
+        'restricted',
+        'unavailable',
+      ]).toContain((report[key] as { state: string }).state);
+  });
+
   it('exits on clean stdin EOF without starting a session', () => {
     const result = run('');
     expect(result.status).toBe(0);

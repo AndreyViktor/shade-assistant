@@ -15,6 +15,7 @@ import {
   getMeetingProfile,
   MEETING_PROFILES,
 } from '../../../contracts/meeting/meetingProfile';
+import { ReadinessPanel } from './ReadinessPanel';
 
 export function SettingsPanel({
   active = true,
@@ -311,6 +312,7 @@ export function SettingsPanel({
           falas recentes ficam em memória e são limpas ao parar. Áudio nunca é
           enviado no modo local.
         </p>
+        <ReadinessPanel />
       </section>
     </section>
   );

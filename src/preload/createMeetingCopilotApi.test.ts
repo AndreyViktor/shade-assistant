@@ -23,6 +23,8 @@ describe('limited preload API', () => {
       'savePreferences',
       'importSecret',
       'removeSecret',
+      'getReadiness',
+      'openPermissionSettings',
     ]);
     expect(Object.isFrozen(api)).toBe(true);
     expect(await api.getStatus()).toEqual(success);
@@ -77,6 +79,82 @@ describe('limited preload API', () => {
       success,
     ]);
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe('readiness preload boundary', () => {
+  const readiness = {
+    owner: {
+      capture: 'MeetingCopilotTranscriber' as const,
+      host: 'Meeting Copilot' as const,
+    },
+    microphone: { state: 'not-requested' as const, detail: 'exact' as const },
+    systemAudio: {
+      state: 'denied' as const,
+      detail: 'screen-preflight-ambiguous' as const,
+    },
+    speechRecognition: { state: 'allowed' as const, detail: 'exact' as const },
+    helper: { state: 'allowed' as const, detail: 'exact' as const },
+    helperIdentity: {
+      process: 'MeetingCopilotTranscriber' as const,
+      bundleIdentifier: 'local.meetingcopilot.transcriber',
+      signingIdentifier: 'local.meetingcopilot.transcriber',
+      signature: 'no-team' as const,
+    },
+  };
+
+  it('uses only closed read and settings actions', async () => {
+    const invoke = vi
+      .fn()
+      .mockResolvedValueOnce({
+        version: 1,
+        ok: true,
+        action: 'check',
+        readiness,
+      })
+      .mockResolvedValueOnce({
+        version: 1,
+        ok: true,
+        action: 'open-settings',
+        target: 'microphone',
+      });
+    const api = createMeetingCopilotApi(invoke);
+    expect(await api.getReadiness()).toMatchObject({
+      ok: true,
+      readiness: { microphone: { state: 'not-requested' } },
+    });
+    expect(await api.openPermissionSettings('microphone')).toMatchObject({
+      ok: true,
+      target: 'microphone',
+    });
+    expect(invoke.mock.calls).toEqual([
+      ['meeting-copilot:readiness', { version: 1, action: 'check' }],
+      [
+        'meeting-copilot:readiness',
+        { version: 1, action: 'open-settings', target: 'microphone' },
+      ],
+    ]);
+  });
+
+  it('blocks arbitrary targets, extra args and malformed responses', async () => {
+    const invoke = vi.fn().mockResolvedValue({
+      version: 1,
+      ok: true,
+      action: 'check',
+      readiness: { ...readiness, privatePath: '/private/helper' },
+    });
+    const api = createMeetingCopilotApi(invoke);
+    expect(
+      await Reflect.apply(api.openPermissionSettings, null, ['arbitrary']),
+    ).toMatchObject({ ok: false, code: 'INVALID_REQUEST' });
+    expect(
+      await Reflect.apply(api.getReadiness, null, ['extra']),
+    ).toMatchObject({ ok: false, code: 'INVALID_REQUEST' });
+    expect(invoke).not.toHaveBeenCalled();
+    expect(await api.getReadiness()).toMatchObject({
+      ok: false,
+      code: 'INVALID_RESPONSE',
+    });
   });
 });
 

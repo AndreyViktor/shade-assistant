@@ -25,9 +25,9 @@ O produto evolui de uma base local e segura para transcrição confiável, assis
 | Sugestões de IA e qualidade | **71%** | 10 | 4 | 0 |
 | UI/UX e overlay | **80%** | 8 | 2 | 4 |
 | Resultados e fluxo da reunião | **0%** | 0 | 4 | 0 |
-| Segurança, privacidade e distribuição | **11%** | 1 | 8 | 4 |
+| Segurança, privacidade e distribuição | **22%** | 2 | 7 | 4 |
 | Windows futuro | **—** | 0 | 0 | 4 |
-| **Total ativo** | **66%** | **39** | **20** | **14** |
+| **Total ativo** | **68%** | **40** | **19** | **14** |
 
 ## Fase atual e sequência protegida
 
@@ -99,15 +99,15 @@ Próxima evolução arquitetural ocorre apenas quando uma tarefa concreta exigir
 
 O histórico continua temporário por padrão. Persistência permanente ou sincronização exige tarefa e consentimento próprios.
 
-## 7. Segurança, privacidade e distribuição — 11%
+## 7. Segurança, privacidade e distribuição — 22%
 
 | Funcionalidade | Tarefas | Estado | Progresso | Próximo resultado |
 | --- | --- | --- | ---: | --- |
 | Consentimento reversível por sessão | T008 | DONE | 100% | Preservar captura/envio separados e cleanup no stop/revogação. |
 | Baseline Electron + helper | T032 | TODO | 0% | Auditar TCC, IPC, CSP, sandbox, segredos, buffers, dependências e entitlements sem esperar recursos remotos adiados. |
-| Prontidão e permissões | T065 | TODO | 0% | Estado real por fonte/serviço, processo responsável, rechecagem e abertura explícita dos Ajustes. |
+| Prontidão e permissões | T065 | DONE | 100% | Aceita para uso local; ensaios em Mac limpo e após mudança de assinatura permanecem em T034. |
 | Regressão prolongada | T033 | TODO | 0% | Sessão mock de 30 min e sessão Mac real autorizada, com métricas e sem helper/buffer residual. |
-| Pacote macOS | T034 | TODO | 0% | Incluir e assinar helper próprio; iniciar em Mac limpo compatível. |
+| Pacote macOS | T034 | TODO | 0% | Incluir e assinar helper próprio; validar Mac limpo e mudança de identidade/TCC antes de entregar o pacote. |
 | Diagnóstico privado | T070 | TODO | 0% | Relatório local sanitizado e pré-visualizado, sem fala, áudio, contexto ou chave. |
 | Hardening do artefato | T072 | TODO | 0% | Fuses restritos, ASAR íntegro/exclusivo, DevTools/protocolo limitados, nested code assinado e notarização verificada. |
 | Revisão de distribuição | T035 | TODO | 0% | Aceite macOS baseado no pacote endurecido; não afirmar screenshot/Windows adiados. |

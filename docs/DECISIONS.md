@@ -22,6 +22,8 @@ Decisões confirmadas pelo usuário prevalecem sobre propostas e hipóteses anti
 
 - **D021 (2026-11-15):** a pedido do usuário, remover a retenção de apenas dois cartões reais. Mostrar todos os cards recebidos até descarte/limpeza, numa lista rolável com os mais recentes primeiro. O contrato limita cada resposta a oito cards e mantém o teto atual de 100 pedidos por sessão; o protocolo comporta até 800 e não descarta itens dentro desse orçamento. A DEMO continua com dois cards e expiração de 30 s. Ver [ADR 0026](adr/0026-all-live-suggestion-cards.md).
 
+- **D022 (2026-11-24):** para o uso local privado, o usuário aceitou os gates e evidências existentes de T065 e transferiu para T034 os ensaios de prontidão em Mac limpo e após mudança real da identidade/assinatura. Esses ensaios devem ocorrer antes da entrega do pacote a desenvolvedores confiáveis. A decisão não declara que eles ocorreram nem altera os requisitos de assinatura/notarização de distribuição.
+
 ## Propostas técnicas reversíveis
 
 Defaults sujeitos a validação de implementação; detalhes do fluxo e fronteiras estão em [ARCHITECTURE.md](ARCHITECTURE.md).

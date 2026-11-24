@@ -6,7 +6,10 @@ import MeetingCopilotProtocol
 struct TranscriberCLI {
   @MainActor
   static func main() async {
-    // No developer/test switches and no automatic capture from command-line arguments.
+    if CommandLine.arguments == [CommandLine.arguments[0], "--readiness"] {
+      writeReadinessAndExit()
+    }
+    // No developer/test switches and no automatic capture from other arguments.
     guard CommandLine.arguments.count == 1 else { exit(64) }
     signal(SIGPIPE, SIG_IGN)
     let output: ProcessOutput
@@ -66,5 +69,20 @@ struct TranscriberCLI {
     await session.finish(reason: .cancelled)
     for source in signals { source.cancel() }
     exit(failed || session.failed || input.overflowed ? 2 : 0)
+  }
+
+  private static func writeReadinessAndExit() -> Never {
+    do {
+      let encoder = JSONEncoder()
+      encoder.outputFormatting = [.sortedKeys]
+      let data = try encoder.encode(probeReadiness())
+      FileHandle.standardOutput.write(data)
+      FileHandle.standardOutput.write(Data([0x0A]))
+      exit(0)
+    } catch {
+      // Never expose framework, filesystem or signing details through stderr.
+      FileHandle.standardError.write(Data("READINESS_ENCODING_FAILED\n".utf8))
+      exit(2)
+    }
   }
 }

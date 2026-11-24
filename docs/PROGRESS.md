@@ -1,14 +1,14 @@
 # Estado atual e handoff
 
-**Atualizado:** 2026-11-23. **Marco:** T067 DONE.
+**Atualizado:** 2026-11-24. **Marco:** T065 DONE para uso local.
 
-## Resultado parcial T067
+## Resultado T065
 
-- Os cinco modos efêmeros foram implementados no renderer, sem IPC/persistência; o modo oculto mantém indicador de captura, restauração focada e aviso explícito de que a janela pode aparecer em compartilhamentos.
-- Typecheck, lint, formato, build, 13 testes React focados e smoke Electron offline 1/1 passaram. O smoke foi executado fora do sandbox após autorização explícita do usuário.
-- `npm run verify` passou: lint, formato, typecheck, 962 Vitest (19 skipped), 19 testes do runner e build. Smoke Electron offline 1/1; `git diff --check` limpo.
-- Evidência e limites em [T067](evidence/tasks/T067.md). A exceção fora do sandbox foi autorizada pelo usuário somente para o smoke offline.
+- Contrato/IPC/UI e modo `--readiness` sem captura do helper foram implementados; `verify:swift` passou (59 testes e build) e `npm run verify` final passou (985 Vitest, 20 skipped; 19 runner; lint/formato/tipos/build).
+- Bundle helper com assinatura ad hoc passou 17 testes de processo; smoke Electron offline da interface e IPC passou 1/1 com helper sintético e rede bloqueada.
+- Probe real sem captura retornou helper permitido, assinatura ad hoc, microfone/Speech negados e screen capture ambíguo/negado; nenhum prompt ou captura foi iniciado.
+- O usuário aceitou o escopo local e transferiu a T034 os ensaios em Mac limpo e após mudança real de assinatura/TCC, antes da entrega do pacote a desenvolvedores confiáveis. Evidências em [T065](evidence/tasks/T065.md); decisão D022.
 
 ## Próximo passo
 
-- Encerrar a sessão após o commit local T067; nenhuma outra tarefa foi iniciada.
+- Encerrar T065 após o commit local. Em T034, executar os dois ensaios de TCC antes da entrega do pacote.

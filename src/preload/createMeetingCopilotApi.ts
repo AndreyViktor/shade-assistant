@@ -22,22 +22,36 @@ import type {
   SettingsRequest,
   SettingsResult,
 } from '../contracts/ipc/settings';
+import {
+  READINESS_CHANNEL,
+  READINESS_IPC_VERSION,
+  parseReadinessRequest,
+  parseReadinessResult,
+  readinessFailure,
+} from '../contracts/ipc/readiness';
+import type {
+  ReadinessRequest,
+  ReadinessResult,
+} from '../contracts/ipc/readiness';
 
 type Invoke = (
   channel:
     | typeof APP_STATUS_CHANNEL
+    | typeof READINESS_CHANNEL
     | typeof SETTINGS_CHANNEL
     | typeof SESSION_CHANNEL,
-  request: { version: 1 } | SettingsRequest | SessionRequest,
+  request: { version: 1 } | ReadinessRequest | SettingsRequest | SessionRequest,
 ) => Promise<unknown>;
 
 export function createMeetingCopilotApi(invoke: Invoke): MeetingCopilotApi {
   async function call(
     channel:
       | typeof APP_STATUS_CHANNEL
+      | typeof READINESS_CHANNEL
       | typeof SETTINGS_CHANNEL
       | typeof SESSION_CHANNEL,
-    request: { version: 1 } | SettingsRequest | SessionRequest,
+    request:
+      { version: 1 } | ReadinessRequest | SettingsRequest | SessionRequest,
     timeout: number,
   ): Promise<unknown> {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -70,6 +84,12 @@ export function createMeetingCopilotApi(invoke: Invoke): MeetingCopilotApi {
         parsed.action === 'import-secret' ? 300000 : 5000,
       ),
     );
+  }
+
+  async function readiness(request: unknown): Promise<ReadinessResult> {
+    const parsed = parseReadinessRequest(request);
+    if (!parsed) return readinessFailure('INVALID_REQUEST');
+    return parseReadinessResult(await call(READINESS_CHANNEL, parsed, 10000));
   }
 
   return Object.freeze({
@@ -116,6 +136,18 @@ export function createMeetingCopilotApi(invoke: Invoke): MeetingCopilotApi {
     async removeSecret(...args: unknown[]) {
       if (args.length !== 0) return settingsFailure('INVALID_REQUEST');
       return settings({ version: 1, action: 'remove-secret' });
+    },
+    async getReadiness(...args: unknown[]) {
+      if (args.length !== 0) return readinessFailure('INVALID_REQUEST');
+      return readiness({ version: READINESS_IPC_VERSION, action: 'check' });
+    },
+    async openPermissionSettings(...args: unknown[]) {
+      if (args.length !== 1) return readinessFailure('INVALID_REQUEST');
+      return readiness({
+        version: READINESS_IPC_VERSION,
+        action: 'open-settings',
+        target: args[0],
+      });
     },
   });
 }

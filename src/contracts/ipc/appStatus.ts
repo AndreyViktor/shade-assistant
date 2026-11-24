@@ -2,6 +2,7 @@ import type { SessionRequest, SessionResult } from './session';
 import { hasExactKeys } from '../validation';
 import type { Preferences } from '../settings/preferences';
 import type { SettingsResult } from './settings';
+import type { PermissionSettingsTarget, ReadinessResult } from './readiness';
 
 export const IPC_VERSION = 1;
 export const APP_STATUS_CHANNEL = 'meeting-copilot:app-status';
@@ -44,6 +45,10 @@ export interface MeetingCopilotApi {
   ) => Promise<SettingsResult>;
   readonly importSecret: () => Promise<SettingsResult>;
   readonly removeSecret: () => Promise<SettingsResult>;
+  readonly getReadiness: () => Promise<ReadinessResult>;
+  readonly openPermissionSettings: (
+    target: PermissionSettingsTarget,
+  ) => Promise<ReadinessResult>;
 }
 
 export function ipcFailure(code: IpcErrorCode): AppStatusResult {

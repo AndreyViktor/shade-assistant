@@ -4,11 +4,20 @@ import { createSettingsService } from '../settings/createSettingsService';
 import { registerSettingsIpc } from '../ipc/registerSettingsIpc';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { app, BrowserWindow, session, systemPreferences } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  session,
+  shell,
+  systemPreferences,
+} from 'electron';
 import { getDevelopmentUrl } from './getDevelopmentUrl';
 import { registerAppIpc } from '../ipc/registerAppIpc';
 import { createAppleNativeTranscriptionProvider } from '../transcription/createAppleNativeTranscriptionProvider';
 import { exportSuggestionFeedback } from './exportSuggestionFeedback';
+import { createReadinessService } from '../readiness/createReadinessService';
+import { registerReadinessIpc } from '../ipc/registerReadinessIpc';
+import { resolveNativeTranscriberExecutable } from '../../infrastructure/transcription/apple/resolveNativeTranscriberExecutable';
 
 export async function createMainWindow(): Promise<BrowserWindow> {
   const developmentUrl = getDevelopmentUrl(
@@ -78,13 +87,25 @@ export async function createMainWindow(): Promise<BrowserWindow> {
         exportSuggestionFeedback(window, feedback),
     },
   );
-  registerAppIpc(window, developmentUrl ?? pathToFileURL(rendererFile).href);
-
-  registerSettingsIpc(
+  const rendererUrl = developmentUrl ?? pathToFileURL(rendererFile).href;
+  registerAppIpc(window, rendererUrl);
+  registerReadinessIpc(
     window,
-    developmentUrl ?? pathToFileURL(rendererFile).href,
-    settings,
+    rendererUrl,
+    createReadinessService({
+      platform: process.platform,
+      resolveExecutable: () =>
+        resolveNativeTranscriberExecutable({
+          platform: process.platform,
+          isPackaged: app.isPackaged,
+          appPath: app.getAppPath(),
+          resourcesPath: process.resourcesPath,
+        }),
+      openExternal: (url) => shell.openExternal(url),
+    }),
   );
+
+  registerSettingsIpc(window, rendererUrl, settings);
 
   if (developmentUrl) await window.loadURL(developmentUrl);
   else await window.loadFile(rendererFile);

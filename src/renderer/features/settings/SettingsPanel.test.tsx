@@ -146,7 +146,12 @@ describe('settings interface', () => {
     });
     render(<SettingsPanel />);
     expect(await screen.findByText(/Não foi possível carregar/)).toBeVisible();
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Salvar preferências' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Verificar prontidão' }),
+    ).toBeEnabled();
   });
 });
 
