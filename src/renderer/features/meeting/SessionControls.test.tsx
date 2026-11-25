@@ -127,6 +127,10 @@ describe('session controls', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Falha na transcrição. Consulte Preferências.',
     );
+    expect(
+      screen.getByText(/Não foi possível verificar a captura/),
+    ).toBeVisible();
+    expect(screen.queryByText(/Captura inativa/)).not.toBeInTheDocument();
     expect(screen.queryByText('private')).not.toBeInTheDocument();
   });
 });

@@ -3,10 +3,8 @@ import { TranscriptionDiagnostics } from '../features/meeting/TranscriptionDiagn
 import { SuggestionDiagnosticsPanel } from '../features/suggestions/SuggestionDiagnosticsPanel';
 import { DemoDiagnostics } from '../features/meeting/DemoDiagnostics';
 import type { Preferences } from '../../contracts/settings/preferences';
-import {
-  SessionControls,
-  type OverlayMode,
-} from '../features/meeting/SessionControls';
+import { SessionControls } from '../features/meeting/SessionControls';
+import type { OverlayMode } from '../features/meeting/OverlayViewPicker';
 import { SettingsDisclosure } from '../features/settings/SettingsDisclosure';
 import { useEffect, useState } from 'react';
 import { ipcFailure } from '../../contracts/ipc/appStatus';
@@ -120,14 +118,17 @@ export function App() {
           </>
         }
       >
-        <SessionControls
-          meeting={meeting}
-          overlayMode={overlayMode}
-          onOverlayModeChange={setOverlayMode}
-          savedPreferences={preferences}
-          available={result?.ok === true}
-          appError={appError}
-        />
+        {(preferencesButton) => (
+          <SessionControls
+            meeting={meeting}
+            overlayMode={overlayMode}
+            onOverlayModeChange={setOverlayMode}
+            preferencesButton={preferencesButton}
+            savedPreferences={preferences}
+            available={result?.ok === true}
+            appError={appError}
+          />
+        )}
       </SettingsDisclosure>
     </main>
   );

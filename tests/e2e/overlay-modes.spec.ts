@@ -36,6 +36,9 @@ test('overlay views preserve the session and reflow offline', async () => {
     await expect(transcript).toBeFocused();
     await expect(transcript).toHaveAttribute('aria-pressed', 'true');
     await expect(
+      page.getByText('Envio de texto à OpenAI autorizado.', { exact: true }),
+    ).toBeInViewport();
+    await expect(
       page.getByRole('region', { name: 'Transcrição ao vivo' }),
     ).toBeVisible();
     await expect(

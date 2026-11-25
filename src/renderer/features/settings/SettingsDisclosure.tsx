@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { PanelIcon } from '../../ui/PanelIcon';
 import type { Preferences } from '../../../contracts/settings/preferences';
 import { SettingsPanel } from './SettingsPanel';
 
@@ -10,14 +11,12 @@ export function SettingsDisclosure({
   connection,
   sessionSummary,
   demoSummary,
-  showToggle = true,
 }: {
-  children?: ReactNode;
+  children: (preferencesButton: ReactNode) => ReactNode;
   diagnostics?: ReactNode;
   connection?: ReactNode;
   sessionSummary?: string;
   demoSummary?: string;
-  showToggle?: boolean;
   onSaved?: (preferences: Preferences) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -35,21 +34,21 @@ export function SettingsDisclosure({
   return (
     <>
       <div className="operation-panel" hidden={expanded}>
-        {children}
-        {showToggle && (
-          <div className="settings-disclosure">
-            <button
-              ref={toggle}
-              aria-expanded={expanded}
-              aria-controls="panel-settings"
-              onClick={() => {
-                setVisited(true);
-                setExpanded(true);
-              }}
-            >
-              Preferências
-            </button>
-          </div>
+        {children(
+          <button
+            ref={toggle}
+            type="button"
+            className="preferences-button"
+            aria-expanded={expanded}
+            aria-controls="panel-settings"
+            onClick={() => {
+              setVisited(true);
+              setExpanded(true);
+            }}
+          >
+            <PanelIcon name="settings2" />
+            Preferências
+          </button>,
         )}
       </div>
       <div id="panel-settings" hidden={!expanded}>

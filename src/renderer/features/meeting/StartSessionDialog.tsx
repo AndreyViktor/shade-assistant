@@ -3,6 +3,7 @@ import {
   SUGGESTION_MODELS,
 } from '../../../contracts/settings/providerOptions';
 import { useEffect, useRef, useState } from 'react';
+import { PanelIcon } from '../../ui/PanelIcon';
 import {
   parseSuggestionAuthorization,
   USER_CONTEXT_LIMIT,
@@ -120,22 +121,32 @@ export function StartSessionDialog({
         }}
       >
         <div className="consent-content">
-          <p className="eyebrow">PRONTO PARA COMEÇAR</p>
-          <h3 id="consent-title">Transcrever neste Mac</h3>
-          <dl className="capture-summary">
-            <div>
-              <dt>Capturar</dt>
-              <dd>{source}</dd>
-            </div>
-            <div>
-              <dt>Idioma</dt>
-              <dd>{language}</dd>
-            </div>
-          </dl>
+          <div className="dialog-heading">
+            <span className="session-symbol">
+              <PanelIcon name="audioLines" />
+            </span>
+            <h2 id="consent-title">Transcrever neste Mac</h2>
+          </div>
           <p id="local-start-description">
             A transcrição usa o áudio deste Mac. Não precisa de conta, chave ou
             créditos da OpenAI.
           </p>
+          <dl className="capture-summary">
+            <div>
+              <dt>
+                <PanelIcon name="radio" />
+                Fonte de áudio
+              </dt>
+              <dd>{source}</dd>
+            </div>
+            <div>
+              <dt>
+                <PanelIcon name="languages" />
+                Idioma
+              </dt>
+              <dd>{language}</dd>
+            </div>
+          </dl>
           <p className="field-help">
             Ao iniciar, você permite a captura até pausar ou parar. O macOS pode
             pedir permissão para as fontes escolhidas.
@@ -159,7 +170,7 @@ export function StartSessionDialog({
               <span>
                 Adicionar sugestões de IA
                 <span className="optional-label">
-                  Opcional · usa a API OpenAI
+                  Opcional · envia texto à OpenAI e usa créditos da API
                 </span>
               </span>
             </label>
@@ -273,15 +284,16 @@ export function StartSessionDialog({
                   </p>
                   {!hasKey && (
                     <p className="field-help">
-                      Configure a chave em Preferências → Chave OpenAI e volte
-                      para iniciar. A transcrição local funciona sem chave.
+                      Configure a chave em Preferências → Sugestões de IA →
+                      Chave OpenAI e volte para iniciar. A transcrição local
+                      funciona sem chave.
                     </p>
                   )}
                   {hasKey && (
                     <p className="field-help">
                       {credential === 'development'
                         ? 'Chave carregada de .env ou OPENAI_API_KEY. Reinicie o app após alterá-la.'
-                        : 'Você pode gerenciar a chave em Preferências → Chave OpenAI.'}
+                        : 'Você pode gerenciar a chave em Preferências → Sugestões de IA → Chave OpenAI.'}
                     </p>
                   )}
                   {error && <p role="alert">{error}</p>}
@@ -346,6 +358,7 @@ export function StartSessionDialog({
               )
             }
           >
+            <PanelIcon name="play" />
             {withSuggestions ? 'Iniciar com sugestões' : 'Iniciar transcrição'}
           </button>
           {withSuggestions && (

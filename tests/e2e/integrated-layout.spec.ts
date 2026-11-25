@@ -163,8 +163,11 @@ test('active meeting keeps preferences reachable and all panes usable at 200% zo
       await expect
         .poll(() => page.evaluate(() => window.innerWidth))
         .toBe(width);
-      // Check before click/focus can silently scroll a clipped footer into view.
+      // Check before click/focus can silently scroll the controls into view.
       await expect(preferences).toBeInViewport({ ratio: 1 });
+      await expect(
+        suggestionRegion.getByRole('article').first().getByRole('heading'),
+      ).toBeInViewport({ ratio: 1 });
       await preferences.click({ trial: true });
       await captureWindow(win, page, `active-${width}.png`);
       await preferences.click();
@@ -225,15 +228,8 @@ test('active meeting keeps preferences reachable and all panes usable at 200% zo
       .poll(() => assistance.evaluate((element) => element.scrollTop))
       .toBe(0);
     await expect(
-      assistance.getByRole('heading', { name: 'Resultados ao vivo' }),
+      assistance.getByRole('heading', { name: 'Sugestões · OpenAI' }),
     ).toBeInViewport({ ratio: 1 });
-    const resultEvidence = assistance.getByText('1 fala de suporte');
-    await page.keyboard.press('Tab');
-    await expect(resultEvidence).toBeFocused();
-    await page.keyboard.press('Tab');
-    await expect(
-      assistance.getByText('Como estes resultados mudam?'),
-    ).toBeFocused();
     const suggestionList = suggestionRegion.getByRole('list', {
       name: 'Lista rolável de cartões da reunião',
     });
@@ -278,12 +274,22 @@ test('active meeting keeps preferences reachable and all panes usable at 200% zo
     await expect(
       page.getByText('Quando os cartões são removidos?'),
     ).toBeFocused();
+    const resultEvidence = assistance.getByText('1 fala de suporte');
+    await page.keyboard.press('Tab');
+    await expect(resultEvidence).toBeFocused();
+    await expectVisibleBounds(resultEvidence);
+    await page.keyboard.press('Tab');
+    await expect(
+      assistance.getByText('Como estes resultados mudam?'),
+    ).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(
       page.getByRole('button', { name: 'Desativar sugestões' }),
     ).toBeFocused();
     await captureWindow(win, page, 'zoom-suggestions-end.png');
-    await page.keyboard.press('Tab');
+    // Settings precede the speech log, even when the session has many cards.
+    await log.focus();
+    await page.keyboard.press('Shift+Tab');
     await expect(preferences).toBeFocused();
     await expectVisibleBounds(preferences);
     await captureWindow(win, page, 'zoom-preferences-access.png');
@@ -393,6 +399,22 @@ test('consent content and actions remain reachable at 200% zoom without capture'
     await page.keyboard.press('Tab');
     await expect(toggle).toBeFocused();
     await page.keyboard.press('Space');
+    await expect
+      .poll(() =>
+        page
+          .getByRole('alertdialog')
+          .evaluate((dialog) => dialog.scrollHeight > dialog.clientHeight),
+      )
+      .toBe(true);
+    expect(
+      await page
+        .locator('.consent-content, .consent-actions')
+        .evaluateAll((regions) =>
+          regions.every(
+            (region) => region.scrollHeight <= region.clientHeight + 1,
+          ),
+        ),
+    ).toBe(true);
     await page.getByLabel('Limite de pedidos de sugestão').focus();
     await expect(
       page.getByLabel('Limite de pedidos de sugestão'),
@@ -404,10 +426,7 @@ test('consent content and actions remain reachable at 200% zoom without capture'
     );
     await expectVisibleBounds(disclosure, 'start');
     await captureWindow(win, page, 'zoom-consent-disclosure-start.png');
-    // The disclosure is taller than this zoomed scroll area; both ends must be reachable.
-    await page.locator('.consent-content').evaluate((element) => {
-      element.scrollTop = element.scrollHeight;
-    });
+    // The entire dialog can be read in sequence with one scrollbar at high zoom.
     await disclosure.evaluate((element) =>
       element.scrollIntoView({ block: 'end' }),
     );

@@ -37,9 +37,7 @@ for (const empty of [false, true]) {
       await expect(log).toBeVisible();
       await expect(cards).toHaveCount(empty ? 0 : 8);
       if (empty) {
-        await expect(
-          page.getByText('Nenhuma fala exibida nesta sessão.'),
-        ).toBeVisible();
+        await expect(log.getByText('Aguardando a primeira fala')).toBeVisible();
         await expect(
           page.getByText('Nenhuma sugestão neste momento.'),
         ).toBeVisible();

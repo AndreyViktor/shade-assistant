@@ -30,6 +30,8 @@ test('opens the real Electron build with an isolated offline renderer', async ()
       process: false,
       bridge: false,
       methods: [
+        'setShortcutEditing',
+        'shortcuts',
         'session',
         'getStatus',
         'getSettings',

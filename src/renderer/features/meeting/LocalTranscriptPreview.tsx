@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
+import { PanelIcon } from '../../ui/PanelIcon';
 import type { LocalTranscriptSnapshot } from '../../../contracts/meeting/localTranscript';
+import type { SessionPhase } from '../../../contracts/meeting/session';
 import {
   channelLabel,
   hasTranscriptionFailure,
@@ -19,9 +21,11 @@ function sessionTime(ms: number): string {
 
 export function LocalTranscriptPreview({
   transcript,
+  phase,
   error = false,
 }: {
   transcript: LocalTranscriptSnapshot | null;
+  phase?: SessionPhase;
   error?: boolean;
 }) {
   const log = useRef<HTMLDivElement>(null);
@@ -31,12 +35,16 @@ export function LocalTranscriptPreview({
       log.current.scrollTop = log.current.scrollHeight;
   }, [transcript]);
   const failed = error || hasTranscriptionFailure(transcript);
+  const empty = !transcript?.segments.length;
   return (
     <section
       className={`local-transcript${failed ? ' area-failed' : ''}`}
       aria-label="Transcrição ao vivo"
     >
-      <h3>Transcrição ao vivo</h3>
+      <h2 className="pane-title">
+        <PanelIcon name="audioLines" />
+        Transcrição ao vivo
+      </h2>
       {failed && (
         <p className="area-error" role="alert">
           <span aria-hidden="true">⚠</span> Falha na transcrição. Consulte
@@ -71,15 +79,31 @@ export function LocalTranscriptPreview({
             element.scrollHeight - element.scrollTop - element.clientHeight <
             32;
         }}
-        className="transcript-segments"
+        className={`transcript-segments${empty ? ' transcript-empty' : ''}`}
         role="log"
         tabIndex={0}
         aria-label="Falas recentes"
         aria-live="polite"
         aria-relevant="additions text"
       >
-        {(!transcript || transcript.segments.length === 0) && (
-          <p>Nenhuma fala exibida nesta sessão.</p>
+        {empty && !failed && (
+          <div className="pane-empty">
+            <span className="empty-icon">
+              <PanelIcon name="scrollText" />
+            </span>
+            <h3>
+              {phase === 'running'
+                ? 'Aguardando a primeira fala'
+                : 'Nenhuma fala nesta sessão'}
+            </h3>
+            <p>
+              {phase === 'running'
+                ? 'As falas aparecem aqui conforme o Mac reconhece o áudio.'
+                : phase === 'paused'
+                  ? 'Retome a sessão para acompanhar as falas.'
+                  : 'Inicie a transcrição para acompanhar a conversa em tempo real.'}
+            </p>
+          </div>
         )}
         {transcript?.segments.map((segment) => (
           <div
@@ -87,6 +111,11 @@ export function LocalTranscriptPreview({
             key={`${segment.source}:${segment.segmentId}`}
           >
             <p className="transcript-metadata">
+              {segment.source === 'mic' ? (
+                <PanelIcon name="mic" />
+              ) : (
+                <PanelIcon name="audioLines" />
+              )}
               {segment.source === 'mic' ? 'Microfone' : 'Sistema'} ·{' '}
               {segment.locale} ·{' '}
               {segment.type === 'partial' ? 'Parcial' : 'Final'}

@@ -3,6 +3,7 @@ import type {
   MeetingResultKind,
   MeetingResultsSnapshot,
 } from '../../../contracts/meeting/meetingResult';
+import { PanelIcon } from '../../ui/PanelIcon';
 
 const headings: Record<MeetingResultKind, string> = {
   topic: 'Tópico atual',
@@ -24,7 +25,10 @@ export function StructuredMeetingResults({
       className="meeting-results"
       aria-label="Resultados estruturados da reunião"
     >
-      <h3>Resultados ao vivo</h3>
+      <h2 className="pane-title">
+        <PanelIcon name="listChecks" />
+        Resultados ao vivo
+      </h2>
       {snapshot.items.length === 0 ? (
         <p>
           Ainda não há fatos ou inferências com evidência suficiente nesta

@@ -7,6 +7,7 @@ import type {
   SuggestionFeedbackValue,
   SuggestionRating,
 } from '../../../contracts/meeting/suggestionFeedback';
+import { PanelIcon } from '../../ui/PanelIcon';
 
 const labels: Record<SuggestionCategory, string> = {
   answer: 'Resposta',
@@ -39,17 +40,23 @@ export function SuggestionCards({
   onOpenCitation?: (id: string) => void;
 }) {
   const displayedSuggestions = demo ? suggestions : [...suggestions].reverse();
+  const Heading = demo ? 'h3' : 'h2';
+  const CardHeading = demo ? 'h4' : 'h3';
   return (
     <section
       aria-label={demo ? 'Sugestões DEMO' : 'Sugestões da reunião'}
       className="suggestion-cards"
     >
-      <h3>{demo ? 'Sugestões simuladas · DEMO' : 'Sugestões · OpenAI'}</h3>
-      <p>
-        {demo
-          ? 'Cards roteirizados da demonstração. Expiram após 30 segundos, inclusive durante a pausa.'
-          : 'Todos os cards da sessão ficam disponíveis até descarte ou limpeza. Os mais recentes aparecem primeiro.'}
-      </p>
+      <Heading className="pane-title">
+        <PanelIcon name="sparkles" />
+        {demo ? 'Sugestões simuladas · DEMO' : 'Sugestões · OpenAI'}
+      </Heading>
+      {demo && (
+        <p>
+          Cards roteirizados da demonstração. Expiram após 30 segundos,
+          inclusive durante a pausa.
+        </p>
+      )}
       {suggestions.length === 0 && (
         <p role="status">Nenhuma sugestão neste momento.</p>
       )}
@@ -70,7 +77,7 @@ export function SuggestionCards({
                   {labels[card.category]}
                   {demo ? ' · DEMO' : ''}
                 </p>
-                <h4>{card.title}</h4>
+                <CardHeading>{card.title}</CardHeading>
                 <p>{card.body}</p>
                 {card.citation && (
                   <div>
@@ -141,9 +148,9 @@ export function SuggestionCards({
         <details className="card-retention">
           <summary>Quando os cartões são removidos?</summary>
           <p>
-            Os mais recentes aparecem primeiro. Role a lista para acessar todos
-            os cards desta sessão. Redimensionar não remove cartões. Descarte
-            quando quiser; pausar, parar ou desativar sugestões limpa os cards.
+            Todos os cartões da sessão ficam disponíveis até descarte ou
+            limpeza. Os mais recentes aparecem primeiro. Redimensionar preserva
+            os cartões. Pausar, parar ou desativar sugestões limpa a lista.
           </p>
         </details>
       )}

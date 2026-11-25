@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { SuggestionCards } from './SuggestionCards';
 import type { Suggestion } from '../../../contracts/meeting/suggestion';
@@ -118,7 +118,8 @@ it('explains retention and cleanup for real cards and dismisses by ID', () => {
     />,
   );
   const region = screen.getByRole('region', { name: 'Sugestões da reunião' });
-  expect(region).toHaveTextContent('Todos os cards da sessão');
+  fireEvent.click(within(region).getByText('Quando os cartões são removidos?'));
+  expect(within(region).getByText(/Todos os cartões da sessão/)).toBeVisible();
   expect(region).toHaveTextContent('Os mais recentes aparecem primeiro');
   expect(
     screen.getByRole('list', {
@@ -126,7 +127,7 @@ it('explains retention and cleanup for real cards and dismisses by ID', () => {
     }),
   ).toBeVisible();
   expect(region).toHaveTextContent(
-    'pausar, parar ou desativar sugestões limpa os cards',
+    'Pausar, parar ou desativar sugestões limpa a lista',
   );
   expect(region).not.toHaveTextContent('30 segundos');
   fireEvent.click(

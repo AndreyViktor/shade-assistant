@@ -18,7 +18,12 @@ describe('separate preferences screen', () => {
   it('starts collapsed, exposes its relationship, and preserves drafts when closed', () => {
     render(
       <SettingsDisclosure>
-        <button>Controle da reunião</button>
+        {(preferencesButton) => (
+          <>
+            <button>Controle da reunião</button>
+            {preferencesButton}
+          </>
+        )}
       </SettingsDisclosure>,
     );
     const toggle = screen.getByRole('button', { name: 'Preferências' });

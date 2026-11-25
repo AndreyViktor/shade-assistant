@@ -134,7 +134,7 @@ test('uses a fresh session focus and clears it on stop', async () => {
     await page.getByRole('button', { name: 'Retomar', exact: true }).click();
     await page.getByRole('button', { name: 'Desativar sugestões' }).click();
     await expect(
-      page.getByText(/Sugestões e resultados ao vivo desativados/),
+      page.getByRole('heading', { name: 'Sugestões desativadas' }),
     ).toBeVisible();
     expect(await sessionJson(page)).not.toContain('discovery');
     expect(await page.locator('body').innerHTML()).not.toContain(

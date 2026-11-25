@@ -18,11 +18,10 @@ test('compact idle panel supports keyboard and resize without capture or network
     const left = page.getByRole('region', { name: 'Transcrição ao vivo' });
     const right = page.getByRole('region', { name: 'Assistência da reunião' });
     await expect(start).toBeEnabled();
-    await expect(page.locator('header')).toHaveCount(0);
-    await expect(page.locator('html')).toHaveCSS(
-      'background-color',
-      'rgb(16, 24, 39)',
-    );
+    await expect(
+      page.getByRole('heading', { name: 'Sessão local', level: 1 }),
+    ).toBeVisible();
+    await expect(page.locator('html')).toHaveCSS('color-scheme', 'dark');
     for (const width of [960, 640]) {
       await win.evaluate(
         (window: BrowserWindow, size) => window.setSize(...size),
@@ -35,7 +34,13 @@ test('compact idle panel supports keyboard and resize without capture or network
       const b = await right.boundingBox();
       if (!a || !b) throw new Error('Missing columns');
       expect(a.x + a.width).toBeLessThan(b.x);
-      for (const element of [left, right, start, preferences])
+      for (const element of [
+        left,
+        right,
+        start,
+        preferences,
+        page.getByText(/Captura inativa\./),
+      ])
         await expect(element).toBeInViewport({ ratio: 1 });
       expect(
         await page.evaluate(
@@ -47,10 +52,14 @@ test('compact idle panel supports keyboard and resize without capture or network
       });
     }
     await start.focus();
-    await page.keyboard.press('Tab');
-    await expect(page.getByRole('log')).toBeFocused();
-    await page.keyboard.press('Tab');
-    await expect(right).toBeFocused();
+    for (const name of [
+      'Visualização completa',
+      'Só transcrição',
+      'Só assistência',
+    ]) {
+      await page.keyboard.press('Tab');
+      await expect(page.getByRole('button', { name })).toBeFocused();
+    }
     await page.keyboard.press('Tab');
     await expect(preferences).toBeFocused();
     await page.keyboard.press('Enter');
@@ -59,6 +68,10 @@ test('compact idle panel supports keyboard and resize without capture or network
     ).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(preferences).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('log')).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(right).toBeFocused();
     await start.focus();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('alertdialog')).toBeVisible();

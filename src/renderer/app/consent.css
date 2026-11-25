@@ -1,0 +1,229 @@
+.consent-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(5 10 11 / 78%);
+}
+
+.consent-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 490px);
+  min-width: 0;
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+  border: 1px solid var(--control-line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 20px 64px rgb(0 0 0 / 38%);
+}
+
+.consent-content {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px;
+}
+
+.dialog-heading,
+.capture-summary dt,
+.consent-actions button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dialog-heading {
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.dialog-heading h2 {
+  font-size: 23px;
+}
+
+.consent-dialog p {
+  color: var(--muted);
+}
+
+.capture-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px 14px;
+  margin: 14px 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--inset);
+}
+
+.capture-summary dt {
+  color: var(--quiet);
+  font-size: 12px;
+}
+
+.capture-summary dt .panel-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.capture-summary dd {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.consent-dialog .field-help,
+.optional-label {
+  font-size: 12px;
+  color: var(--quiet);
+}
+
+.suggestion-setup {
+  margin-top: 16px;
+}
+
+.suggestion-toggle,
+.profile-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--control-line);
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+.suggestion-toggle > input,
+.profile-option > input {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  margin: 2px 0 0;
+  accent-color: var(--lilac);
+}
+
+.suggestion-toggle:has(input:checked),
+.profile-option:has(input:checked) {
+  background: var(--lilac-wash);
+  border-color: var(--lilac);
+}
+
+.optional-label {
+  display: block;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.suggestion-setup-fields {
+  margin-top: 12px;
+}
+
+.suggestion-setup-fields > label {
+  display: block;
+  margin-top: 14px;
+}
+
+.suggestion-setup-fields > .suggestion-toggle {
+  display: flex;
+}
+
+.suggestion-setup-fields .field-help {
+  margin: 6px 0 10px;
+}
+
+.suggestion-setup-fields textarea::placeholder {
+  color: var(--quiet);
+}
+
+.credential-setup,
+.cloud-consent {
+  padding: 12px;
+  margin: 14px 0;
+  background: var(--inset);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.consent-dialog .cloud-consent {
+  background: var(--lilac-wash);
+  color: var(--text);
+}
+
+.profile-options {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  margin: 16px 0;
+}
+
+.profile-option {
+  margin-top: 5px;
+  font-weight: 400;
+  font-size: 13px;
+  background: var(--inset);
+  border-color: var(--line);
+}
+
+.consent-actions {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  max-height: 50dvh;
+  overflow-y: auto;
+  padding: 12px 22px;
+  border-top: 1px solid var(--line);
+  background: var(--inset);
+}
+
+.consent-actions .field-help {
+  flex-basis: 100%;
+}
+
+.consent-actions button {
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+@media (max-width: 420px) {
+  .consent-backdrop {
+    padding: 6px;
+  }
+  .consent-dialog {
+    max-height: calc(100dvh - 12px);
+  }
+  .consent-content {
+    padding: 14px;
+  }
+  .consent-actions {
+    padding: 8px 14px;
+  }
+  .capture-summary {
+    grid-template-columns: 1fr;
+  }
+  .dialog-heading h2 {
+    font-size: 20px;
+  }
+}
+
+/* At high zoom the content and actions share the available reading space. */
+@media (max-height: 320px) {
+  .consent-dialog {
+    display: block;
+    overflow-y: auto;
+  }
+
+  .consent-content,
+  .consent-actions {
+    overflow: visible;
+  }
+
+  .consent-actions {
+    max-height: none;
+  }
+}

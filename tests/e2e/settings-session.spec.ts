@@ -75,6 +75,11 @@ test('settings navigation preserves a running and paused session; saved choices 
     await page.getByRole('button', { name: 'Voltar às preferências' }).click();
     await back.click();
     await expect(
+      page.getByText('Microfone + Sistema · Português (Brasil)', {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(
       page.getByRole('button', { name: 'Preferências', exact: true }),
     ).toBeFocused();
     await expect(cards.getByRole('article')).toHaveCount(1);
@@ -92,6 +97,9 @@ test('settings navigation preserves a running and paused session; saved choices 
     await expect(page.getByRole('button', { name: 'Retomar' })).toBeVisible();
     expect(await read()).toEqual(paused);
     await page.getByRole('button', { name: 'Parar' }).click();
+    await expect(
+      page.getByText('Sistema · Inglês (EUA)', { exact: true }),
+    ).toBeVisible();
 
     await page
       .getByRole('button', { name: 'Iniciar transcrição local' })

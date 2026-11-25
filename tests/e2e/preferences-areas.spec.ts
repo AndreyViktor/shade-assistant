@@ -27,11 +27,16 @@ test('preferences areas work offline at both window sizes and high zoom', async 
       );
       await expect(
         page.getByRole('button', { name: /Diagnóstico/ }),
-      ).toBeVisible();
+      ).toBeInViewport({ ratio: 1 });
       await page.screenshot({
         path: `test-results/t076-overview-${width}.png`,
       });
     }
+    const win = await app.browserWindow(page);
+    await win.evaluate((window: BrowserWindow) => window.setSize(640, 480));
+    await expect(
+      page.getByRole('button', { name: /Diagnóstico/ }),
+    ).toBeInViewport({ ratio: 1 });
     await audio.focus();
     await page.keyboard.press('Enter');
     await page.getByLabel('Idioma').selectOption('en-US');
@@ -51,7 +56,6 @@ test('preferences areas work offline at both window sizes and high zoom', async 
     await expect(page.getByText(/Nenhum serviço foi iniciado/)).toBeVisible();
     await page.getByRole('button', { name: 'Voltar às preferências' }).click();
     await expect(audio).toContainText('en-US');
-    const win = await app.browserWindow(page);
     await win.evaluate((window: BrowserWindow) =>
       window.webContents.setZoomFactor(2),
     );

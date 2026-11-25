@@ -1,6 +1,6 @@
 # Roadmap por áreas — Meeting Copilot
 
-**Atualizado:** 2026-11-24. **Fonte de verdade:** [TASKS.md](TASKS.md).
+**Atualizado:** 2026-11-25. **Fonte de verdade:** [TASKS.md](TASKS.md).
 
 O produto evolui de uma base local e segura para transcrição confiável, assistência avaliada, resultados estruturados, fluxos de reunião reutilizáveis e distribuição macOS endurecida. Marcos e percentuais representam escopo verificável, não estimativas de data.
 
@@ -22,12 +22,12 @@ O produto evolui de uma base local e segura para transcrição confiável, assis
 | Fundação e arquitetura | **100%** | 6 | 0 | 0 |
 | Ferramentas e documentação | **100%** | 6 | 0 | 0 |
 | Transcrição e áudio | **100%** | 10 | 0 | 2 |
-| Sugestões de IA e qualidade | **87%** | 13 | 2 | 0 |
-| UI/UX e overlay | **100%** | 13 | 0 | 4 |
+| Sugestões de IA e qualidade | **88%** | 14 | 2 | 0 |
+| UI/UX e overlay | **100%** | 14 | 0 | 4 |
 | Resultados e fluxo da reunião | **60%** | 3 | 2 | 0 |
 | Segurança, privacidade e distribuição | **33%** | 3 | 6 | 4 |
 | Windows futuro | **—** | 0 | 0 | 4 |
-| **Total ativo** | **84%** | **54** | **10** | **14** |
+| **Total ativo** | **85%** | **56** | **10** | **14** |
 
 ## Fase atual e sequência protegida
 
@@ -61,7 +61,7 @@ Próxima evolução arquitetural ocorre apenas quando uma tarefa concreta exigir
 | Avaliar e melhorar STT | T057 | DONE | 100% | Avaliação offline e ensaio físico registrados, com limites do corpus. |
 | STT remoto e troca de idiomas | T016, T026 | DEFERRED | — | Só reativar com decisão de produto, custo e consentimento. |
 
-## 4. Sugestões de IA e qualidade — 87%
+## 4. Sugestões de IA e qualidade — 88%
 
 | Funcionalidade | Tarefas | Estado | Progresso | Próximo resultado |
 | --- | --- | --- | ---: | --- |
@@ -71,7 +71,8 @@ Próxima evolução arquitetural ocorre apenas quando uma tarefa concreta exigir
 | Orçamento por modalidade | T025 | TODO | 0% | Estimar e limitar custo de texto, imagem e áudio remoto. A execução depende da T016, que está adiada. |
 | Avaliação de qualidade e uso | T027 | DONE | 100% | Protocolo offline e comparação real limitada registrados. |
 | Feedback local dos cartões | T064 | DONE | 100% | Classificações e métricas locais sem persistir conteúdo sensível. |
-| Verificação factual de vídeos | T078 | BLOCKED | 0% | Implementação offline e smoke concluídos; ensaio real com busca e citações aguarda autorização para custo e credencial. |
+| Verificação factual de vídeos | T078 | BLOCKED | 0% | O ensaio com três pedidos encontrou um cartão inesperado para uma afirmação verdadeira. O reteste exige nova autorização. [Evidências da T078](evidence/tasks/T078.md). |
+| Falhas nas sugestões | T079 | DONE | 100% | O painel exibe o motivo da falha e suspende novas tentativas. [Evidências da T079](evidence/tasks/T079.md). |
 
 ## 5. UI/UX e overlay — 100%
 
@@ -81,6 +82,7 @@ Próxima evolução arquitetural ocorre apenas quando uma tarefa concreta exigir
 | Visualizações do overlay | T067, T077 | DONE | 100% | Completa, somente transcrição e somente assistência, com seletor acessível e layout responsivo. [Evidências da T077](evidence/tasks/T077.md). |
 | Atalhos globais configuráveis | T068 | DONE | 100% | Mostrar ou ocultar a janela, pausar ou retomar, parar e pedir ajuda. Configuração com confirmação, detecção de conflitos e suspensão durante edição no painel. [Evidências e limites](evidence/tasks/T068.md). |
 | Design e reformulação de preferências | T074, T076 | DONE | 100% | Áreas com resumo dos valores salvos, confirmação de descarte e prontidão local preservada. [Evidências da T076](evidence/tasks/T076.md). |
+| Redesign da experiência de reunião | T080 | DONE | 100% | Sessão, consentimento e Preferências redesenhados e verificados no Electron em janela normal, compacta e com zoom de 200%. [Comparação visual](evidence/tasks/T080.md). |
 | Múltiplos monitores, histórico, troca de fonte e controles separados | T045, T049–T051 | DEFERRED | — | Retomar somente após evidência de prioridade de uso. |
 
 ## 6. Resultados e fluxo da reunião — 60%

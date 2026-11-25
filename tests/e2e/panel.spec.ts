@@ -34,18 +34,8 @@ test('floating panel supports keyboard controls, resize, zoom and restoration', 
       name: 'Preferências',
       exact: true,
     });
-    await page
-      .getByRole('button', { name: 'Iniciar transcrição local' })
-      .focus();
-    await page.keyboard.press('Tab');
-    await expect(
-      page.getByRole('log', { name: 'Falas recentes' }),
-    ).toBeFocused();
-    await page.keyboard.press('Tab');
-    await expect(
-      page.getByRole('region', { name: 'Assistência da reunião' }),
-    ).toBeFocused();
-    await page.keyboard.press('Tab');
+    await page.getByRole('log', { name: 'Falas recentes' }).focus();
+    await page.keyboard.press('Shift+Tab');
     await expect(toggle).toBeFocused();
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
     expect(

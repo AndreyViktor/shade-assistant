@@ -118,10 +118,13 @@ for (const filled of [false, true]) {
       ).toHaveCount(0);
       await page.getByRole('button', { name: 'Desativar sugestões' }).click();
       await expect(
-        page.getByText(
-          'Sugestões e resultados ao vivo desativados. A transcrição continua disponível neste painel.',
-          { exact: true },
-        ),
+        page.getByRole('heading', { name: 'Sugestões desativadas' }),
+      ).toBeVisible();
+      await expect(
+        page.getByText('Envio de texto à OpenAI autorizado.', { exact: true }),
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole('log', { name: 'Falas recentes' }),
       ).toBeVisible();
       const state = await page.evaluate(async () => ({
         session: await window.meetingCopilot.session({

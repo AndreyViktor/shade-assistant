@@ -36,7 +36,9 @@ Preferências antigas válidas são migradas automaticamente. A opção bilíngu
 
 ## Visualizações e atalhos do overlay
 
-Use o seletor do painel para alternar entre **Completa**, **Somente transcrição** e **Somente assistência**. A assistência reúne resultados estruturados e cartões de sugestão. A troca preserva a sessão em andamento.
+O painel **Sessão local** mostra o estado, a fonte de áudio e o idioma junto dos controles de início, pausa e parada. Na barra logo abaixo, escolha **Completa**, **Transcrição** ou **Assistência**, ou abra **Preferências**. A troca de visualização preserva a sessão em andamento.
+
+Quando você autoriza sugestões, a assistência mostra primeiro os cartões mais recentes. Os resultados com suas falas de suporte ficam abaixo da lista. O rodapé indica o estado da captura e se o envio de texto à OpenAI está autorizado.
 
 Em **Preferências → Atalhos globais**, configure ou restaure as combinações do macOS. Todos os atalhos padrão usam **⌘ + ⌥ + ⇧** com **F9** para mostrar ou ocultar a janela, **F10** para pausar ou retomar, **F11** para parar e **F12** para pedir ajuda. Confirme para aplicar a alteração. Os atalhos são suspensos enquanto um campo editável do painel está em foco, e o pedido manual respeita o consentimento e o limite da sessão.
 

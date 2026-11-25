@@ -3,8 +3,9 @@ import {
   SUGGESTION_PROVIDERS,
   TRANSCRIPTION_PROVIDERS,
 } from '../../../contracts/settings/providerOptions';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { PanelIcon, type PanelIconName } from '../../ui/PanelIcon';
 import { parsePreferences } from '../../../contracts/settings/preferences';
 import type { Preferences } from '../../../contracts/settings/preferences';
 import type {
@@ -80,9 +81,16 @@ export function SettingsPanel({
     };
   }, [active, loadAttempt]);
 
-  useEffect(() => {
-    if (active) back.current?.focus();
-  }, [active]);
+  useLayoutEffect(() => {
+    if (!active) return;
+    const areaButton =
+      !area && origin.current
+        ? root.current?.querySelector<HTMLButtonElement>(
+            `[data-settings-area="${origin.current}"]`,
+          )
+        : null;
+    (areaButton ?? back.current)?.focus();
+  }, [active, area]);
   useEffect(() => {
     if (confirm) keep.current?.focus();
   }, [confirm]);
@@ -95,19 +103,11 @@ export function SettingsPanel({
     } else navigateBack(destination);
   }
   function navigateBack(destination: 'area' | 'panel') {
+    setArea(null);
     if (destination === 'panel') {
+      origin.current = null;
       setMessage('');
-      setArea(null);
       onClose?.();
-    } else {
-      setArea(null);
-      requestAnimationFrame(() =>
-        root.current
-          ?.querySelector<HTMLButtonElement>(
-            `[data-settings-area="${origin.current}"]`,
-          )
-          ?.focus(),
-      );
     }
   }
   useEffect(() => {
@@ -156,7 +156,6 @@ export function SettingsPanel({
     origin.current = next;
     setArea(next);
     setMessage('');
-    requestAnimationFrame(() => back.current?.focus());
   }
   const saved = snapshot?.preferences;
   const source = !saved
@@ -180,7 +179,7 @@ export function SettingsPanel({
     description: string;
     summary: string;
     detail: string;
-    icon: string;
+    icon: PanelIconName;
   }[] = [
     {
       id: 'audio',
@@ -191,7 +190,7 @@ export function SettingsPanel({
           (p) => p.id === saved?.sttProvider,
         )?.label.split(' — ')[0] ?? 'Indisponível',
       detail: `${source} · ${saved?.language ?? '—'}`,
-      icon: '◉',
+      icon: 'audioLines',
     },
     {
       id: 'suggestions',
@@ -199,7 +198,7 @@ export function SettingsPanel({
       description: 'Fornecedor, modelo e chave',
       summary: `${SUGGESTION_PROVIDERS.find((p) => p.id === saved?.suggestionProvider)?.label.split(' — ')[0] ?? 'Indisponível'} · ${SUGGESTION_MODELS.find((m) => m.id === saved?.suggestionModel)?.label.split(' — ')[0] ?? '—'}`,
       detail: credential,
-      icon: '✦',
+      icon: 'sparkles',
     },
     {
       id: 'shortcuts',
@@ -207,7 +206,7 @@ export function SettingsPanel({
       description: 'Combinações para janela e sessão',
       summary: 'Configurar',
       detail: 'Atalhos de teclado',
-      icon: '⌘',
+      icon: 'keyboard',
     },
     {
       id: 'readiness',
@@ -215,7 +214,7 @@ export function SettingsPanel({
       description: 'Verificação no macOS',
       summary: readinessSummary,
       detail: 'Consultar antes da reunião',
-      icon: '◇',
+      icon: 'shieldCheck',
     },
     {
       id: 'diagnostics',
@@ -223,7 +222,7 @@ export function SettingsPanel({
       description: 'Estado da sessão e demonstração offline',
       summary: sessionSummary,
       detail: demoSummary,
-      icon: '▣',
+      icon: 'activity',
     },
   ];
   return (
@@ -234,17 +233,19 @@ export function SettingsPanel({
         className="settings-back"
         onClick={() => requestBack(area ? 'area' : 'panel')}
       >
+        <PanelIcon name="arrowLeft" />
         {area ? 'Voltar às preferências' : 'Voltar ao painel'}
       </button>
-      <h2 id="settings-title">
+      <h1 id="settings-title">
         {area ? items.find((item) => item.id === area)?.title : 'Preferências'}
-      </h2>
-      <p>
-        As escolhas de áudio e sugestões valem para a próxima sessão. Atalhos
-        são aplicados ao confirmar. Salvar não autoriza captura, envio ou
-        cobrança.
-      </p>
-      <p role="status" aria-live="polite">
+      </h1>
+      {!area && (
+        <p className="settings-intro">
+          Áudio e sugestões valem para a próxima sessão. Você confirma a captura
+          e o envio de texto ao iniciar.
+        </p>
+      )}
+      <p className="settings-status" role="status" aria-live="polite">
         {message}
       </p>
       {!loading && !snapshot && (
@@ -268,7 +269,7 @@ export function SettingsPanel({
                 onClick={() => openArea(item.id)}
               >
                 <span className="settings-area-icon" aria-hidden="true">
-                  {item.icon}
+                  <PanelIcon name={item.icon} />
                 </span>
                 <span className="settings-area-name">
                   <strong>{item.title}</strong>
@@ -278,11 +279,10 @@ export function SettingsPanel({
                   <span>{item.summary}</span>
                   <small>{item.detail}</small>
                 </span>
-                <span aria-hidden="true">›</span>
+                <PanelIcon name="chevronRight" className="area-chevron" />
               </button>
             ))}
           </div>
-          <p>A transcrição local mantém o áudio neste Mac.</p>
         </>
       )}
       {draft && snapshot && (

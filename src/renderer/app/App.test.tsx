@@ -57,9 +57,7 @@ describe('App shell', () => {
     expect(
       screen.getByRole('region', { name: 'Assistência da reunião' }),
     ).toBeVisible();
-    expect(
-      screen.getByText('Nenhuma fala exibida nesta sessão.'),
-    ).toBeVisible();
+    expect(screen.getByText('Nenhuma fala nesta sessão')).toBeVisible();
     expect(
       screen.queryByText('Sobre o histórico de transcrição'),
     ).not.toBeInTheDocument();

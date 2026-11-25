@@ -39,6 +39,17 @@ async function open(name: string) {
 }
 
 describe('settings areas', () => {
+  it('keeps the next control focused when navigating immediately after entering an area', async () => {
+    render(<SettingsPanel diagnostics={<button>Abrir roteiro</button>} />);
+    await open('Diagnóstico');
+    const entry = screen.getByRole('button', { name: 'Abrir roteiro' });
+    entry.focus();
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve()),
+    );
+    expect(entry).toHaveFocus();
+  });
+
   it('announces loading and saving and prevents duplicate writes', async () => {
     let finishLoad: (value: typeof initial) => void = () => {};
     api.getSettings.mockReturnValueOnce(
